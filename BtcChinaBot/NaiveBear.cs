@@ -78,6 +78,10 @@ namespace BtcChinaBot
             log("Interval={0} ms; ", _intervalMs);
 
             //TODO: log(some description of market condition based on recent trades)
+            var debug = MarketTrend.getCandleStickData(tradeHistory, new TimeSpan(0, 3, 0));
+            foreach (var candle in debug)
+                Console.WriteLine(candle);
+
 
 
             //We have BTC to SELL
@@ -97,6 +101,13 @@ namespace BtcChinaBot
                     //TODO: Create or update BUY order
                 }
                 else log("No reason to SELL...");
+
+                var buyBackReason = _trend.ReasonToBuyBack(tradeHistory);
+                if (null != buyBackReason)
+                {
+                    log("DEBUG: Reason to BUY back=" + buyBackReason, ConsoleColor.Green);
+                }
+                else log("No reason to BUY...");
             }
 
             //TODO: before executing a market BUY, ensure that market (ASK orders) can satisfy our profit needs

@@ -17,12 +17,11 @@ namespace BtcChinaBot
     {
         private const string BASE_URL = "https://api.btcchina.com/api_trade_v1.php";
         private const string TRADE_HISTORY_URL = "http://data.btcchina.com/data/historydata";
-        private const string PROXY_HOST = "wsproxybra.ext.crifnet.com";
-        private const int PROXY_PORT = 8080;
         private const byte RETRY_COUNT = 5;
         private const int RETRY_DELAY = 750;
 
         private readonly Logger _logger;
+        private readonly WebProxy _webProxy;
         private ulong _lastId;
         
 
@@ -30,6 +29,13 @@ namespace BtcChinaBot
         internal RequestHelper(Logger logger)
         {
             _logger = logger;
+            var proxyHost = Configuration.GetValue("proxyHost");
+            var proxyPort = Configuration.GetValue("proxyPort");
+            if (null != proxyHost && null != proxyPort)
+            {
+                _webProxy = new WebProxy(proxyHost, int.Parse(proxyPort));
+                _webProxy.Credentials = CredentialCache.DefaultCredentials;
+            }
         }
 
 
@@ -59,9 +65,9 @@ namespace BtcChinaBot
         internal List<TradeResponse> GetTradeHistory(DateTime? since = null)
         {
             var client = new WebClient();
-            var proxy = new WebProxy(PROXY_HOST, PROXY_PORT);
-            proxy.Credentials = CredentialCache.DefaultCredentials;
-            client.Proxy = proxy;
+
+            if (null != _webProxy)
+                client.Proxy = _webProxy;
 
             var data = client.DownloadString(TRADE_HISTORY_URL);
             var trades = deserializeJSON<List<TradeResponse>>(data);
@@ -239,14 +245,13 @@ namespace BtcChinaBot
         }
 
 
-        private static string sendPostRequest(string url, string base64, string tonce, string postData)
+        private string sendPostRequest(string url, string base64, string tonce, string postData)
         {
             WebRequest webRequest = WebRequest.Create(url);
             byte[] bytes = Encoding.ASCII.GetBytes(postData);
 
-            var proxy = new WebProxy(PROXY_HOST, PROXY_PORT);
-            proxy.Credentials = CredentialCache.DefaultCredentials;
-            webRequest.Proxy = proxy;
+            if (null != _webProxy)
+                webRequest.Proxy = _webProxy;
 
             webRequest.Method = "POST";
             webRequest.ContentType = "application/json-rpc";

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using BtcChinaBot.Business;
 
 
@@ -12,6 +11,10 @@ namespace BtcChinaBot
     /// </summary>
     internal class MarketTrend
     {
+        //When price moved <= 2.0 CNY in one candle, it's not rise/fall
+        private const double PRICE_SIGNIFICANCE_LIMIT = 2.0;
+        //Average volume limit, to avoid price swings by single whale trade
+        private const double AVG_VOLUME_LIMIT = 0.15;
         //Interval length in minutes
         private const int GROUP_INTERVAL = 3;
 
@@ -34,49 +37,30 @@ namespace BtcChinaBot
         }
 
         /// <summary>
-        /// Returns NULL if market doesn't give enough SELL signals, description of SELL reason otherwise.
+        /// Returns NULL if market doesn't give enough SELL signals, description of SELL reason otherwise. Good for BEAR strategy.
         /// </summary>
         internal string ReasonToSell(List<TradeResponse> tradeHistory)
         {
             if (runningSelloff(tradeHistory))
                 return "DUMP";
-
-            #region pattern: significant-enough rise followed
-
-            //TODO: this is very primitive! Think, read and analyse! Then code.
-            const double SIGNIFICANCE_LIMIT = 1.0;      //When price moved <= 1.0 CNY in one candle, it's not rise/fall
-            const double SIGNIFICANT_RISE = 6.0;       //todo: no magic here!
-            const int CANDLE_COUNT = 7;
-            var candles = getCandleStickData(tradeHistory, new TimeSpan(0, GROUP_INTERVAL, 0));
-            if (candles.Count < CANDLE_COUNT)
-                throw new ArgumentException("Not enough data. Need wider trade history.");
-            candles = candles.GetRange(candles.Count - CANDLE_COUNT, CANDLE_COUNT).ToList();    //Get only last 7 candles
-
-            bool initialRise = true;
-            double totalRise = 0.0;
-            for (int c = 0; c < candles.Count-2; c++)
-            {
-                if (candles[c].ClosingPrice - candles[c].OpeningPrice - SIGNIFICANCE_LIMIT < 0.0)
-                {
-                    initialRise = false;
-                    break;
-                }
-                totalRise += candles[c].ClosingPrice - candles[c].OpeningPrice;
-            }
-            //Last 2 candles suggest fall
-            if (initialRise && totalRise / (candles.Count-2) >= SIGNIFICANT_RISE)
-            {
-                var beforeLast = candles[candles.Count - 2];
-                var last = candles.Last();
-
-                if (beforeLast.OpeningPrice - beforeLast.ClosingPrice > SIGNIFICANCE_LIMIT && last.OpeningPrice > last.ClosingPrice)
-                    return "Decent rise (TODO!!!)";
-            }
-            #endregion
-
+            if (volumeDeclineAfterPriceRise(tradeHistory))
+                return "Volume and price decline after price rise";
 
             //TODO: recognition of all the other patterns
             
+            return null;
+        }
+
+        /// <summary>
+        /// Returns non-NULL description of BUY reason for bearish bot.
+        /// </summary>
+        internal string ReasonToBuyBack(List<TradeResponse> tradeHistory)
+        {
+            if (declineIsSlowing(tradeHistory))
+                return "Decline slowing down";
+            if (isRising(tradeHistory))
+                return "Significant rise";
+            //TODO: all the strategies
             return null;
         }
 
@@ -100,45 +84,63 @@ namespace BtcChinaBot
             return (startPrice > endPrice && startPrice - endPrice >= startPrice * PRICE_DIFF);
         }
 
-
-        /* Steps:
-         * - group past trades by interval (3m?)
-         * - count weighted mean price (use value from previous interval if this has no trades)
-         */
-        private Dictionary<DateTime, double> preprocessTradeData(IEnumerable<TradeResponse> tradeHistory)
+        /// <summary>Price and volume are going down after price rise.</summary>
+        private bool volumeDeclineAfterPriceRise(List<TradeResponse> tradeHistory)
         {
-            //Group trades by interval
-            var tradesInItervals = new Dictionary<DateTime, List<TradeResponse>>();   //KEY=interval start
+            const int MIN_CANDLES = 7;
+            var candles = getCandleStickData(tradeHistory, new TimeSpan(0, GROUP_INTERVAL, 0));
 
-            foreach (var trade in tradeHistory)
+            if (candles.Count < MIN_CANDLES)
+                return false;
+            candles = candles.TakeLast(MIN_CANDLES).ToList();
+
+            const double SIGNIFICANT_RISE = 3.0;       //Minimum rise of a candle to be considered significant. TODO: no magic here!
+
+            //First 4 candles price rise
+            double previousePrice = -1.0;
+            for (var c = 0; c < 4; c++)
             {
-                var interval = getIntervalStart(trade, GROUP_INTERVAL);
-                if (!tradesInItervals.ContainsKey(interval))
-                    tradesInItervals.Add(interval, new List<TradeResponse>());
-
-                tradesInItervals[interval].Add(trade);
-            }
-
-            //Count weighted mean price
-            var grouppedData = new Dictionary<DateTime, double>();      //VALUE=weighted mean price
-            foreach (var interval in tradesInItervals)
-            {
-                double weightedSum = 0.0;
-                double totalAmount = 0.0;
-
-                foreach (var trade in interval.Value)
+                if (candles[c].ClosingPrice > candles[c].OpeningPrice + PRICE_SIGNIFICANCE_LIMIT && //rise
+                    candles[c].ClosingPrice > previousePrice + SIGNIFICANT_RISE)
                 {
-                    weightedSum += trade.amount * trade.price;
-                    totalAmount += trade.amount;
+                    previousePrice = candles[c].ClosingPrice;
                 }
-
-                grouppedData.Add(interval.Key, weightedSum/totalAmount);
+                else return false;  //Not rise
             }
 
-            return grouppedData;
+            //5th candle
+            if (candles[4].ClosingPrice + PRICE_SIGNIFICANCE_LIMIT > candles[4].OpeningPrice || candles[4].BtcVolume > candles[3].BtcVolume)
+                return false;   //Not fall or volume still rising
+            //6th candle (before last)
+            if (candles[5].ClosingPrice + PRICE_SIGNIFICANCE_LIMIT > candles[5].OpeningPrice || candles[5].BtcVolume > candles[4].BtcVolume)
+                return false;   //Not fall or volume still rising
+
+            //Present candle, most recent trade decides
+            return candles[6].ClosingPrice < candles[5].ClosingPrice;
         }
 
-        /*TODO: private*/internal List<candle> getCandleStickData(IEnumerable<TradeResponse> tradeHistory, TimeSpan intervalLength)
+        private bool declineIsSlowing(List<TradeResponse> tradeHistory)
+        {
+            return false;
+            //TODO
+        }
+
+        private bool isRising(List<TradeResponse> tradeHistory)
+        {
+            const int MIN_CANDLES = 2;
+            var candles = getCandleStickData(tradeHistory, new TimeSpan(0, GROUP_INTERVAL, 0));
+
+            if (candles.Count < MIN_CANDLES)
+                return false;
+            candles = candles.TakeLast(MIN_CANDLES).ToList();
+
+            //Previous candle is simply rise and latest price was rise too //TODO: maybe something more sofisticated
+            return candles[0].ClosingPrice > candles[0].OpeningPrice + PRICE_SIGNIFICANCE_LIMIT &&
+                   candles[0].ClosingPrice < candles[1].ClosingPrice;
+        }
+
+
+        /*TODO: private*/internal static List<candle> getCandleStickData(IEnumerable<TradeResponse> tradeHistory, TimeSpan intervalLength)
         {
             var candles = new Dictionary<DateTime, candle>();        //KEY=interval start
             int minutes = (int)intervalLength.TotalMinutes;
@@ -200,7 +202,6 @@ namespace BtcChinaBot
             }
 
             private double _closePrice;
-
             internal double ClosingPrice
             {
                 //NOTE: quietly relies that will be called when Trades is fully filled and will not change
@@ -222,6 +223,46 @@ namespace BtcChinaBot
                 }
             }
 
+            private double _btcVolume;
+            internal double BtcVolume
+            {
+                get
+                {
+                    if (_btcVolume < 0.0)
+                    {
+                        _btcVolume = 0.0;
+                        foreach (var trade in Trades)
+                            _btcVolume += trade.amount;
+                    }
+
+                    return _btcVolume;
+                }
+            }
+
+            private double _avgVolume;
+            /// <summary>Mean BTC volume per trade.</summary>
+            internal double AverageVolume
+            {
+                get
+                {
+                    if (_avgVolume < 0.0)
+                    {
+                        //Group by time
+                        var volumes = new Dictionary<string, double>();
+                        foreach (var trade in Trades)
+                        {
+                            if (!volumes.ContainsKey(trade.date))
+                                volumes.Add(trade.date, 0.0);
+                            volumes[trade.date] += trade.amount;
+                        }
+
+                        _avgVolume = volumes.Values.Sum() / volumes.Count;
+                    }
+
+                    return _avgVolume;
+                }
+            }
+
             internal candle(DateTime start, TimeSpan length)
             {
                 Trades = new List<TradeResponse>();
@@ -229,12 +270,14 @@ namespace BtcChinaBot
                 IntervalLength = length;
                 _openPrice = -1.0;
                 _closePrice = -1.0;
+                _btcVolume = -1.0;
+                _avgVolume = -1.0;
             }
 
             public override string ToString()
             {
                 return "OPEN=" + OpeningPrice + " (" + IntervalStart.ToString("hh:mm:ss") + ") ### CLOSE=" +
-                       ClosingPrice + " (" + (IntervalStart.Add(IntervalLength)).ToString("hh:mm:ss");
+                       ClosingPrice + " (" + (IntervalStart.Add(IntervalLength)).ToString("hh:mm:ss") + ") ### AvgVolume=" + AverageVolume.ToString("0.00");
             }
         }
     }

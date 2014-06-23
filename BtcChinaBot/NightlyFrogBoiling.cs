@@ -24,7 +24,7 @@ namespace BtcChinaBot
         private const double MIN_DIFFERENCE = 0.2;
         //Tolerance of BUY price (factor). Usefull if possible price change is minor, to avoid frequent order updates.
         private const double PRICE_DELTA = 0.05;    //5%
-        private const double MIN_SPREAD = 1.8;
+        private const double MIN_SPREAD = 1.6;
 
         //Active BUY order ID
         private int _buyOrderId = -1;

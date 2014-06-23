@@ -38,7 +38,7 @@ namespace BtcChinaBot
         {
             key = key.ToUpper();
             if (!_values.ContainsKey(key))
-                throw new ArgumentException("Key '" + key + "' not found in configuration");
+                return null;
             return _values[key];
         }
     }
