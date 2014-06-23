@@ -1,0 +1,36 @@
+{
+    "result":
+    {
+        "market_depth":
+        {
+            "bid":
+            [
+                {"price":3490.43,"amount":0.7163},
+                {"price":3490.42,"amount":0.058},
+                {"price":3490.41,"amount":1.5861},
+                {"price":3490.4,"amount":0.1877},
+                {"price":3490.01,"amount":8.085},
+                {"price":3490,"amount":6.8691},
+                {"price":3489.22,"amount":0.007},
+                {"price":3484.72,"amount":0.001},
+                {"price":3481.47,"amount":3.449},
+                {"price":3481.42,"amount":11.025}
+            ],
+            "ask":
+            [
+                {"price":3499.5,"amount":0.1},
+                {"price":3499.99,"amount":4.559},
+                {"price":3500,"amount":1.352},
+                {"price":3501.61,"amount":0.007},
+                {"price":3502,"amount":3.0009},
+                {"price":3504.08,"amount":6},
+                {"price":3504.99,"amount":2.205},
+                {"price":3505,"amount":5.8534},
+                {"price":3507.31,"amount":0.05},
+                {"price":3509.99,"amount":5.88}
+            ],
+            "date":1401020373
+        }
+    },
+    "id":"1"
+}
