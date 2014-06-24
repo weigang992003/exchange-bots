@@ -78,9 +78,19 @@ namespace BtcChinaBot
             log("Interval={0} ms; ", _intervalMs);
 
             //TODO: log(some description of market condition based on recent trades)
-            var debug = MarketTrend.getCandleStickData(tradeHistory, new TimeSpan(0, 3, 0));
-            foreach (var candle in debug)
+            var candles = MarketTrend.getCandleStickData(tradeHistory, new TimeSpan(0, 3, 0));
+            candles = candles.TakeLast(8).ToList();
+            foreach (var candle in candles)
+            {
+                var color = ConsoleColor.Gray;
+                if (candle.ClosingPrice > candle.OpeningPrice)
+                    color = ConsoleColor.Green;
+                if (candle.ClosingPrice < candle.OpeningPrice)
+                    color = ConsoleColor.Red;
+                Console.ForegroundColor = color;
                 Console.WriteLine(candle);
+                Console.ResetColor();
+            }
 
 
 
@@ -91,7 +101,7 @@ namespace BtcChinaBot
                 if (null != reason)
                 {
                     var amount = OPERATIVE_AMOUNT - _buyOrderAmount;
-                    log("SELLing {0} BTC at market price. Reason={1}", ConsoleColor.Green, amount, reason);
+                    log("SELLing {0} BTC at market price. Reason={1}", ConsoleColor.Cyan, amount, reason);
 /*TODO
                     int orderId = _requestor.PlaceSellOrder(null, ref amount);
                     var orderInfo = _requestor.GetOrderInfo(orderId);
@@ -105,7 +115,7 @@ namespace BtcChinaBot
                 var buyBackReason = _trend.ReasonToBuyBack(tradeHistory);
                 if (null != buyBackReason)
                 {
-                    log("DEBUG: Reason to BUY back=" + buyBackReason, ConsoleColor.Green);
+                    log("DEBUG: Reason to BUY back=" + buyBackReason, ConsoleColor.Cyan);
                 }
                 else log("No reason to BUY...");
             }

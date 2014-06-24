@@ -3,5 +3,5 @@ Exchange bots.v12.suo
 BtcChinaBot/BtcChinaBot.csproj.user
 
 # Compiled assemblies
-BtcChinaBot/bin/Debug/*
-BtcChinaBot/obj/Debug/*
+BtcChinaBot/bin/*
+BtcChinaBot/obj/*

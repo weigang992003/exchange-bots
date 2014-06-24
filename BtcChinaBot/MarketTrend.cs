@@ -85,7 +85,7 @@ namespace BtcChinaBot
         }
 
         /// <summary>Price and volume are going down after price rise.</summary>
-        private bool volumeDeclineAfterPriceRise(List<TradeResponse> tradeHistory)
+        private bool volumeDeclineAfterPriceRise(IEnumerable<TradeResponse> tradeHistory)
         {
             const int MIN_CANDLES = 7;
             var candles = getCandleStickData(tradeHistory, new TimeSpan(0, GROUP_INTERVAL, 0));
@@ -97,7 +97,7 @@ namespace BtcChinaBot
             const double SIGNIFICANT_RISE = 3.0;       //Minimum rise of a candle to be considered significant. TODO: no magic here!
 
             //First 4 candles price rise
-            double previousePrice = -1.0;
+            double previousePrice = -1.0;           //(BUG?) hmm, that makes first candle automatic rise
             for (var c = 0; c < 4; c++)
             {
                 if (candles[c].ClosingPrice > candles[c].OpeningPrice + PRICE_SIGNIFICANCE_LIMIT && //rise
@@ -276,8 +276,8 @@ namespace BtcChinaBot
 
             public override string ToString()
             {
-                return "OPEN=" + OpeningPrice + " (" + IntervalStart.ToString("hh:mm:ss") + ") ### CLOSE=" +
-                       ClosingPrice + " (" + (IntervalStart.Add(IntervalLength)).ToString("hh:mm:ss") + ") ### AvgVolume=" + AverageVolume.ToString("0.00");
+                return String.Format("OPEN={0:0.00} ({1:hh:mm:ss})  |  CLOSE={2:0.00} ({3:hh:mm:ss})  |  SumVolume={4:0.00}  |  AvgVolume={5:0.00}",
+                                     OpeningPrice, IntervalStart, ClosingPrice, IntervalStart.Add(IntervalLength), BtcVolume, AverageVolume);
             }
         }
     }

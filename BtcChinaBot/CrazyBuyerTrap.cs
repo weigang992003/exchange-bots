@@ -19,7 +19,7 @@ namespace BtcChinaBot
         private int _intervalMs;
 
         //Available BTC to trade
-        private const double OPERATIVE_AMOUNT = 0.5;    //TODO: whatever
+        private readonly double _operativeAmount;
         private readonly double _minWallVolume = 2.0;
         private readonly double _maxWallVolume = 8.0;
         //Volumen of BTC necessary to buy our offer
@@ -49,9 +49,10 @@ namespace BtcChinaBot
         public CrazyBuyerTrap(Logger logger)
         {
             _logger = logger;
+            _operativeAmount = double.Parse(Configuration.GetValue("operative_amount"));
             _minWallVolume = double.Parse(Configuration.GetValue("min_volume"));
             _maxWallVolume = double.Parse(Configuration.GetValue("max_volume"));
-            _logger.AppendMessage(String.Format("Crazy buyer trap trader initialized with operative={0}; MinWall={1}; MaxWal={2}", OPERATIVE_AMOUNT, _minWallVolume, _maxWallVolume));
+            _logger.AppendMessage(String.Format("Crazy buyer trap trader initialized with operative={0}; MinWall={1}; MaxWal={2}", _operativeAmount, _minWallVolume, _maxWallVolume));
             _requestor = new RequestHelper(logger);
         }
 
@@ -104,7 +105,7 @@ namespace BtcChinaBot
                             log("SELL order ID={0} untouched (amount={1} BTC, price={2} CNY)", _sellOrderId, _sellOrderAmount, _sellOrderPrice);
 
                             double price = suggestSellPrice(market);
-                            var newAmount = OPERATIVE_AMOUNT - _buyOrderAmount;
+                            var newAmount = _operativeAmount - _buyOrderAmount;
 
                             //Evaluate and update if needed
                             if (newAmount > _sellOrderAmount || !_sellOrderPrice.eq(price))
@@ -149,17 +150,17 @@ namespace BtcChinaBot
                         throw new Exception(message);
                 }
             }
-            else if (OPERATIVE_AMOUNT - _buyOrderAmount > 0.00001)    //No SELL order (and there are some BTC available). So create one
+            else if (_operativeAmount - _buyOrderAmount > 0.00001)    //No SELL order (and there are some BTC available). So create one
             {
                 _sellOrderPrice = suggestSellPrice(market);
-                var amount = OPERATIVE_AMOUNT - _buyOrderAmount;
+                var amount = _operativeAmount - _buyOrderAmount;
                 _sellOrderId = _requestor.PlaceSellOrder(_sellOrderPrice, ref amount);
                 _sellOrderAmount = amount;
                 log("Successfully created SELL order with ID={0}; amount={1} BTC; price={2} CNY", ConsoleColor.Cyan, _sellOrderId, _sellOrderAmount, _sellOrderPrice);
             }
 
             //Handle BUY order
-            if (OPERATIVE_AMOUNT - _sellOrderAmount > 0.00001)
+            if (_operativeAmount - _sellOrderAmount > 0.00001)
             {
                 //BUY order already existed
                 if (-1 != _buyOrderId)
@@ -184,9 +185,9 @@ namespace BtcChinaBot
                                 log("Updated BUY order ID={0}; amount={1} BTC; price={2} CNY", _buyOrderId, _buyOrderAmount, price);
                             }
                             //If there were some money released by filling a BUY order, increase this SELL order
-                            else if (OPERATIVE_AMOUNT - _sellOrderAmount > _buyOrderAmount)
+                            else if (_operativeAmount - _sellOrderAmount > _buyOrderAmount)
                             {
-                                var newAmount = OPERATIVE_AMOUNT - _sellOrderAmount;
+                                var newAmount = _operativeAmount - _sellOrderAmount;
                                 log("SELL dumped some BTC. Increasing BUY amount to {0} BTC", ConsoleColor.Cyan, newAmount);
                                 _buyOrderId = _requestor.UpdateBuyOrder(_buyOrderId, price, newAmount);
                                 _buyOrderAmount = newAmount;
@@ -223,7 +224,7 @@ namespace BtcChinaBot
                 else    //No BUY order, create one
                 {
                     _buyOrderPrice = suggestBuyPrice(market);
-                    _buyOrderAmount = OPERATIVE_AMOUNT - _sellOrderAmount;
+                    _buyOrderAmount = _operativeAmount - _sellOrderAmount;
                     _buyOrderId = _requestor.PlaceBuyOrder(_buyOrderPrice, _buyOrderAmount);
                     log("Successfully created BUY order with ID={0}; amount={1} BTC; price={2} CNY", ConsoleColor.Cyan, _buyOrderId, _buyOrderAmount, _buyOrderPrice);
                 }
@@ -240,7 +241,7 @@ namespace BtcChinaBot
 
             foreach (var ask in market.ask)
             {
-                if (sum + OPERATIVE_AMOUNT > _volume && ask.price-MIN_DIFFERENCE > highestBid)
+                if (sum + _operativeAmount > _volume && ask.price-MIN_DIFFERENCE > highestBid)
                 {
                     double sellPrice = ask.price - 0.01;
 

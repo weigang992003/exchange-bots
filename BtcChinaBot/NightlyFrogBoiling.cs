@@ -19,7 +19,7 @@ namespace BtcChinaBot
         private int _intervalMs;
 
         //BTC amount to trade
-        private const double OPERATIVE_AMOUNT = 0.1;
+        private readonly double _operativeAmount;
         //Minimum difference between BUY price and subsequent SELL price (so we have at least some profit)
         private const double MIN_DIFFERENCE = 0.2;
         //Tolerance of BUY price (factor). Usefull if possible price change is minor, to avoid frequent order updates.
@@ -46,7 +46,8 @@ namespace BtcChinaBot
         public NightlyFrogBoiling(Logger logger)
         {
             _logger = logger;
-            _logger.AppendMessage("Nightly Frog Boiling trader initialized with operative amount " + OPERATIVE_AMOUNT + " BTC");
+            _operativeAmount = double.Parse(Configuration.GetValue("operative_amount"));
+            _logger.AppendMessage("Nightly Frog Boiling trader initialized with operative amount " + _operativeAmount + " BTC");
             _requestor = new RequestHelper(logger);
         }
 
@@ -102,7 +103,7 @@ namespace BtcChinaBot
                                 log("BUY order ID={0} untouched (amount={1} BTC, price={2} CNY)", _buyOrderId, _buyOrderAmount, _buyOrderPrice);
 
                                 var price = suggestBuyPrice(market, spread);
-                                var newAmount = OPERATIVE_AMOUNT - _sellOrderAmount;
+                                var newAmount = _operativeAmount - _sellOrderAmount;
 
                                 //Evaluate and update if needed
                                 if (newAmount > _buyOrderAmount || !_buyOrderPrice.eq(price))
@@ -145,10 +146,10 @@ namespace BtcChinaBot
                             throw new Exception(message);
                     }
                 }
-                else if (OPERATIVE_AMOUNT - _sellOrderAmount > 0.00001)    //No BUY order (and there are some money available). So create one
+                else if (_operativeAmount - _sellOrderAmount > 0.00001)    //No BUY order (and there are some money available). So create one
                 {
                     _buyOrderPrice = suggestBuyPrice(market, spread);
-                    _buyOrderAmount = OPERATIVE_AMOUNT - _sellOrderAmount;
+                    _buyOrderAmount = _operativeAmount - _sellOrderAmount;
                     _buyOrderId = _requestor.PlaceBuyOrder(_buyOrderPrice, _buyOrderAmount);
                     log("Successfully created BUY order with ID={0}; amount={1} BTC; price={2} CNY", ConsoleColor.Cyan, _buyOrderId, _buyOrderAmount, _buyOrderPrice);
                 }
@@ -170,7 +171,7 @@ namespace BtcChinaBot
             }
 
             //Handle SELL order
-            if (OPERATIVE_AMOUNT - _buyOrderAmount > 0.00001 && _executedBuyPrice > -1.0)
+            if (_operativeAmount - _buyOrderAmount > 0.00001 && _executedBuyPrice > -1.0)
             {
                 //SELL order already existed
                 if (-1 != _sellOrderId)
@@ -198,9 +199,9 @@ namespace BtcChinaBot
                                     log("Updated SELL order ID={0}; amount={1} BTC; price={2} CNY", _sellOrderId, _sellOrderAmount, price);
                                 }
                                 //If there were some money released by filling a BUY order, increase this SELL order
-                                else if (OPERATIVE_AMOUNT - _buyOrderAmount > _sellOrderAmount)
+                                else if (_operativeAmount - _buyOrderAmount > _sellOrderAmount)
                                 {
-                                    var newAmount = OPERATIVE_AMOUNT - _buyOrderAmount;
+                                    var newAmount = _operativeAmount - _buyOrderAmount;
                                     _sellOrderId = _requestor.UpdateSellOrder(_sellOrderId, price, ref newAmount);
                                     _sellOrderAmount = newAmount;
                                     _sellOrderPrice = price;
@@ -239,7 +240,7 @@ namespace BtcChinaBot
                     if (availableBtc > 0.0)
                     {
                         _sellOrderPrice = suggestSellPrice(market, spread);
-                        var amount = OPERATIVE_AMOUNT - _buyOrderAmount;
+                        var amount = _operativeAmount - _buyOrderAmount;
                         if (availableBtc > amount)
                         {
                             log("Available BTC={0}; OPERATIVE-_buyOrderAmount={1}; Using the first for new SELL order.", ConsoleColor.Yellow, availableBtc, amount);

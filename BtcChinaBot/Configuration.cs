@@ -14,7 +14,7 @@ namespace BtcChinaBot
         internal static string SecretKey { get { return GetValue("SECRET_KEY"); } }
 
 
-        /// <summary>Read configuration file in form "key=value" per line. Lines not having this pattern are ignored.</summary>
+        /// <summary>Read configuration file in form "key=value" per line, case insensitive. Lines not having this pattern are ignored.</summary>
         internal static void Load(string fullPath)
         {
             _values = new Dictionary<string, string>();
