@@ -2,13 +2,13 @@
 using System.IO;
 
 
-namespace BtcChinaBot
+namespace Common
 {
-    internal class Logger
+    public class Logger
     {
         private readonly StreamWriter _writer;
 
-        internal Logger(string logFilePath)
+        public Logger(string logFilePath)
         {
             var stream = new FileStream(logFilePath, FileMode.Create, FileAccess.Write);
             _writer = new StreamWriter(stream);
@@ -18,7 +18,7 @@ namespace BtcChinaBot
         }
 
         /// <summary>Append line to log file</summary>
-        internal void AppendMessage(string message, bool console=true, ConsoleColor? color = null)
+        public void AppendMessage(string message, bool console=true, ConsoleColor? color = null)
         {
             _writer.WriteLine(DateTime.Now.ToString("HH:mm:ss") + " ### " +  message);
             _writer.Flush();

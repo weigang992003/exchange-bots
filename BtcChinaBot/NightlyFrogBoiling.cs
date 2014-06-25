@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading;
 using BtcChinaBot.Business;
+using Common;
 
 
 namespace BtcChinaBot
@@ -15,7 +16,7 @@ namespace BtcChinaBot
         private bool _killSignal;
         private bool _verbose = true;
         private readonly Logger _logger;
-        private readonly RequestHelper _requestor;
+        private readonly BtcChinaRequestHelper _requestor;
         private int _intervalMs;
 
         //BTC amount to trade
@@ -48,7 +49,7 @@ namespace BtcChinaBot
             _logger = logger;
             _operativeAmount = double.Parse(Configuration.GetValue("operative_amount"));
             _logger.AppendMessage("Nightly Frog Boiling trader initialized with operative amount " + _operativeAmount + " BTC");
-            _requestor = new RequestHelper(logger);
+            _requestor = new BtcChinaRequestHelper(logger);
         }
 
         public void StartTrading()
@@ -301,10 +302,16 @@ namespace BtcChinaBot
 
         private double suggestBuyPrice(MarketDepth market, double spread)
         {
-            var buyPrice = Math.Round(market.bid.First().price + spread / 3.0, 2);
-            if (-1 == _buyOrderId)
-                return buyPrice;
+            var firstBid = market.bid.First();
+            //Either we don't have active BUY or we do, but someone else gave better price
+            if (-1 == _buyOrderId || !firstBid.price.eq(_buyOrderPrice))
+                 return Math.Round(firstBid.price + spread / 3.0, 2);
 
+            //Someone else shares the price
+            if (firstBid.amount > _operativeAmount)
+                return Math.Round(firstBid.price + spread / 3.0, 2);
+
+            var buyPrice = Math.Round(market.bid[1].price + spread / 3.0, 2);
             var minDiff = spread * PRICE_DELTA;
             if (Math.Abs(buyPrice - _buyOrderPrice) < minDiff)
             {

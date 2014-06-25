@@ -1,11 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using BtcChinaBot.Business;
 using Common;
 
 
-namespace BtcChinaBot
+namespace HuobiBot
 {
     /// <summary>
     /// Sort of bearish strategy. The logic: keep a sell order some fixed volume above the lowest demand prize. When a crazy
@@ -16,7 +16,7 @@ namespace BtcChinaBot
         private bool _killSignal;
         private bool _verbose = true;
         private readonly Logger _logger;
-        private readonly BtcChinaRequestHelper _requestor;
+        private readonly HuobiRequestHelper _requestor;
         private int _intervalMs;
 
         //Available BTC to trade
@@ -54,7 +54,7 @@ namespace BtcChinaBot
             _minWallVolume = double.Parse(Configuration.GetValue("min_volume"));
             _maxWallVolume = double.Parse(Configuration.GetValue("max_volume"));
             _logger.AppendMessage(String.Format("Crazy buyer trap trader initialized with operative={0}; MinWall={1}; MaxWal={2}", _operativeAmount, _minWallVolume, _maxWallVolume));
-            _requestor = new BtcChinaRequestHelper(logger);
+            _requestor = new HuobiRequestHelper(logger);
         }
 
         public void StartTrading()
@@ -83,8 +83,19 @@ namespace BtcChinaBot
         /// <summary>The core method to do one iteration of orders' check and updates</summary>
         private void check()
         {
-            var market = _requestor.GetMarketDepth().result.market_depth;
-            var tradeHistory = _requestor.GetTradeHistory();
+            var market = _requestor.GetMarketDepth();
+
+            foreach (var ask in market.Asks)
+                log("ASK " + ask.amount + " BTC for " + ask.price + " CNY");
+            log("######################################");
+            foreach (var bid in market.Bids)
+                log("BID " + bid.amount + " BTC for " + bid.price + " CNY");
+
+            var trades = _requestor.GetTradeStatistics();
+            foreach (var trade in trades.trades)
+                log(trade.Type + ":   time=" + trade.TimeTyped + "; amount=" + trade.amount + " BTC; price=" + trade.price);
+
+/*TODO            var tradeHistory = _requestor.GetTradeHistory();
 
             var now = new DateTime(1970, 1, 1).AddSeconds(market.date).AddHours(2);
             var coef = Helpers.GetMadness(tradeHistory, now);
@@ -229,11 +240,11 @@ namespace BtcChinaBot
                     _buyOrderId = _requestor.PlaceBuyOrder(_buyOrderPrice, _buyOrderAmount);
                     log("Successfully created BUY order with ID={0}; amount={1} BTC; price={2} CNY", ConsoleColor.Cyan, _buyOrderId, _buyOrderAmount, _buyOrderPrice);
                 }
-            }
+            }*/
 
             log(new string('=', 80));
         }
-
+/*TODO?
         private double suggestSellPrice(MarketDepth market)
         {
             double sum = 0;
@@ -271,10 +282,6 @@ namespace BtcChinaBot
 
         private double suggestBuyPrice(MarketDepth market)
         {
-            //If best SELL order fits our profit greed, don't hesitate and try to use it
-/*            if (market.ask[0].price < _executedSellPrice - MIN_DIFFERENCE)
-                return market.ask[0].price;     //TODO: review this rule. Maybe if we wait a bit longer, we can have bigger profit
-*/
             foreach (var bid in market.bid)
             {
                 if (bid.price < _executedSellPrice - MIN_DIFFERENCE)
@@ -287,7 +294,7 @@ namespace BtcChinaBot
 
             //All BUY orders are too high (probably some wild race). Suggest BUY order with minimum profit and hope
             return _executedSellPrice - MIN_DIFFERENCE;
-        }
+        }*/
 
         private void log(string message, ConsoleColor color, params object[] args)
         {

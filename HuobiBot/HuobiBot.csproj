@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{A9750DB3-A398-44DB-BFE0-A56BDBC5986B}</ProjectGuid>
+    <ProjectGuid>{6F9E7E0C-A16A-447C-B305-AA1D763F3224}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>BtcChinaBot</RootNamespace>
-    <AssemblyName>BtcChinaBot</AssemblyName>
+    <RootNamespace>HuobiBot</RootNamespace>
+    <AssemblyName>HuobiBot</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -42,24 +42,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Business\AccountInfo.cs" />
-    <Compile Include="Business\BuyOrder.cs" />
-    <Compile Include="Business\CancelOrder.cs" />
-    <Compile Include="Business\Error.cs" />
     <Compile Include="Business\MarketDepth.cs" />
-    <Compile Include="Business\OrderInfo.cs" />
-    <Compile Include="Business\SellOrder.cs" />
-    <Compile Include="Business\TradeHistory.cs" />
+    <Compile Include="Business\TradeStatistics.cs" />
     <Compile Include="CrazyBuyerTrap.cs" />
-    <Compile Include="CrazySellerTrap.cs" />
-    <Compile Include="Helpers.cs" />
-    <Compile Include="MarketTrend.cs" />
-    <Compile Include="NaiveBear.cs" />
-    <Compile Include="NightlyFrogBoiling.cs" />
-    <Compile Include="NightlyHeckler.cs" />
+    <Compile Include="HuobiRequestHelper.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="BtcChinaRequestHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -69,6 +57,10 @@
       <Project>{2EEF9328-252F-4889-804D-E6071F1DA8F0}</Project>
       <Name>Common</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="DataSamples\market_json.js" />
+    <Content Include="DataSamples\tradeStatistics_json.js" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

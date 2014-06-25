@@ -1,7 +1,7 @@
 ﻿
-namespace BtcChinaBot
+namespace Common
 {
-    internal interface ITrader
+    public interface ITrader
     {
         /// <summary>Launch trading loop</summary>
         void StartTrading();

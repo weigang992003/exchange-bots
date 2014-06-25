@@ -7,17 +7,14 @@ namespace BtcChinaBot.Business
     [DataContract]
     internal class MarketDepthResponse
     {
-        [DataMember]
-        internal MarketDepthResult result { get; set; }
-        [DataMember]
-        internal string id { get; set; }
+        [DataMember] internal MarketDepthResult result { get; set; }
+        [DataMember] internal string id { get; set; }
     }
 
     [DataContract]
     internal class MarketDepthResult
     {
-        [DataMember]
-        internal MarketDepth market_depth { get; set; }
+        [DataMember] internal MarketDepth market_depth { get; set; }
     }
 
     [DataContract]

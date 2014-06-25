@@ -3,19 +3,19 @@ using System.Collections.Generic;
 using System.IO;
 
 
-namespace BtcChinaBot
+namespace Common
 {
-    internal static class Configuration
+    public static class Configuration
     {
         private static Dictionary<string, string> _values;
 
-        internal static string Strategy { get { return GetValue("STRATEGY"); } }
-        internal static string AccessKey { get { return GetValue("ACCESS_KEY"); } }
-        internal static string SecretKey { get { return GetValue("SECRET_KEY"); } }
+        public static string Strategy { get { return GetValue("STRATEGY"); } }
+        public static string AccessKey { get { return GetValue("ACCESS_KEY"); } }
+        public static string SecretKey { get { return GetValue("SECRET_KEY"); } }
 
 
         /// <summary>Read configuration file in form "key=value" per line, case insensitive. Lines not having this pattern are ignored.</summary>
-        internal static void Load(string fullPath)
+        public static void Load(string fullPath)
         {
             _values = new Dictionary<string, string>();
 
@@ -34,7 +34,7 @@ namespace BtcChinaBot
         }
 
 
-        internal static string GetValue(string key)
+        public static string GetValue(string key)
         {
             key = key.ToUpper();
             if (!_values.ContainsKey(key))

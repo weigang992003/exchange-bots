@@ -6,21 +6,6 @@ using BtcChinaBot.Business;
 
 public static class Helpers
 {
-    /// <summary>Compare this <see cref="Double"/> to another, with tolerance of 0.00001</summary>
-    public static bool eq(this double value, double other)
-    {
-        return Math.Abs(value - other) < 0.00001;
-    }
-
-    /// <summary>Retuns given number of elements at the end of sequence</summary>
-    public static IEnumerable<T> TakeLast<T>(this IEnumerable<T> source, int count)
-    {
-        if (source.Count() < count)
-            throw new ArgumentException("Not enough elements");
-
-        return source.Skip(source.Count() - count);
-    }
-
     /// <summary>Returns numeric indicator of market activity. Higher value means higher activity (i.e. lot of trades with higher volume).</summary>
     /// <param name="tradeHistory">Last executed trades of exchange</param>
     /// <param name="now">Current local time of the exchange</param>

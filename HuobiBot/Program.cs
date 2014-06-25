@@ -4,7 +4,7 @@ using System.Threading;
 using Common;
 
 
-namespace BtcChinaBot
+namespace HuobiBot
 {
     class Program
     {
@@ -29,19 +29,10 @@ namespace BtcChinaBot
                 case "cbt":
                     trader = new CrazyBuyerTrap(logger);
                 break;
-                case "cst":
-                    trader = new CrazySellerTrap(logger);
-                break;
-                case "nfb":
-                    trader = new NightlyFrogBoiling(logger);
-                break;
-                case "bear":
-                    trader = new NaiveBear(logger);
-                break;
                 case "bull":
-                    throw new NotImplementedException("Soon...");
+                throw new NotImplementedException("Soon...");
                 default:
-                    throw new ArgumentException("Unknown strategy " + strategy);
+                throw new ArgumentException("Unknown strategy " + strategy);
             }
 
             Thread t = new Thread(trader.StartTrading);
@@ -55,7 +46,7 @@ namespace BtcChinaBot
 
         static void usage()
         {
-            Console.WriteLine("BTC China trading bot. Usage: bot.exe --config=<config file path> --log=<log file path>");
+            Console.WriteLine("Huobi trading bot. Usage: bot.exe --config=<config file path> --log=<log file path>");
             Console.WriteLine("Config is in form key=value on each line. Mandatory keys are 'strategy', 'access_key', 'secret_key'.");
         }
     }

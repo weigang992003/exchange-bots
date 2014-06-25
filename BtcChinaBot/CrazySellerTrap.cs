@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading;
 using BtcChinaBot.Business;
+using Common;
 
 
 namespace BtcChinaBot
@@ -15,7 +16,7 @@ namespace BtcChinaBot
         private bool _killSignal;
         private bool _verbose = true;
         private readonly Logger _logger;
-        private readonly RequestHelper _requestor;
+        private readonly BtcChinaRequestHelper _requestor;
         private int _intervalMs;
 
         //BTC amount to trade
@@ -53,7 +54,7 @@ namespace BtcChinaBot
             _minWallVolume = double.Parse(Configuration.GetValue("min_volume"));
             maxWallVolume = double.Parse(Configuration.GetValue("max_volume"));
             _logger.AppendMessage(String.Format("Crazy seller trap trader initialized with operative={0}; MinWall={1}; MaxWal={2}", _operativeAmount, _minWallVolume, maxWallVolume));
-            _requestor = new RequestHelper(logger);
+            _requestor = new BtcChinaRequestHelper(logger);
         }
 
         public void StartTrading()
