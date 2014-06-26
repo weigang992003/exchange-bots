@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Runtime.Serialization;
 
 
@@ -23,6 +24,12 @@ namespace BtcChinaBot.Business
         [DataMember] internal List<Bid> bid { get; set; }
         [DataMember] internal List<Ask> ask { get; set; }
         [DataMember] internal int date { get; set; }
+
+        internal DateTime ServerTime
+        {
+            //2hrs offset
+            get { return new DateTime(1970, 1, 1).AddSeconds(date).AddHours(2); }
+        }
     }
 
     [DataContract]

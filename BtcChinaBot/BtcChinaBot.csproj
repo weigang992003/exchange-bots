@@ -52,7 +52,7 @@
     <Compile Include="Business\TradeHistory.cs" />
     <Compile Include="CrazyBuyerTrap.cs" />
     <Compile Include="CrazySellerTrap.cs" />
-    <Compile Include="Helpers.cs" />
+    <Compile Include="TradeHelpers.cs" />
     <Compile Include="MarketTrend.cs" />
     <Compile Include="NaiveBear.cs" />
     <Compile Include="NightlyFrogBoiling.cs" />

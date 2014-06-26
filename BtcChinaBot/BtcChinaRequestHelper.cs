@@ -73,7 +73,7 @@ namespace BtcChinaBot
             var data = client.DownloadString(TRADE_HISTORY_URL);
             var trades = deserializeJSON<List<TradeResponse>>(data);
 
-            while (null != since && trades.First().DateTyped > since.Value)
+            while (null != since && trades.First().TimeTyped > since.Value)
             {
                 int firstTradeId = int.Parse(trades.First().tid);
                 data = client.DownloadString(TRADE_HISTORY_URL + "?since=" + (firstTradeId-100));
@@ -166,7 +166,6 @@ namespace BtcChinaBot
             //It's been closed meanwhile. Leave it be, very next iteration will find and handle properly
             return orderId;
         }
-
 
         internal bool CancelOrder(int orderId)
         {

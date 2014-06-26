@@ -80,8 +80,7 @@ namespace BtcChinaBot
             var market = _requestor.GetMarketDepth().result.market_depth;
             var tradeHistory = _requestor.GetTradeHistory();
 
-            var now = new DateTime(1970, 1, 1).AddSeconds(market.date).AddHours(2);
-            var coef = Helpers.GetMadness(tradeHistory, now);
+            var coef = TradeHelpers.GetMadness(tradeHistory, market.ServerTime);
             _intervalMs = Helpers.SuggestInterval(coef);
 
             var spread = getSpread(market);

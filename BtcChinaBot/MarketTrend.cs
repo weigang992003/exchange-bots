@@ -74,9 +74,9 @@ namespace BtcChinaBot
             //There's lot of activity in recent time and price is falling
             const double PRICE_DIFF = 3 * 0.001;  //0.3%
 
-            var endTime = tradeHistory.Last().DateTyped;
+            var endTime = tradeHistory.Last().TimeTyped;
             var startTime = endTime.AddSeconds(-90);    //Trades of past 90 seconds
-            var pastTrades = tradeHistory.Where(trade => trade.DateTyped >= startTime).ToList();
+            var pastTrades = tradeHistory.Where(trade => trade.TimeTyped >= startTime).ToList();
             if (pastTrades.Count < 10)        //TODO: tune up
                 return false;
 
@@ -166,7 +166,7 @@ namespace BtcChinaBot
 
         private static DateTime getIntervalStart(TradeResponse trade, int intervalMinutes)
         {
-            var start = trade.DateTyped;
+            var start = trade.TimeTyped;
             var extra = start.Minute % intervalMinutes;
             return new DateTime(start.Year, start.Month, start.Day, start.Hour, start.Minute - extra, 0);
         }
@@ -191,9 +191,9 @@ namespace BtcChinaBot
                         DateTime first = DateTime.MaxValue;
                         foreach (var trade in Trades)
                         {
-                            if (trade.DateTyped < first)
+                            if (trade.TimeTyped < first)
                             {
-                                first = trade.DateTyped;
+                                first = trade.TimeTyped;
                                 _openPrice = trade.price;
                             }
                         }
@@ -213,9 +213,9 @@ namespace BtcChinaBot
                         var last = DateTime.MinValue;
                         foreach (var trade in Trades)
                         {
-                            if (trade.DateTyped > last)
+                            if (trade.TimeTyped > last)
                             {
-                                last = trade.DateTyped;
+                                last = trade.TimeTyped;
                                 _closePrice = trade.price;
                             }
                         }

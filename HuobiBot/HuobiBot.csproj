@@ -42,15 +42,21 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Business\AccountInfo.cs" />
+    <Compile Include="Business\BasicResponse.cs" />
+    <Compile Include="Business\Error.cs" />
     <Compile Include="Business\MarketDepth.cs" />
+    <Compile Include="Business\OrderInfo.cs" />
     <Compile Include="Business\TradeStatistics.cs" />
     <Compile Include="CrazyBuyerTrap.cs" />
+    <Compile Include="TradeHelper.cs" />
     <Compile Include="HuobiRequestHelper.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <Content Include="DataSamples\get_account_info.json.js" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.csproj">
@@ -59,8 +65,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="DataSamples\market_json.js" />
-    <Content Include="DataSamples\tradeStatistics_json.js" />
+    <Content Include="DataSamples\market.json.js" />
+    <Content Include="DataSamples\tradeStatistics.json.js" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

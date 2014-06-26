@@ -88,7 +88,7 @@ namespace BtcChinaBot
             var tradeHistory = _requestor.GetTradeHistory();
 
             var now = new DateTime(1970, 1, 1).AddSeconds(market.date).AddHours(2);
-            var coef = Helpers.GetMadness(tradeHistory, now);
+            var coef = TradeHelpers.GetMadness(tradeHistory, now);
             _volumeWall = Helpers.SuggestWallVolume(coef, _minWallVolume, maxWallVolume);
             _intervalMs = Helpers.SuggestInterval(coef);
             log("Volume={0} BTC; Interval={1} ms;", _volumeWall, _intervalMs);
@@ -271,14 +271,17 @@ namespace BtcChinaBot
 
         private double suggestSellPrice(MarketDepth market)
         {
-/*            //If best BUY order fits our profit greed, don't hesitate and try to use it
-            if (market.bid[0].price > _executedBuyPrice + MIN_DIFFERENCE)
-                return market.bid[0].price;     //TODO: review this rule. Maybe if we wait a bit longer, we can have bigger profit
-*/
+            const double MIN_WALL_VOLUME = 0.1;
+
+            double sumVolume = 0.0;
             foreach (var ask in market.ask)
             {
                 //Don't count self
                 if (ask.price.eq(_sellOrderPrice) && ask.amount.eq(_sellOrderAmount))
+                    continue;
+                //Skip SELL orders with tiny amount
+                sumVolume += ask.amount;
+                if (sumVolume < MIN_WALL_VOLUME)
                     continue;
 
                 if (ask.price > _executedBuyPrice + MIN_DIFFERENCE)

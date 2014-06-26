@@ -28,7 +28,7 @@ namespace HuobiBot
         //Minimum difference between SELL price and subsequent BUY price (so we have at least some profit)
         private const double MIN_DIFFERENCE = 0.8;
         //Tolerance of SELL price (factor). Usefull if possible price change is minor, to avoid frequent order updates.
-        private const double PRICE_DELTA = 0.075;
+        private const double PRICE_DELTA = 0.05;
 
         //Active SELL order ID
         private int _sellOrderId = -1;
@@ -83,7 +83,7 @@ namespace HuobiBot
         /// <summary>The core method to do one iteration of orders' check and updates</summary>
         private void check()
         {
-            var market = _requestor.GetMarketDepth();
+/*            var market = _requestor.GetMarketDepth();
 
             foreach (var ask in market.Asks)
                 log("ASK " + ask.amount + " BTC for " + ask.price + " CNY");
@@ -94,15 +94,29 @@ namespace HuobiBot
             var trades = _requestor.GetTradeStatistics();
             foreach (var trade in trades.trades)
                 log(trade.Type + ":   time=" + trade.TimeTyped + "; amount=" + trade.amount + " BTC; price=" + trade.price);
+            */
 
-/*TODO            var tradeHistory = _requestor.GetTradeHistory();
+            var tradeStatistics = _requestor.GetTradeStatistics();
 
-            var now = new DateTime(1970, 1, 1).AddSeconds(market.date).AddHours(2);
-            var coef = Helpers.GetMadness(tradeHistory, now);
+            var now = _requestor.GetServerTime();
+            var coef = TradeHelper.GetMadness(tradeStatistics, now);
             _volume = Helpers.SuggestWallVolume(coef, _minWallVolume, _maxWallVolume);
             _intervalMs = Helpers.SuggestInterval(coef);
-            log("Volume={0} BTC; Interval={1} ms; ", _volume, _intervalMs);
+            log("(Madness={0:0.000}), Wall volume={1:0.000} BTC; Interval={2} ms; ", coef, _volume, _intervalMs);
 
+
+            var orderInfo = _requestor.GetOrderInfo(24202843);
+            log(orderInfo.Type + " " + orderInfo.Amount + " BTC for " + orderInfo.Price + " CNY. Status="+orderInfo.Status);
+            orderInfo = _requestor.GetOrderInfo(24220300);
+            log(orderInfo.Type + " " + orderInfo.Amount + " BTC for " + orderInfo.Price + " CNY. Status="+orderInfo.Status);
+
+
+            double amount = orderInfo.Amount;
+            var newId = _requestor.UpdateBuyOrder(24220300, 3571.22222222, ref amount);
+            orderInfo = _requestor.GetOrderInfo(newId);
+            log(orderInfo.Type + " " + orderInfo.Amount + " BTC for " + orderInfo.Price + " CNY. Status=" + orderInfo.Status);
+
+/*TODO
             //We have active SELL order
             if (-1 != _sellOrderId)
             {

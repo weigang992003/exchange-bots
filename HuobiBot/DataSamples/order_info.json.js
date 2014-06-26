@@ -1,0 +1,12 @@
+﻿{
+    "id":24202843,
+    "type":1,
+    "order_price":"3571.00",
+    "order_amount":"0.0990",
+    "processed_amount":"0.0000",
+    "processed_price":"0.00",
+    "total":"0.00",
+    "fee":"0.00",
+    "vot":"0.00",
+    "status":0
+}
