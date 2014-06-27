@@ -27,7 +27,7 @@ namespace HuobiBot.Business
                     _asks = new List<Order>();
 
                     foreach (var ask in asks.TakeLast(ORDER_LIST_LENGTH).Reverse())
-                        _asks.Add(new Order{price = Convert.ToDouble(ask[0]), amount = Convert.ToDouble(ask[1])});
+                        _asks.Add(new Order{Price = Convert.ToDouble(ask[0]), Amount = Convert.ToDouble(ask[1])});
                 }
 
                 return _asks;
@@ -47,7 +47,7 @@ namespace HuobiBot.Business
                     _bids = new List<Order>();
 
                     foreach (var bid in bids.Take(ORDER_LIST_LENGTH))
-                        _bids.Add(new Order { price = Convert.ToDouble(bid[0]), amount = Convert.ToDouble(bid[1]) });
+                        _bids.Add(new Order { Price = Convert.ToDouble(bid[0]), Amount = Convert.ToDouble(bid[1]) });
                 }
 
                 return _bids;
@@ -58,7 +58,7 @@ namespace HuobiBot.Business
 
     internal class Order
     {
-        internal double price { get; set; }
-        internal double amount { get; set; }
+        internal double Price { get; set; }
+        internal double Amount { get; set; }
     }
 }

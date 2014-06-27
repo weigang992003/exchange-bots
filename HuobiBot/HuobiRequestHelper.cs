@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -84,6 +83,7 @@ namespace HuobiBot
             return deserializeJSON<OrderInfoResponse>(data);
         }
 
+        private int _buyRetryCounter;
         internal int PlaceBuyOrder(double price, double amount)
         {
             var paramz = new List<Tuple<string, string>>
@@ -95,17 +95,63 @@ namespace HuobiBot
 
             var error = deserializeJSON<ErrorResponse>(data);
             if (!String.IsNullOrEmpty(error.Description))
+            {
+                if (70 == error.code && ++_buyRetryCounter <= RETRY_COUNT)
+                {
+                    //Simetimes it takes so long to server to respond, that it returns "Invalid submitting time"
+                    _logger.AppendMessage("The server returned " + error.Description + " when creating a BUY order. Trying again...", true, ConsoleColor.Yellow);
+                    return PlaceBuyOrder(price, amount);
+                }
                 throw new Exception(String.Format("Error creating BUY order (price={0}; amount={1}). Message={2}", price, amount, error.Description));
+            }
+            _buyRetryCounter = 0;
 
             var debug = deserializeJSON<BasicResponse>(data);
             return debug.id;
         }
 
-        internal int UpdateBuyOrder(int orderId, double price, ref double amount)
+        internal int UpdateBuyOrder(int orderId, double price, double amount)
         {
             //Cancel the old order, recreate
             if (CancelOrder(orderId))
                 return PlaceBuyOrder(price, amount);
+            //It's been closed meanwhile. Leave it be, very next iteration will find and handle properly
+            return orderId;
+        }
+
+        internal int PlaceSellOrder(double price, ref double amount)
+        {
+            var paramz = new List<Tuple<string, string>>
+            {
+                new Tuple<string, string>("price", price.ToString("0.00")),
+                new Tuple<string, string>("amount", amount.ToString("0.0000")),
+            };
+            var data = doRequest("sell", paramz);
+
+            var error = deserializeJSON<ErrorResponse>(data);
+            if (!String.IsNullOrEmpty(error.Description))
+            {
+                if (10 == error.code)
+                {
+                    //BTC balance changed meanwhile, probably SELL order was (partially) filled
+                    _logger.AppendMessage("WARN: Insufficient balance reported when creating SELL order with amount=" + amount, true, ConsoleColor.Yellow);
+                    var accountInfo = GetAccountInfo();
+                    amount = accountInfo.AvailableBtc;
+                    _logger.AppendMessage("Available account balance is " + amount + " BTC. Using this as amount for SELL order", true, ConsoleColor.Yellow);
+                    return PlaceSellOrder(price, ref amount);
+                }
+                throw new Exception(String.Format("Error creating SELL order (price={0}; amount={1}). Message={2}", price, amount, error.Description));
+            }
+
+            var debug = deserializeJSON<BasicResponse>(data);
+            return debug.id;
+        }
+
+        internal int UpdateSellOrder(int orderId, double price, ref double amount)
+        {
+            //Cancel the old order, recreate
+            if (CancelOrder(orderId))
+                return PlaceSellOrder(price, ref amount);
             //It's been closed meanwhile. Leave it be, very next iteration will find and handle properly
             return orderId;
         }
@@ -244,7 +290,14 @@ namespace HuobiBot
             using (var ms = new MemoryStream(Encoding.Unicode.GetBytes(json)))
             {
                 var deserializer = new DataContractJsonSerializer(typeof(T));
-                return (T)deserializer.ReadObject(ms);
+                try
+                {
+                    return (T) deserializer.ReadObject(ms);
+                }
+                catch (Exception e)
+                {
+                    throw new Exception("JSON deserialization problem. The input string was:" + Environment.NewLine + json, e);
+                }
             }
         }
         #endregion

@@ -135,6 +135,10 @@ namespace BtcChinaBot
                 return false;
             candles = candles.TakeLast(MIN_CANDLES).ToList();
 
+            //Present candle is significant rise
+            if (candles[1].ClosingPrice > candles[1].OpeningPrice + 3.0*PRICE_SIGNIFICANCE_LIMIT)
+                return true;
+
             //Previous candle is simply rise and latest price was rise too //TODO: maybe something more sofisticated
             return candles[0].ClosingPrice > candles[0].OpeningPrice + PRICE_SIGNIFICANCE_LIMIT &&
                    candles[0].ClosingPrice < candles[1].ClosingPrice;

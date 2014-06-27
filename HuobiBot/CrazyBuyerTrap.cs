@@ -1,8 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Common;
+using HuobiBot.Business;
 
 
 namespace HuobiBot
@@ -24,7 +24,7 @@ namespace HuobiBot
         private readonly double _minWallVolume = 2.0;
         private readonly double _maxWallVolume = 8.0;
         //Volumen of BTC necessary to buy our offer
-        private double _volume;
+        private double _volumeWall;
         //Minimum difference between SELL price and subsequent BUY price (so we have at least some profit)
         private const double MIN_DIFFERENCE = 0.8;
         //Tolerance of SELL price (factor). Usefull if possible price change is minor, to avoid frequent order updates.
@@ -83,50 +83,26 @@ namespace HuobiBot
         /// <summary>The core method to do one iteration of orders' check and updates</summary>
         private void check()
         {
-/*            var market = _requestor.GetMarketDepth();
+            var market = _requestor.GetMarketDepth();
+            var tradeStats = _requestor.GetTradeStatistics();
+            var serverTime = _requestor.GetServerTime();
 
-            foreach (var ask in market.Asks)
-                log("ASK " + ask.amount + " BTC for " + ask.price + " CNY");
-            log("######################################");
-            foreach (var bid in market.Bids)
-                log("BID " + bid.amount + " BTC for " + bid.price + " CNY");
-
-            var trades = _requestor.GetTradeStatistics();
-            foreach (var trade in trades.trades)
-                log(trade.Type + ":   time=" + trade.TimeTyped + "; amount=" + trade.amount + " BTC; price=" + trade.price);
-            */
-
-            var tradeStatistics = _requestor.GetTradeStatistics();
-
-            var now = _requestor.GetServerTime();
-            var coef = TradeHelper.GetMadness(tradeStatistics, now);
-            _volume = Helpers.SuggestWallVolume(coef, _minWallVolume, _maxWallVolume);
+            var coef = TradeHelper.GetMadness(tradeStats, serverTime);
+            _volumeWall = Helpers.SuggestWallVolume(coef, _minWallVolume, _maxWallVolume);
             _intervalMs = Helpers.SuggestInterval(coef);
-            log("(Madness={0:0.000}), Wall volume={1:0.000} BTC; Interval={2} ms; ", coef, _volume, _intervalMs);
+            log("Madness={0}; Volume={1} BTC; Interval={2} ms;", coef, _volumeWall, _intervalMs);
 
-
-            var orderInfo = _requestor.GetOrderInfo(24202843);
-            log(orderInfo.Type + " " + orderInfo.Amount + " BTC for " + orderInfo.Price + " CNY. Status="+orderInfo.Status);
-            orderInfo = _requestor.GetOrderInfo(24220300);
-            log(orderInfo.Type + " " + orderInfo.Amount + " BTC for " + orderInfo.Price + " CNY. Status="+orderInfo.Status);
-
-
-            double amount = orderInfo.Amount;
-            var newId = _requestor.UpdateBuyOrder(24220300, 3571.22222222, ref amount);
-            orderInfo = _requestor.GetOrderInfo(newId);
-            log(orderInfo.Type + " " + orderInfo.Amount + " BTC for " + orderInfo.Price + " CNY. Status=" + orderInfo.Status);
-
-/*TODO
             //We have active SELL order
             if (-1 != _sellOrderId)
             {
-                var sellOrder = _requestor.GetOrderInfo(_sellOrderId).result.order;
-                switch (sellOrder.status)
+                var sellOrder = _requestor.GetOrderInfo(_sellOrderId);
+                switch (sellOrder.Status)
                 {
-                    case Status.OPEN:
+                    case OrderStatus.Unfilled:
+                    case OrderStatus.PartiallyFilled:
                     {
                         //Untouched
-                        if (sellOrder.amount.eq(_sellOrderAmount))
+                        if (sellOrder.Amount.eq(_sellOrderAmount))
                         {
                             log("SELL order ID={0} untouched (amount={1} BTC, price={2} CNY)", _sellOrderId, _sellOrderAmount, _sellOrderPrice);
 
@@ -144,12 +120,12 @@ namespace HuobiBot
                         }
                         else    //Partially filled
                         {
-                            _executedSellPrice = sellOrder.price;
-                            _sellOrderAmount = sellOrder.amount;
-                            log("SELL order ID={0} partially filled at price={1} CNY. Remaining amount={2} BTC;", ConsoleColor.Green, _sellOrderId, _executedSellPrice, sellOrder.amount);
+                            _executedSellPrice = sellOrder.Price;
+                            _sellOrderAmount = sellOrder.Amount;
+                            log("SELL order ID={0} partially filled at price={1} CNY. Remaining amount={2} BTC;", ConsoleColor.Green, _sellOrderId, _executedSellPrice, sellOrder.Amount);
                             var price = suggestSellPrice(market);
                             //The same price is totally unlikely, so we don't check it here
-                            var amount = sellOrder.amount;
+                            var amount = sellOrder.Amount;
                             _sellOrderId = _requestor.UpdateSellOrder(_sellOrderId, price, ref amount);
                             _sellOrderAmount = amount;
                             _sellOrderPrice = price;
@@ -157,17 +133,12 @@ namespace HuobiBot
                         }
                         break;
                     }
-                    case Status.CLOSED:
+                    case OrderStatus.Finished:
                     {
-                        _executedSellPrice = sellOrder.price;
+                        _executedSellPrice = sellOrder.Price;
                         _sellOrderId = -1;
                         log("SELL order ID={0} (amount={1} BTC) was closed at price={2} CNY", ConsoleColor.Green, sellOrder.id, _sellOrderAmount, _executedSellPrice);
                         _sellOrderAmount = 0;
-                        break;
-                    }
-                    case Status.PENDING:
-                    {
-                        log("SELL order ID={0} is in status Pending", _sellOrderId);
                         break;
                     }
                     default:
@@ -191,22 +162,23 @@ namespace HuobiBot
                 //BUY order already existed
                 if (-1 != _buyOrderId)
                 {
-                    var buyOrder = _requestor.GetOrderInfo(_buyOrderId).result.order;
+                    var buyOrder = _requestor.GetOrderInfo(_buyOrderId);
 
-                    switch (buyOrder.status)
+                    switch (buyOrder.Status)
                     {
-                        case Status.OPEN:
+                        case OrderStatus.Unfilled:
+                        case OrderStatus.PartiallyFilled:
                         {
-                            log("BUY order ID={0} open (amount={1} BTC, price={2} CNY)", _buyOrderId, buyOrder.amount, _buyOrderPrice);
+                            log("BUY order ID={0} open (amount={1} BTC, price={2} CNY)", _buyOrderId, buyOrder.Amount, _buyOrderPrice);
 
                             double price = suggestBuyPrice(market);
 
                             //Partially filled
-                            if (!buyOrder.amount.eq(_buyOrderAmount))
+                            if (!buyOrder.Amount.eq(_buyOrderAmount))
                             {
-                                log("BUY order ID={0} partially filled at price={1} CNY. Remaining amount={2} BTC;", ConsoleColor.Green, _buyOrderId, buyOrder.price, buyOrder.amount);
-                                _buyOrderId = _requestor.UpdateBuyOrder(_buyOrderId, price, buyOrder.amount);
-                                _buyOrderAmount = buyOrder.amount;
+                                log("BUY order ID={0} partially filled at price={1} CNY. Remaining amount={2} BTC;", ConsoleColor.Green, _buyOrderId, buyOrder.Price, buyOrder.Amount);
+                                _buyOrderId = _requestor.UpdateBuyOrder(_buyOrderId, price, buyOrder.Amount);
+                                _buyOrderAmount = buyOrder.Amount;
                                 _buyOrderPrice = price;
                                 log("Updated BUY order ID={0}; amount={1} BTC; price={2} CNY", _buyOrderId, _buyOrderAmount, price);
                             }
@@ -229,16 +201,11 @@ namespace HuobiBot
                             }
                             break;
                         }
-                        case Status.CLOSED:
+                        case OrderStatus.Finished:
                         {
-                            log("BUY order ID={0} (amount={1} BTC) was closed at price={2} CNY", ConsoleColor.Green, _buyOrderId, _buyOrderAmount, buyOrder.price);
+                            log("BUY order ID={0} (amount={1} BTC) was closed at price={2} CNY", ConsoleColor.Green, _buyOrderId, _buyOrderAmount, buyOrder.Price);
                             _buyOrderAmount = 0;
                             _buyOrderId = -1;
-                            break;
-                        }
-                        case Status.PENDING:
-                        {
-                            log("BUY order ID={0} is in status Pending", _buyOrderId);
                             break;
                         }
                         default:
@@ -254,25 +221,25 @@ namespace HuobiBot
                     _buyOrderId = _requestor.PlaceBuyOrder(_buyOrderPrice, _buyOrderAmount);
                     log("Successfully created BUY order with ID={0}; amount={1} BTC; price={2} CNY", ConsoleColor.Cyan, _buyOrderId, _buyOrderAmount, _buyOrderPrice);
                 }
-            }*/
+            }
 
             log(new string('=', 80));
         }
-/*TODO?
-        private double suggestSellPrice(MarketDepth market)
+
+        private double suggestSellPrice(MarketDepthResponse market)
         {
             double sum = 0;
-            var minDiff = _volume * PRICE_DELTA;
-            var highestBid = market.bid.First().price;
+            var minDiff = _volumeWall * PRICE_DELTA;
+            var highestBid = market.Bids.First().Price;
 
-            foreach (var ask in market.ask)
+            foreach (var ask in market.Asks)
             {
-                if (sum + _operativeAmount > _volume && ask.price-MIN_DIFFERENCE > highestBid)
+                if (sum + _operativeAmount > _volumeWall && ask.Price-MIN_DIFFERENCE > highestBid)
                 {
-                    double sellPrice = ask.price - 0.01;
+                    double sellPrice = ask.Price - 0.01;
 
                     //The difference is too small and we'd be not the first SELL order. Leave previous price to avoid server call
-                    if (-1 != _sellOrderId && sellPrice > market.ask[0].price && Math.Abs(sellPrice - _sellOrderPrice) < minDiff)
+                    if (-1 != _sellOrderId && sellPrice > market.Asks[0].Price && Math.Abs(sellPrice - _sellOrderPrice) < minDiff)
                     {
                         log("DEBUG: SELL price {0} too similar, using previous", sellPrice);
                         return _sellOrderPrice;
@@ -280,35 +247,35 @@ namespace HuobiBot
 
                     return sellPrice;
                 }
-                sum += ask.amount;
+                sum += ask.Amount;
 
                 //Don't consider volume of own order
-                if (ask.price.eq(_sellOrderPrice))
+                if (ask.Price.eq(_sellOrderPrice))
                     sum -= _sellOrderAmount;
             }
 
             //Market too dry, use SELL order before last, so we see it in chart
-            var price = market.ask.Last().price - 0.01;
+            var price = market.Asks.Last().Price - 0.01;
             if (-1 != _sellOrderId && Math.Abs(price - _sellOrderPrice) < minDiff)
                 return _sellOrderPrice;
             return price;
         }
 
-        private double suggestBuyPrice(MarketDepth market)
+        private double suggestBuyPrice(MarketDepthResponse market)
         {
-            foreach (var bid in market.bid)
+            foreach (var bid in market.Bids)
             {
-                if (bid.price < _executedSellPrice - MIN_DIFFERENCE)
+                if (bid.Price < _executedSellPrice - MIN_DIFFERENCE)
                 {
-                    return bid.price.eq(_buyOrderPrice)
+                    return bid.Price.eq(_buyOrderPrice)
                         ? _buyOrderPrice
-                        : bid.price + 0.01;
+                        : bid.Price + 0.01;
                 }
             }
 
             //All BUY orders are too high (probably some wild race). Suggest BUY order with minimum profit and hope
             return _executedSellPrice - MIN_DIFFERENCE;
-        }*/
+        }
 
         private void log(string message, ConsoleColor color, params object[] args)
         {

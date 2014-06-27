@@ -20,12 +20,7 @@ namespace HuobiBot.Business
             set {  Price = double.Parse(value); }
         }
 
-        [DataMember]
-        internal string order_amount
-        {
-            get { return Amount.ToString(); }
-            set { Amount = double.Parse(value); }
-        }
+        [DataMember] internal string order_amount { get; set; }
 
         [DataMember] internal string processed_amount
         {
@@ -46,7 +41,14 @@ namespace HuobiBot.Business
 
         internal OrderType Type { get; private set; }
         internal double Price { get; private set; }
-        internal double Amount { get; private set; }
+
+        /// <summary>
+        /// (Remaining) amount of the order, that is original amount - processed amount
+        /// </summary>
+        internal double Amount
+        {
+            get { return double.Parse(order_amount) - double.Parse(processed_amount); }
+        }
         internal double ProcessedAmount { get; private set; }
         internal OrderStatus Status { get; private set; }
     }

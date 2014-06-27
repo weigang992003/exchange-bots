@@ -49,6 +49,7 @@
     <Compile Include="Business\OrderInfo.cs" />
     <Compile Include="Business\TradeStatistics.cs" />
     <Compile Include="CrazyBuyerTrap.cs" />
+    <Compile Include="CrazySellerTrap.cs" />
     <Compile Include="TradeHelper.cs" />
     <Compile Include="HuobiRequestHelper.cs" />
     <Compile Include="Program.cs" />
@@ -66,6 +67,8 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="DataSamples\market.json.js" />
+    <Content Include="DataSamples\error.json.js" />
+    <Content Include="DataSamples\order_info.json.js" />
     <Content Include="DataSamples\tradeStatistics.json.js" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

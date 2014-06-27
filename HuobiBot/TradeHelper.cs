@@ -50,7 +50,7 @@ namespace HuobiBot
             else if (tradesTimeRange < MAX_SPEED)
                 intenseCoef = 1.0f;
             else
-                intenseCoef = (float) ((tradesTimeRange - MAX_SPEED).TotalSeconds / (MIN_SPEED - MAX_SPEED).TotalSeconds);
+                intenseCoef = 1.0f - (float) ((tradesTimeRange - MAX_SPEED).TotalSeconds / (MIN_SPEED - MAX_SPEED).TotalSeconds);
 
             const double MIN_AVG_VOLUME = 0.8;
             const double MAX_AVG_VOLUME = 20.0;
