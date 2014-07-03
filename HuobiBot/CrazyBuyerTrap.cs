@@ -53,7 +53,7 @@ namespace HuobiBot
             _operativeAmount = double.Parse(Configuration.GetValue("operative_amount"));
             _minWallVolume = double.Parse(Configuration.GetValue("min_volume"));
             _maxWallVolume = double.Parse(Configuration.GetValue("max_volume"));
-            _logger.AppendMessage(String.Format("Crazy buyer trap trader initialized with operative={0}; MinWall={1}; MaxWal={2}", _operativeAmount, _minWallVolume, _maxWallVolume));
+            _logger.AppendMessage(String.Format("Crazy buyer trap trader initialized with Operative={0}; MinWall={1}; MaxWall={2}", _operativeAmount, _minWallVolume, _maxWallVolume));
             _requestor = new HuobiRequestHelper(logger);
         }
 
@@ -89,7 +89,7 @@ namespace HuobiBot
 
             var coef = TradeHelper.GetMadness(tradeStats, serverTime);
             _volumeWall = Helpers.SuggestWallVolume(coef, _minWallVolume, _maxWallVolume);
-            _intervalMs = Helpers.SuggestInterval(coef);
+            _intervalMs = Helpers.SuggestInterval(coef, 1000, 10000);
             log("Madness={0}; Volume={1} BTC; Interval={2} ms;", coef, _volumeWall, _intervalMs);
 
             //We have active SELL order
@@ -169,6 +169,7 @@ namespace HuobiBot
                         case OrderStatus.Unfilled:
                         case OrderStatus.PartiallyFilled:
                         {
+//TODO                            var orderAmount = buyOrder.Amount > -1.0 ? buyOrder.Amount : _buyOrderAmount;
                             log("BUY order ID={0} open (amount={1} BTC, price={2} CNY)", _buyOrderId, buyOrder.Amount, _buyOrderPrice);
 
                             double price = suggestBuyPrice(market);
@@ -273,6 +274,11 @@ namespace HuobiBot
                 }
             }
 
+            //Dirty fix. Sometimes the Huobi server gives so chaotic responses, that closed SELL order is recognised by insufficient
+            //           balance and we don't have the SELL price
+            if (_executedSellPrice < 0.0)
+                return market.Bids.First().Price + 0.01;
+
             //All BUY orders are too high (probably some wild race). Suggest BUY order with minimum profit and hope
             return _executedSellPrice - MIN_DIFFERENCE;
         }
@@ -280,13 +286,37 @@ namespace HuobiBot
         private void log(string message, ConsoleColor color, params object[] args)
         {
             if (_verbose) //TODO: select verbose and non-verbose messages
-                _logger.AppendMessage(String.Format(message, args), true, color);
+            {
+                try
+                {
+                    _logger.AppendMessage(String.Format(message, args), true, color);
+                }
+                catch (FormatException)
+                {
+                    var argz = null == args || 0 == args.Length
+                        ? "NULL"
+                        : String.Join(",", args);
+                    _logger.AppendMessage("Couldn't log message '" + message + "',  args=" + argz, true, ConsoleColor.Red);
+                }
+            }
         }
 
         private void log(string message, params object[] args)
         {
             if (_verbose) //TODO: select verbose and non-verbose messages
-                _logger.AppendMessage(String.Format(message, args));
+            {
+                try
+                {
+                    _logger.AppendMessage(String.Format(message, args));
+                }
+                catch (FormatException)
+                {
+                    var argz = null == args || 0 == args.Length
+                        ? "NULL"
+                        : String.Join(",", args);
+                    _logger.AppendMessage("Couldn't log message '" + message + "',  args=" + argz, true, ConsoleColor.Red);
+                }
+            }
         }
     }
 }

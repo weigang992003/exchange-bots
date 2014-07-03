@@ -1,20 +1,16 @@
 ﻿
-
 namespace Common
 {
     public static class Helpers
     {
-        public static int SuggestInterval(float madnessCoef)
+        public static int SuggestInterval(float madnessCoef, int minInterval = 2000, int maxInterval = 11000)
         {
-            const int MIN_INTERVAL = 2000;
-            const int MAX_INTERVAL = 11000;
-
             if (madnessCoef <= 0.0f)
-                return MAX_INTERVAL;
+                return maxInterval;
             if (madnessCoef >= 1.0f)
-                return MIN_INTERVAL;
+                return minInterval;
 
-            return (int)(MIN_INTERVAL + ((1.0f - madnessCoef) * (MAX_INTERVAL - MIN_INTERVAL)));
+            return (int)(minInterval + ((1.0f - madnessCoef) * (maxInterval - minInterval)));
         }
 
         public static double SuggestWallVolume(float madnessCoef, double minVolume, double maxVolue)

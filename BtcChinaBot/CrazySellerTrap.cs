@@ -53,7 +53,7 @@ namespace BtcChinaBot
             _operativeAmount = double.Parse(Configuration.GetValue("operative_amount"));
             _minWallVolume = double.Parse(Configuration.GetValue("min_volume"));
             maxWallVolume = double.Parse(Configuration.GetValue("max_volume"));
-            _logger.AppendMessage(String.Format("Crazy seller trap trader initialized with operative={0}; MinWall={1}; MaxWal={2}", _operativeAmount, _minWallVolume, maxWallVolume));
+            _logger.AppendMessage(String.Format("Crazy seller trap trader initialized with operative={0}; MinWall={1}; MaxWall={2}", _operativeAmount, _minWallVolume, maxWallVolume));
             _requestor = new BtcChinaRequestHelper(logger);
         }
 

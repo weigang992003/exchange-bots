@@ -15,6 +15,7 @@ namespace HuobiBot
 {
     internal class HuobiRequestHelper
     {
+        private const string TICKER_URL = "http://market.huobi.com/staticmarket/ticker_btc_json.js";
         private const string MARKET_URL = "http://market.huobi.com/staticmarket/depth_btc_json.js";
         private const string TRADE_STATS_URL = "http://market.huobi.com/staticmarket/detail_btc_json.js";
         private const string TRADING_API_URL = "https://api.huobi.com/api.php";
@@ -64,11 +65,14 @@ namespace HuobiBot
 
         internal DateTime GetServerTime()
         {
-            var data = doRequest("get_server_time");
-            var error = deserializeJSON<ErrorResponse>(data);
-            var serverTime = new DateTime(1970, 1, 1).AddSeconds(error.time).AddHours(-2);
+            var client = new WebClient();
 
-            return serverTime;
+            if (null != _webProxy)
+                client.Proxy = _webProxy;
+
+            var data = client.DownloadString(TICKER_URL);
+            var ticker = deserializeJSON<TickerResponse>(data);
+            return ticker.ServerTime;
         }
 
         internal AccountInfoResponse GetAccountInfo()
@@ -80,7 +84,12 @@ namespace HuobiBot
         internal OrderInfoResponse GetOrderInfo(int orderId)
         {
             var data = doRequest("order_info", new List<Tuple<string, string>>{new Tuple<string, string>("id", orderId.ToString())});
-            return deserializeJSON<OrderInfoResponse>(data);
+            var debug = deserializeJSON<OrderInfoResponse>(data);
+
+            if (null == debug.order_amount || null == debug.processed_amount)
+                _logger.AppendMessage(String.Format("OrderInfo JSON:\n{0}\n", data), true, ConsoleColor.Red);
+
+            return debug;
         }
 
         private int _buyRetryCounter;
@@ -213,7 +222,7 @@ namespace HuobiBot
             var postData = buildQueryString(parameters);
 
             WebException error = null;
-            for (int i = 0; i < RETRY_COUNT; i++)
+            for (int i = 1; i <= RETRY_COUNT; i++)
             {
                 try
                 {
@@ -221,7 +230,7 @@ namespace HuobiBot
                 }
                 catch (WebException we)
                 {
-                    var text = String.Format("(ATTEMPT {0}/3) Web request failed with exception={1}; status={2}", i, we.Message, we.Status);
+                    var text = String.Format("(ATTEMPT {0}/{1}) Web request failed with exception={2}; status={3}", i, RETRY_COUNT, we.Message, we.Status);
                     _logger.AppendMessage(text, true, ConsoleColor.Yellow);
                     error = we;
                     Thread.Sleep(RETRY_DELAY);
@@ -234,7 +243,8 @@ namespace HuobiBot
         private string sendPostRequest(string url, string postData)
         {
             var webRequest = WebRequest.CreateHttp(url);
-            webRequest.KeepAlive = false;       //TODO: debug
+            webRequest.KeepAlive = false;
+            webRequest.Timeout = 150000;        //150 seconds
             byte[] bytes = Encoding.ASCII.GetBytes(postData);
 
             if (null != _webProxy)

@@ -47,6 +47,7 @@
     <Compile Include="Business\Error.cs" />
     <Compile Include="Business\MarketDepth.cs" />
     <Compile Include="Business\OrderInfo.cs" />
+    <Compile Include="Business\Ticker.cs" />
     <Compile Include="Business\TradeStatistics.cs" />
     <Compile Include="CrazyBuyerTrap.cs" />
     <Compile Include="CrazySellerTrap.cs" />
