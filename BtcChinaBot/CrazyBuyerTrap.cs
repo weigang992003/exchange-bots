@@ -24,7 +24,7 @@ namespace BtcChinaBot
         private readonly double _minWallVolume;
         private readonly double _maxWallVolume;
         //Volumen of BTC necessary to buy our offer
-        private double _volume;
+        private double _wallVolume;
         //Minimum difference between SELL price and subsequent BUY price (so we have at least some profit)
         private const double MIN_DIFFERENCE = 0.8;
         //Tolerance of SELL price (factor). Usefull if possible price change is minor, to avoid frequent order updates.
@@ -87,9 +87,9 @@ namespace BtcChinaBot
             var tradeHistory = _requestor.GetTradeHistory();
 
             var coef = TradeHelpers.GetMadness(tradeHistory, market.ServerTime);
-            _volume = Helpers.SuggestWallVolume(coef, _minWallVolume, _maxWallVolume);
+            _wallVolume = Helpers.SuggestWallVolume(coef, _minWallVolume, _maxWallVolume);
             _intervalMs = Helpers.SuggestInterval(coef);
-            log("Volume={0} BTC; Interval={1} ms; ", _volume, _intervalMs);
+            log("Volume={0} BTC; Interval={1} ms; ", _wallVolume, _intervalMs);
 
             //We have active SELL order
             if (-1 != _sellOrderId)
@@ -236,12 +236,12 @@ namespace BtcChinaBot
         private double suggestSellPrice(MarketDepth market)
         {
             double sum = 0;
-            var minDiff = _volume * PRICE_DELTA;
+            var minDiff = _wallVolume * PRICE_DELTA;
             var highestBid = market.bid.First().price;
 
             foreach (var ask in market.ask)
             {
-                if (sum + _operativeAmount > _volume && ask.price-MIN_DIFFERENCE > highestBid)
+                if (sum + _operativeAmount > _wallVolume && ask.price-MIN_DIFFERENCE > highestBid)
                 {
                     double sellPrice = ask.price - 0.01;
 

@@ -4,7 +4,7 @@
 namespace BtcChinaBot.Business
 {
     [DataContract]
-    internal class SellOrderResponse
+    internal class NewOrderResponse
     {
         [DataMember] internal int result { get; set; }
         [DataMember] internal string id { get; set; }

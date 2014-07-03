@@ -44,6 +44,37 @@ namespace KrakenBot
 
             var now = _requestor.GetServerTime();
             log("Server time is " + now);
+
+            var trades = _requestor.GetTradeHistory();
+            Console.WriteLine("Last 15 trades:");
+            foreach (var trade in trades.result.Trades.TakeLast(15))
+                Console.WriteLine("({0:hh:mm:ss}) {1} {2:0.000} BTC for {3:0.000} EUR", trade.Time, trade.Type, trade.Amount, trade.Price);
+
+            var market = _requestor.GetMarketDepth().result.XXBTZEUR;
+            Console.WriteLine("Market: ");
+            foreach (var bid in market.Bids)
+                Console.WriteLine("BID {0} BTC for {1} EUR", bid.Amount, bid.Price);
+            Console.WriteLine();
+            foreach (var ask in market.Asks)
+                Console.WriteLine("ASK {0} BTC for {1} EUR", ask.Amount, ask.Price);
+
+            var orderInfo = _requestor.GetOrderInfo("OQW26D-ZL74M-5JE7ML").result.orderData;
+            log(orderInfo.descr.type + " " + orderInfo.vol + " BTC for " + orderInfo.descr.price + " EUR. Remaining amount=" + orderInfo.Amount + ". Status=" + orderInfo.Status);
+            orderInfo = _requestor.GetOrderInfo("OYIGCB-SPMFC-ULV43Q").result.orderData;
+            log(orderInfo.descr.type + " " + orderInfo.vol + " BTC for " + orderInfo.descr.price + " EUR. Remaining amount=" + orderInfo.Amount + ". Status=" + orderInfo.Status);
+
+            var cancel = _requestor.CancelOrder("OQW26D-ZL74M-5JE7ML");     //Closed
+            log("Cancelled=" + cancel);
+            cancel = _requestor.CancelOrder("OWQBUH-H5T2N-RC3BCP");         //Cancelled
+            log("Cancelled=" + cancel);
+
+            var debug = _requestor.PlaceBuyOrder(465.88, 0.0222);
+            log("New order ID=" + debug);
+            orderInfo = _requestor.GetOrderInfo(debug).result.orderData;
+            log(orderInfo.descr.type + " " + orderInfo.vol + " BTC for " + orderInfo.descr.price + " EUR. Remaining amount=" + orderInfo.Amount + ". Status=" + orderInfo.Status);
+
+            cancel = _requestor.CancelOrder(debug);
+            log("Cancelled=" + cancel);
         }
 
         public void Kill()

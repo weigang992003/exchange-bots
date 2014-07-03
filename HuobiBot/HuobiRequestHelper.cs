@@ -81,18 +81,30 @@ namespace HuobiBot
             return Helpers.DeserializeJSON<AccountInfoResponse>(data);
         }
 
+        private int _buyRetryCounter;
+
         internal OrderInfoResponse GetOrderInfo(int orderId)
         {
             var data = doRequest("order_info", new List<Tuple<string, string>>{new Tuple<string, string>("id", orderId.ToString())});
             var debug = Helpers.DeserializeJSON<OrderInfoResponse>(data);
 
-            if (null == debug.order_amount || null == debug.processed_amount)
-                _logger.AppendMessage(String.Format("OrderInfo JSON:\n{0}\n", data), true, ConsoleColor.Red);
+            var error = Helpers.DeserializeJSON<ErrorResponse>(data);
+            if (!String.IsNullOrEmpty(error.Description))
+            {
+                //TODO: this code smells because repeats. And probably should repeat in all private calls. Refactor it.
+                if (70 == error.code && ++_buyRetryCounter <= RETRY_COUNT)
+                {
+                    //Simetimes it takes so long to server to respond, that it returns "Invalid submitting time"
+                    _logger.AppendMessage("The server returned " + error.Description + " when creating a BUY order. Trying again...", true, ConsoleColor.Yellow);
+                    return GetOrderInfo(orderId);
+                }
+                throw new Exception(String.Format("Error getting order ID={0} info. Message={1}", orderId, error.Description));
+            }
+            _buyRetryCounter = 0;
 
             return debug;
         }
 
-        private int _buyRetryCounter;
         internal int PlaceBuyOrder(double price, double amount)
         {
             var paramz = new List<Tuple<string, string>>
@@ -140,6 +152,12 @@ namespace HuobiBot
             var error = Helpers.DeserializeJSON<ErrorResponse>(data);
             if (!String.IsNullOrEmpty(error.Description))
             {
+                if (70 == error.code && ++_buyRetryCounter <= RETRY_COUNT)
+                {
+                    //TODO: refactor repeating code
+                    _logger.AppendMessage("The server returned " + error.Description + " when creating a SELL order. Trying again...", true, ConsoleColor.Yellow);
+                    return PlaceSellOrder(price, ref amount);
+                }
                 if (10 == error.code)
                 {
                     //BTC balance changed meanwhile, probably SELL order was (partially) filled
@@ -221,7 +239,7 @@ namespace HuobiBot
 
             var postData = buildQueryString(parameters);
 
-            WebException error = null;
+            WebException exc = null;
             for (int i = 1; i <= RETRY_COUNT; i++)
             {
                 try
@@ -232,12 +250,12 @@ namespace HuobiBot
                 {
                     var text = String.Format("(ATTEMPT {0}/{1}) Web request failed with exception={2}; status={3}", i, RETRY_COUNT, we.Message, we.Status);
                     _logger.AppendMessage(text, true, ConsoleColor.Yellow);
-                    error = we;
+                    exc = we;
                     Thread.Sleep(RETRY_DELAY);
                 }
             }
 
-            throw new Exception(String.Format("Web request failed {0} times in a row with error '{1}'. Giving up.", RETRY_COUNT, error.Message));
+            throw new Exception(String.Format("Web request failed {0} times in a row with error '{1}'. Giving up.", RETRY_COUNT, exc.Message));
         }
 
         private string sendPostRequest(string url, string postData)

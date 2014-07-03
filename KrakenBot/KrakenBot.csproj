@@ -42,8 +42,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Business\AddOrder.cs" />
     <Compile Include="Business\Balance.cs" />
+    <Compile Include="Business\Error.cs" />
+    <Compile Include="Business\MarketDepth.cs" />
+    <Compile Include="Business\OrderInfo.cs" />
     <Compile Include="Business\TimeResult.cs" />
+    <Compile Include="Business\TradeHistory.cs" />
     <Compile Include="CrazyBuyerTrap.cs" />
     <Compile Include="KrakenRequestHelper.cs" />
     <Compile Include="Program.cs" />
@@ -57,7 +62,11 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <Content Include="DataSamples\addOrder.json.js" />
     <Content Include="DataSamples\balance.json.js" />
+    <Content Include="DataSamples\market.json.js" />
+    <Content Include="DataSamples\queryOrders.json.js" />
+    <Content Include="DataSamples\trades.json.js" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

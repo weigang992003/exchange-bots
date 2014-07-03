@@ -125,7 +125,7 @@ namespace BtcChinaBot
                 throw new Exception(String.Format("Error creating SELL order (paramString={0}). Message={1}", paramString, error.error.message));
             }
 
-            return Helpers.DeserializeJSON<SellOrderResponse>(data).result;
+            return Helpers.DeserializeJSON<NewOrderResponse>(data).result;
         }
 
         /// <summary>Update SELL order by re-creating it. Returns new order ID.</summary>
@@ -154,7 +154,7 @@ namespace BtcChinaBot
             if (null != error.error && !String.IsNullOrEmpty(error.error.message))
                 throw new Exception(String.Format("Error creating BUY order (paramString={0}). Message={1}", paramString, error.error.message));
 
-            return Helpers.DeserializeJSON<BuyOrderResponse>(data).result;
+            return Helpers.DeserializeJSON<NewOrderResponse>(data).result;
         }
 
         /// <summary>Update BUY order by re-creating it. Returns new order ID.</summary>
@@ -181,7 +181,7 @@ namespace BtcChinaBot
                 if ("Order already completed" == error1.error.message)
                 {
                     _logger.AppendMessage("Can't cancel order ID=" + orderId + " because was closed", true, ConsoleColor.Yellow);
-                    return false;     
+                    return false;
                 }
                 if ("Order already cancelled" == error1.error.message)
                 {

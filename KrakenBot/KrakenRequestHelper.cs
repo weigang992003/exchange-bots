@@ -50,9 +50,77 @@ namespace KrakenBot
             return Helpers.DeserializeJSON<TimeResponse>(data).result.TimeTyped;
         }
 
-        internal string /*TODO*/ GetTradeHistory()
+        internal MarketDepthResponse GetMarketDepth(byte maxItems = 15)
         {
-            throw new NotImplementedException("Soon...");
+            var client = new WebClient();
+
+            if (null != _webProxy)
+                client.Proxy = _webProxy;
+
+            var data = client.DownloadString("https://api.kraken.com/0/public/Depth?pair=XXBTZEUR&count=" + maxItems);
+            var market = Helpers.DeserializeJSON<MarketDepthResponse>(data);
+
+            return market;
+        }
+
+        internal OrderInfoResponse GetOrderInfo(string orderId)
+        {
+            var data = sendPostRequest("QueryOrders", String.Format("&txid={0}&trades=false", orderId));
+
+            //NOTE: there's variable with dynamic name of order ID. It's replaced with constant string to avoid tricky JSON parsing
+            data = data.Replace(orderId, "orderData");
+
+            var order = Helpers.DeserializeJSON<OrderInfoResponse>(data);
+            return order;
+        }
+
+        internal string PlaceBuyOrder(double? price, double amount)
+        {
+            string postData = String.Format("&pair=XXBTZEUR&type=buy&ordertype={0}&volume={1}", null == price ? "market" : "limit", amount);
+            if (null != price)
+                postData += "&price=" + price;
+
+            var data = sendPostRequest("AddOrder", postData);
+
+            var error = Helpers.DeserializeJSON<ErrorResponse>(data);
+            if (null != error.error && error.error.Any())
+                throw new Exception(String.Format("Error creating BUY order (postData={0}). Messages={1}", postData, String.Join("; ", error.error)));
+
+            var response = Helpers.DeserializeJSON<AddOrderResponse>(data);
+            return response.result.txid.First();
+        }
+
+        internal TradeHistoryResponse GetTradeHistory()
+        {
+            var client = new WebClient();
+
+            if (null != _webProxy)
+                client.Proxy = _webProxy;
+
+            var data = client.DownloadString("https://api.kraken.com/0/public/Trades?pair=XXBTZEUR");
+            var trades = Helpers.DeserializeJSON<TradeHistoryResponse>(data);
+
+            return trades;
+        }
+
+        internal bool CancelOrder(string orderId)
+        {
+            var data = sendPostRequest("CancelOrder", "&txid=" + orderId);
+
+            var error = Helpers.DeserializeJSON<ErrorResponse>(data);
+            if (null != error.error && error.error.Any())
+            {
+                if (error.error.Contains("EOrder:Unknown order"))
+                {
+                    _logger.AppendMessage("Order ID=" + orderId + " reported unknown during cancelling. Probably closed/cancelled", true, ConsoleColor.Yellow);
+                    return false;
+                }
+            }
+
+            var cancel = Helpers.DeserializeJSON<CancelOrderResponse>(data).result;
+            if (cancel.count != 1)
+                _logger.AppendMessage(String.Format("Unexpected response for CancelOrder. Count={0}", cancel.count));
+            return true;
         }
 
 
@@ -60,7 +128,6 @@ namespace KrakenBot
         {
             // generate a 64 bit nonce using a timestamp at tick resolution
             Int64 nonce = DateTime.Now.Ticks;
-            //TODO: I'm affraid I'll need two-factor password too :-(
             postData = "nonce=" + nonce + postData;
 
             string path = "/0/private/" + method;
