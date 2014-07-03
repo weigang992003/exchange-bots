@@ -56,7 +56,7 @@ namespace BtcChinaBot
         internal AccountInfoResponse GetAccountInfo()
         {
             var data = doRequest("getAccountInfo");
-            return deserializeJSON<AccountInfoResponse>(data);
+            return Helpers.DeserializeJSON<AccountInfoResponse>(data);
         }
 
         /// <summary>
@@ -71,13 +71,13 @@ namespace BtcChinaBot
                 client.Proxy = _webProxy;
 
             var data = client.DownloadString(TRADE_HISTORY_URL);
-            var trades = deserializeJSON<List<TradeResponse>>(data);
+            var trades = Helpers.DeserializeJSON<List<TradeResponse>>(data);
 
             while (null != since && trades.First().TimeTyped > since.Value)
             {
                 int firstTradeId = int.Parse(trades.First().tid);
                 data = client.DownloadString(TRADE_HISTORY_URL + "?since=" + (firstTradeId-100));
-                var trades2 = deserializeJSON<List<TradeResponse>>(data);
+                var trades2 = Helpers.DeserializeJSON<List<TradeResponse>>(data);
                 //Remove overlapping record
                 trades2.RemoveAt(0);
                 trades.InsertRange(0, trades2);
@@ -89,13 +89,13 @@ namespace BtcChinaBot
         internal MarketDepthResponse GetMarketDepth()
         {
             var data = doRequest("getMarketDepth2"/*TODO, "10,\"BTCCNY\""*/);     //Default is 10 orders, BTC/CNY market
-            return deserializeJSON<MarketDepthResponse>(data);
+            return Helpers.DeserializeJSON<MarketDepthResponse>(data);
         }
 
         internal OrderInfoResponse GetOrderInfo(int orderId)
         {
             var data = doRequest("getOrder", orderId.ToString());
-            return deserializeJSON<OrderInfoResponse>(data);
+            return Helpers.DeserializeJSON<OrderInfoResponse>(data);
         }
 
         /// <summary>Create a SELL order. Returns order ID.</summary>
@@ -108,7 +108,7 @@ namespace BtcChinaBot
                 : String.Format("{0:0.##},{1:0.####}", price, amount);
             var data = doRequest("sellOrder2", paramString);
 
-            var error = deserializeJSON<ErrorResponse>(data);
+            var error = Helpers.DeserializeJSON<ErrorResponse>(data);
             if (null != error.error && !String.IsNullOrEmpty(error.error.message))
             {
                 if ("Insufficientbalance" == error.error.message)
@@ -125,7 +125,7 @@ namespace BtcChinaBot
                 throw new Exception(String.Format("Error creating SELL order (paramString={0}). Message={1}", paramString, error.error.message));
             }
 
-            return deserializeJSON<SellOrderResponse>(data).result;
+            return Helpers.DeserializeJSON<SellOrderResponse>(data).result;
         }
 
         /// <summary>Update SELL order by re-creating it. Returns new order ID.</summary>
@@ -150,11 +150,11 @@ namespace BtcChinaBot
                 paramString = String.Format("{0:0.##},{1:0.####}", price, amount);
             var data = doRequest("buyOrder2", paramString);
 
-            var error = deserializeJSON<ErrorResponse>(data);
+            var error = Helpers.DeserializeJSON<ErrorResponse>(data);
             if (null != error.error && !String.IsNullOrEmpty(error.error.message))
                 throw new Exception(String.Format("Error creating BUY order (paramString={0}). Message={1}", paramString, error.error.message));
 
-            return deserializeJSON<BuyOrderResponse>(data).result;
+            return Helpers.DeserializeJSON<BuyOrderResponse>(data).result;
         }
 
         /// <summary>Update BUY order by re-creating it. Returns new order ID.</summary>
@@ -174,7 +174,7 @@ namespace BtcChinaBot
             for (byte i = 0; i < RETRY_COUNT; i++)
             {
                 data = doRequest("cancelOrder", orderId.ToString());
-                var error1 = deserializeJSON<ErrorResponse>(data);
+                var error1 = Helpers.DeserializeJSON<ErrorResponse>(data);
                 if (null == error1 || null == error1.error || String.IsNullOrEmpty(error1.error.message))
                     break;      //Success
 
@@ -192,11 +192,11 @@ namespace BtcChinaBot
                 _logger.AppendMessage(String.Format("Attempt: {0}:: cancelOrder ID={1} failed with error={2}", i, orderId, error1.error.message), true, ConsoleColor.Yellow);
             }
 
-            var error2 = deserializeJSON<ErrorResponse>(data);
+            var error2 = Helpers.DeserializeJSON<ErrorResponse>(data);
             if (null != error2 && null != error2.error && !String.IsNullOrEmpty(error2.error.message))
                 throw new Exception(String.Format("Error canceling order ID={0}. Message={1}", orderId, error2.error.message));
 
-            bool success = deserializeJSON<CancelOrderResponse>(data).result;
+            bool success = Helpers.DeserializeJSON<CancelOrderResponse>(data).result;
             if (!success)
                 throw new Exception(String.Format("Error canceling order ID={0}. Response status is FALSE.", orderId));
 
@@ -296,15 +296,6 @@ namespace BtcChinaBot
                 hashBuilder.Append(data.ToString("x2"));
 
             return hashBuilder.ToString();
-        }
-
-        private static T deserializeJSON<T>(string json)
-        {
-            using (var ms = new MemoryStream(Encoding.Unicode.GetBytes(json)))
-            {
-                var deserializer = new DataContractJsonSerializer(typeof(T));
-                return (T)deserializer.ReadObject(ms);
-            }
         }
         #endregion
     }

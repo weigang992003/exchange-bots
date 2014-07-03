@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{6F9E7E0C-A16A-447C-B305-AA1D763F3224}</ProjectGuid>
+    <ProjectGuid>{FAF7ED45-7CE5-4CA0-B0E1-8F14CC84C670}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>HuobiBot</RootNamespace>
-    <AssemblyName>HuobiBot</AssemblyName>
+    <RootNamespace>KrakenBot</RootNamespace>
+    <AssemblyName>KrakenBot</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -35,26 +35,19 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Business\AccountInfo.cs" />
-    <Compile Include="Business\BasicResponse.cs" />
-    <Compile Include="Business\Error.cs" />
-    <Compile Include="Business\MarketDepth.cs" />
-    <Compile Include="Business\OrderInfo.cs" />
-    <Compile Include="Business\Ticker.cs" />
-    <Compile Include="Business\TradeStatistics.cs" />
+    <Compile Include="Business\Balance.cs" />
+    <Compile Include="Business\TimeResult.cs" />
     <Compile Include="CrazyBuyerTrap.cs" />
-    <Compile Include="CrazySellerTrap.cs" />
-    <Compile Include="TradeHelper.cs" />
-    <Compile Include="HuobiRequestHelper.cs" />
+    <Compile Include="KrakenRequestHelper.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="App.config" />
-    <Content Include="DataSamples\get_account_info.json.js" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.csproj">
@@ -62,11 +55,9 @@
       <Name>Common</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
-    <Content Include="DataSamples\market.json.js" />
-    <Content Include="DataSamples\error.json.js" />
-    <Content Include="DataSamples\order_info.json.js" />
-    <Content Include="DataSamples\tradeStatistics.json.js" />
+    <Content Include="DataSamples\balance.json.js" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

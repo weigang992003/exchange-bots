@@ -3,6 +3,7 @@ Exchange bots.v12.suo
 Exchange bots.sln.DotSettings.user
 BtcChinaBot/BtcChinaBot.csproj.user
 HuobiBot/HuobiBot.csproj.user
+KrakenBot/KrakenBot.csproj.user
 
 # Compiled assemblies
 BtcChinaBot/bin/*
@@ -11,3 +12,5 @@ Common/bin/*
 Common/obj/*
 HuobiBot/bin/*
 HuobiBot/obj/*
+KrakenBot/bin/*
+KrakenBot/obj/*

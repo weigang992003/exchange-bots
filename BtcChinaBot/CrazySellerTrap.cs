@@ -21,8 +21,8 @@ namespace BtcChinaBot
 
         //BTC amount to trade
         private readonly double _operativeAmount;
-        private readonly double _minWallVolume = 2.0;//TODO:1.0;
-        private readonly double maxWallVolume = 8.0;
+        private readonly double _minWallVolume;
+        private readonly double _maxWallVolume;
         //Volumen of BTC necessary to accept our offer
         private double _volumeWall;
         //Minimum difference between BUY price and subsequent SELL price (so we have at least some profit)
@@ -52,8 +52,8 @@ namespace BtcChinaBot
             _logger = logger;
             _operativeAmount = double.Parse(Configuration.GetValue("operative_amount"));
             _minWallVolume = double.Parse(Configuration.GetValue("min_volume"));
-            maxWallVolume = double.Parse(Configuration.GetValue("max_volume"));
-            _logger.AppendMessage(String.Format("Crazy seller trap trader initialized with operative={0}; MinWall={1}; MaxWall={2}", _operativeAmount, _minWallVolume, maxWallVolume));
+            _maxWallVolume = double.Parse(Configuration.GetValue("max_volume"));
+            _logger.AppendMessage(String.Format("Crazy seller trap trader initialized with operative={0}; MinWall={1}; MaxWall={2}", _operativeAmount, _minWallVolume, _maxWallVolume));
             _requestor = new BtcChinaRequestHelper(logger);
         }
 
@@ -89,7 +89,7 @@ namespace BtcChinaBot
 
             var now = new DateTime(1970, 1, 1).AddSeconds(market.date).AddHours(2);
             var coef = TradeHelpers.GetMadness(tradeHistory, now);
-            _volumeWall = Helpers.SuggestWallVolume(coef, _minWallVolume, maxWallVolume);
+            _volumeWall = Helpers.SuggestWallVolume(coef, _minWallVolume, _maxWallVolume);
             _intervalMs = Helpers.SuggestInterval(coef);
             log("Volume={0} BTC; Interval={1} ms;", _volumeWall, _intervalMs);
 

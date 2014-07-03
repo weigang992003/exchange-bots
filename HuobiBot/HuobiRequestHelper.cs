@@ -47,7 +47,7 @@ namespace HuobiBot
                 client.Proxy = _webProxy;
 
             var data = client.DownloadString(MARKET_URL);
-            return deserializeJSON<MarketDepthResponse>(data);
+            return Helpers.DeserializeJSON<MarketDepthResponse>(data);
         }
 
         internal TradeStatisticsResponse GetTradeStatistics()
@@ -58,7 +58,7 @@ namespace HuobiBot
                 client.Proxy = _webProxy;
 
             var data = client.DownloadString(TRADE_STATS_URL);
-            var trades = deserializeJSON<TradeStatisticsResponse>(data);
+            var trades = Helpers.DeserializeJSON<TradeStatisticsResponse>(data);
 
             return trades;
         }
@@ -71,20 +71,20 @@ namespace HuobiBot
                 client.Proxy = _webProxy;
 
             var data = client.DownloadString(TICKER_URL);
-            var ticker = deserializeJSON<TickerResponse>(data);
+            var ticker = Helpers.DeserializeJSON<TickerResponse>(data);
             return ticker.ServerTime;
         }
 
         internal AccountInfoResponse GetAccountInfo()
         {
             var data = doRequest("get_account_info");
-            return deserializeJSON<AccountInfoResponse>(data);
+            return Helpers.DeserializeJSON<AccountInfoResponse>(data);
         }
 
         internal OrderInfoResponse GetOrderInfo(int orderId)
         {
             var data = doRequest("order_info", new List<Tuple<string, string>>{new Tuple<string, string>("id", orderId.ToString())});
-            var debug = deserializeJSON<OrderInfoResponse>(data);
+            var debug = Helpers.DeserializeJSON<OrderInfoResponse>(data);
 
             if (null == debug.order_amount || null == debug.processed_amount)
                 _logger.AppendMessage(String.Format("OrderInfo JSON:\n{0}\n", data), true, ConsoleColor.Red);
@@ -102,7 +102,7 @@ namespace HuobiBot
             };
             var data = doRequest("buy", paramz);
 
-            var error = deserializeJSON<ErrorResponse>(data);
+            var error = Helpers.DeserializeJSON<ErrorResponse>(data);
             if (!String.IsNullOrEmpty(error.Description))
             {
                 if (70 == error.code && ++_buyRetryCounter <= RETRY_COUNT)
@@ -115,7 +115,7 @@ namespace HuobiBot
             }
             _buyRetryCounter = 0;
 
-            var debug = deserializeJSON<BasicResponse>(data);
+            var debug = Helpers.DeserializeJSON<BasicResponse>(data);
             return debug.id;
         }
 
@@ -137,7 +137,7 @@ namespace HuobiBot
             };
             var data = doRequest("sell", paramz);
 
-            var error = deserializeJSON<ErrorResponse>(data);
+            var error = Helpers.DeserializeJSON<ErrorResponse>(data);
             if (!String.IsNullOrEmpty(error.Description))
             {
                 if (10 == error.code)
@@ -152,7 +152,7 @@ namespace HuobiBot
                 throw new Exception(String.Format("Error creating SELL order (price={0}; amount={1}). Message={2}", price, amount, error.Description));
             }
 
-            var debug = deserializeJSON<BasicResponse>(data);
+            var debug = Helpers.DeserializeJSON<BasicResponse>(data);
             return debug.id;
         }
 
@@ -169,7 +169,7 @@ namespace HuobiBot
         {
             var data = doRequest("cancel_order", new List<Tuple<string, string>> { new Tuple<string, string>("id", orderId.ToString()) });
 
-            var error = deserializeJSON<ErrorResponse>(data);
+            var error = Helpers.DeserializeJSON<ErrorResponse>(data);
             if (!String.IsNullOrEmpty(error.Description))
             {
                 //Already filled
@@ -187,7 +187,7 @@ namespace HuobiBot
                 _logger.AppendMessage(String.Format("cancelOrder ID={0} failed with error={1}", orderId, error.Description), true, ConsoleColor.Yellow);
             }
 
-            return deserializeJSON<BasicResponse>(data).result == "success";
+            return Helpers.DeserializeJSON<BasicResponse>(data).result == "success";
         }
 
 
@@ -294,22 +294,7 @@ namespace HuobiBot
             return hashBuilder.ToString().ToLower();
         }
 
-        //TODO: might be duplicate from BtcChinaRequestHelper, refactor
-        private static T deserializeJSON<T>(string json)
-        {
-            using (var ms = new MemoryStream(Encoding.Unicode.GetBytes(json)))
-            {
-                var deserializer = new DataContractJsonSerializer(typeof(T));
-                try
-                {
-                    return (T) deserializer.ReadObject(ms);
-                }
-                catch (Exception e)
-                {
-                    throw new Exception("JSON deserialization problem. The input string was:" + Environment.NewLine + json, e);
-                }
-            }
-        }
+        
         #endregion
     }
 }

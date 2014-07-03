@@ -1,4 +1,9 @@
-﻿
+﻿using System;
+using System.IO;
+using System.Runtime.Serialization.Json;
+using System.Text;
+
+
 namespace Common
 {
     public static class Helpers
@@ -21,6 +26,22 @@ namespace Common
                 return maxVolue;
 
             return (minVolume + (madnessCoef * (maxVolue - minVolume)));
+        }
+
+        public static T DeserializeJSON<T>(string json)
+        {
+            using (var ms = new MemoryStream(Encoding.Unicode.GetBytes(json)))
+            {
+                var deserializer = new DataContractJsonSerializer(typeof(T));
+                try
+                {
+                    return (T)deserializer.ReadObject(ms);
+                }
+                catch (Exception e)
+                {
+                    throw new Exception("JSON deserialization problem. The input string was:" + Environment.NewLine + json, e);
+                }
+            }
         }
     }
 }

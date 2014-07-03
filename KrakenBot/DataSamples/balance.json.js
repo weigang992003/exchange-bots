@@ -1,0 +1,11 @@
+﻿//https://api.kraken.com/0/private/Balance
+{
+    "error":[],
+    "result":
+    {
+        "ZEUR":"22.8598",
+        "XXBT":"1.0006173100",
+        "XXRP":"300.00000000",
+        "XLTC":"0.0000000000"
+    }
+}

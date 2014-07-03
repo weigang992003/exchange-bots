@@ -21,8 +21,8 @@ namespace BtcChinaBot
 
         //Available BTC to trade
         private readonly double _operativeAmount;
-        private readonly double _minWallVolume = 2.0;
-        private readonly double _maxWallVolume = 8.0;
+        private readonly double _minWallVolume;
+        private readonly double _maxWallVolume;
         //Volumen of BTC necessary to buy our offer
         private double _volume;
         //Minimum difference between SELL price and subsequent BUY price (so we have at least some profit)
