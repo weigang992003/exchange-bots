@@ -44,6 +44,7 @@
   <ItemGroup>
     <Compile Include="Business\AddOrder.cs" />
     <Compile Include="Business\Balance.cs" />
+    <Compile Include="Business\CancelOrder.cs" />
     <Compile Include="Business\Error.cs" />
     <Compile Include="Business\MarketDepth.cs" />
     <Compile Include="Business\OrderInfo.cs" />
@@ -53,6 +54,7 @@
     <Compile Include="KrakenRequestHelper.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TradeHelpers.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.csproj">

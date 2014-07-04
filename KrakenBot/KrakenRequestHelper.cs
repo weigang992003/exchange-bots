@@ -33,12 +33,6 @@ namespace KrakenBot
         }
 
 
-        internal BalanceResponse GetAccountBalance()
-        {
-            var data = sendPostRequest("Balance");
-            return Helpers.DeserializeJSON<BalanceResponse>(data);
-        }
-
         internal DateTime GetServerTime()
         {
             var client = new WebClient();
@@ -61,6 +55,25 @@ namespace KrakenBot
             var market = Helpers.DeserializeJSON<MarketDepthResponse>(data);
 
             return market;
+        }
+
+        internal TradeHistoryResponse GetTradeHistory()
+        {
+            var client = new WebClient();
+
+            if (null != _webProxy)
+                client.Proxy = _webProxy;
+
+            var data = client.DownloadString("https://api.kraken.com/0/public/Trades?pair=XXBTZEUR");
+            var trades = Helpers.DeserializeJSON<TradeHistoryResponse>(data);
+
+            return trades;
+        }
+
+        internal BalanceResponse GetAccountBalance()
+        {
+            var data = sendPostRequest("Balance");
+            return Helpers.DeserializeJSON<BalanceResponse>(data);
         }
 
         internal OrderInfoResponse GetOrderInfo(string orderId)
@@ -90,17 +103,50 @@ namespace KrakenBot
             return response.result.txid.First();
         }
 
-        internal TradeHistoryResponse GetTradeHistory()
+        internal string UpdateBuyOrder(string orderId, double price, double amount)
         {
-            var client = new WebClient();
+            //Cancel the old order, recreate
+            if (CancelOrder(orderId))
+                return PlaceBuyOrder(price, amount);
+            //It's been closed meanwhile. Leave it be, very next iteration will find and handle properly
+            return orderId;
+        }
 
-            if (null != _webProxy)
-                client.Proxy = _webProxy;
+        internal string PlaceSellOrder(double? price, ref double amount)
+        {
+            string postData = String.Format("&pair=XXBTZEUR&type=sell&ordertype={0}&volume={1}", null == price ? "market" : "limit", amount);
+            if (null != price)
+                postData += "&price=" + price;
 
-            var data = client.DownloadString("https://api.kraken.com/0/public/Trades?pair=XXBTZEUR");
-            var trades = Helpers.DeserializeJSON<TradeHistoryResponse>(data);
+            var data = sendPostRequest("AddOrder", postData);
 
-            return trades;
+            var error = Helpers.DeserializeJSON<ErrorResponse>(data);
+            if (null != error.error && error.error.Any())
+            {
+                if (error.error.Contains("EOrder:Insufficient funds"))
+                {
+                    //BTC balance changed meanwhile, probably SELL order was (partially) filled
+                    _logger.AppendMessage("WARN: Insufficient balance reported when creating SELL order with amount=" + amount, true, ConsoleColor.Yellow);
+                    var accountInfo = GetAccountBalance();
+                    amount = accountInfo.result.BalanceBtc;     //WARN: Kraken doesn't tell "frozen" funds and we're lazy to deduce from orders.
+                    _logger.AppendMessage("Available account balance is " + amount + " BTC. Using this as amount for SELL order", true, ConsoleColor.Yellow);
+                    return PlaceSellOrder(price, ref amount);
+                }
+
+                throw new Exception(String.Format("Error creating SELL order (price={0}; amount={1}). Message={2}", price, amount, String.Join(", ", error.error)));
+            }
+
+            var response = Helpers.DeserializeJSON<AddOrderResponse>(data);
+            return response.result.txid.First();
+        }
+
+        internal string UpdateSellOrder(string orderId, double price, ref double amount)
+        {
+            //Cancel the old order, recreate
+            if (CancelOrder(orderId))
+                return PlaceSellOrder(price, ref amount);
+            //It's been closed meanwhile. Leave it be, very next iteration will find and handle properly
+            return orderId;
         }
 
         internal bool CancelOrder(string orderId)
@@ -123,6 +169,8 @@ namespace KrakenBot
             return true;
         }
 
+
+        #region private helpers
 
         private string sendPostRequest(string method, string postData = null)
         {
@@ -171,23 +219,21 @@ namespace KrakenBot
             }
         }
 
-
-        private byte[] sha256_hash(String value)
+        private static byte[] sha256_hash(String value)
         {
             using (SHA256 hash = SHA256.Create())
             {
-                Byte[] result = hash.ComputeHash(Encoding.UTF8.GetBytes(value));
-                return result;
+                return hash.ComputeHash(Encoding.UTF8.GetBytes(value));
             }
         }
 
-        private byte[] getHash(byte[] keyByte, byte[] messageBytes)
+        private static byte[] getHash(byte[] keyByte, byte[] messageBytes)
         {
             using (var hmacsha512 = new HMACSHA512(keyByte))
             {
-                Byte[] result = hmacsha512.ComputeHash(messageBytes);
-                return result;
+                return hmacsha512.ComputeHash(messageBytes);
             }
         }
+        #endregion
     }
 }

@@ -46,12 +46,12 @@ namespace KrakenBot.Business
     internal class Trade
     {
         /// <summary>Price in EUR</summary>
-        internal readonly double Price;
+        internal double Price;
         /// <summary>Amount of traded BTC</summary>
-        internal readonly double Amount;
+        internal double Amount;
 
-        internal readonly DateTime Time;
-        internal readonly TradeType Type;
+        internal DateTime Time;
+        internal TradeType Type;
 
         internal Trade(double price, double amount, DateTime time, TradeType type)
         {

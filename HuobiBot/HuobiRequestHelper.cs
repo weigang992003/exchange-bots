@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Runtime.Serialization.Json;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -39,6 +38,18 @@ namespace HuobiBot
         }
 
 
+        internal DateTime GetServerTime()
+        {
+            var client = new WebClient();
+
+            if (null != _webProxy)
+                client.Proxy = _webProxy;
+
+            var data = client.DownloadString(TICKER_URL);
+            var ticker = Helpers.DeserializeJSON<TickerResponse>(data);
+            return ticker.ServerTime;
+        }
+
         internal MarketDepthResponse GetMarketDepth()
         {
             var client = new WebClient();
@@ -61,18 +72,6 @@ namespace HuobiBot
             var trades = Helpers.DeserializeJSON<TradeStatisticsResponse>(data);
 
             return trades;
-        }
-
-        internal DateTime GetServerTime()
-        {
-            var client = new WebClient();
-
-            if (null != _webProxy)
-                client.Proxy = _webProxy;
-
-            var data = client.DownloadString(TICKER_URL);
-            var ticker = Helpers.DeserializeJSON<TickerResponse>(data);
-            return ticker.ServerTime;
         }
 
         internal AccountInfoResponse GetAccountInfo()

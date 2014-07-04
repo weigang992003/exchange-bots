@@ -28,7 +28,7 @@ namespace BtcChinaBot
         //Minimum difference between SELL price and subsequent BUY price (so we have at least some profit)
         private const double MIN_DIFFERENCE = 0.8;
         //Tolerance of SELL price (factor). Usefull if possible price change is minor, to avoid frequent order updates.
-        private const double PRICE_DELTA = 0.075;
+        private const double PRICE_DELTA = 0.05;    //5%
 
         //Active SELL order ID
         private int _sellOrderId = -1;
@@ -270,12 +270,19 @@ namespace BtcChinaBot
 
         private double suggestBuyPrice(MarketDepth market)
         {
-            //If best SELL order fits our profit greed, don't hesitate and try to use it
-/*            if (market.ask[0].price < _executedSellPrice - MIN_DIFFERENCE)
-                return market.ask[0].price;     //TODO: review this rule. Maybe if we wait a bit longer, we can have bigger profit
-*/
+            const double MIN_WALL_VOLUME = 0.1;
+
+            double sumVolume = 0.0;
             foreach (var bid in market.bid)
             {
+                //Don't count self
+                if (bid.price.eq(_buyOrderPrice) && bid.amount.eq(_buyOrderAmount))
+                    continue;
+                //Skip BUY orders with tiny amount
+                sumVolume += bid.amount;
+                if (sumVolume < MIN_WALL_VOLUME)
+                    continue;
+
                 if (bid.price < _executedSellPrice - MIN_DIFFERENCE)
                 {
                     return bid.price.eq(_buyOrderPrice)

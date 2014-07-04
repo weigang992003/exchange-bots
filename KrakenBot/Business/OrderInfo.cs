@@ -51,6 +51,11 @@ namespace KrakenBot.Business
             }
         }
 
+        internal double Price
+        {
+            get { return double.Parse(price); }
+        }
+
         internal OrderStatus Status
         {
             get
