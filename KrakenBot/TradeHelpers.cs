@@ -23,7 +23,7 @@ namespace KrakenBot
             catch (Exception debug)
             {
                 Console.BackgroundColor = ConsoleColor.DarkMagenta;
-                Console.WriteLine(debug.Message);
+                Console.WriteLine(debug.Message + " (tradeHistory=" + (null == tradeHistory ? "NULL" : tradeHistory.last) + ")");
                 Console.ResetColor();
                 return 0.5f;
             }

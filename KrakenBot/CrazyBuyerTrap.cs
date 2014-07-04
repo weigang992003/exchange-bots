@@ -93,7 +93,22 @@ namespace KrakenBot
             //We have active SELL order
             if (null != _sellOrderId)
             {
-                var sellOrder = _requestor.GetOrderInfo(_sellOrderId).result.orderData;
+                //DEBUG, TODO: delete
+                var sellOrderData = _requestor.GetOrderInfo(_sellOrderId);
+                if (null == sellOrderData)
+                {
+                    log("sellOrderData==NULL", ConsoleColor.Red);
+                    return;
+                }
+                if (null == sellOrderData.result)
+                {
+                    log("sellOrderData.result==NULL", ConsoleColor.Red);
+                    return;
+                }
+
+
+                var sellOrder = sellOrderData.result.orderData;//_requestor.GetOrderInfo(_sellOrderId).result.orderData;
+
                 switch (sellOrder.Status)
                 {
                     case OrderStatus.Open:

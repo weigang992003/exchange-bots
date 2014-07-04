@@ -32,6 +32,9 @@ namespace HuobiBot
                 case "cst":
                     trader = new CrazySellerTrap(logger);
                 break;
+                case "bear":
+                    trader = new NaiveBear(logger);
+                break;
                 case "bull":
                 throw new NotImplementedException("Soon...");
                 default:

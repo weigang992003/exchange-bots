@@ -74,6 +74,22 @@ namespace HuobiBot
             return trades;
         }
 
+        internal List<Candle> GetCandles()
+        {
+            var client = new WebClient();
+
+            if (null != _webProxy)
+                client.Proxy = _webProxy;
+
+            var data = client.DownloadString("http://market.huobi.com/staticmarket/btc_kline_001_json.js");
+
+            //NOTE: add auxiliary root variable to avoid tricky JSON parsing
+            data = "{\"candleData\":" + data + "}";
+
+            var candles = Helpers.DeserializeJSON<CandlesResponse>(data);
+            return candles.MergeAsCandles(3);
+        }
+
         internal AccountInfoResponse GetAccountInfo()
         {
             var data = doRequest("get_account_info");
