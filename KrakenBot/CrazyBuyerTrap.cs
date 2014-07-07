@@ -87,7 +87,7 @@ namespace KrakenBot
 
             var coef = TradeHelpers.GetMadness(tradeHistory, serverTime);
             _volumeWall = Helpers.SuggestWallVolume(coef, _minWallVolume, _maxWallVolume);
-            _intervalMs = Helpers.SuggestInterval(coef);
+            _intervalMs = Helpers.SuggestInterval(coef, 4000, 13000);
             log("Volume={0} BTC; Interval={1} ms; ", _volumeWall, _intervalMs);
 
             //We have active SELL order
