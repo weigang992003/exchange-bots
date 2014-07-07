@@ -257,7 +257,7 @@ namespace KrakenBot
             {
                 if (sum + _operativeAmount > _volumeWall && ask.Price - MIN_DIFFERENCE > highestBid)
                 {
-                    double sellPrice = ask.Price - 0.001;
+                    double sellPrice = Math.Round(ask.Price - 0.001, 3);
 
                     //The difference is too small and we'd be not the first SELL order. Leave previous price to avoid server call
                     if (null != _sellOrderId && sellPrice > market.XXBTZEUR.Asks[0].Price && Math.Abs(sellPrice - _sellOrderPrice) < minDiff)
@@ -279,7 +279,7 @@ namespace KrakenBot
             var price = market.XXBTZEUR.Asks.Last().Price - 0.001;
             if (null != _sellOrderId && Math.Abs(price - _sellOrderPrice) < minDiff)
                 return _sellOrderPrice;
-            return price;
+            return Math.Round(price, 3);
         }
 
         private double suggestBuyPrice(MarketDepth market)

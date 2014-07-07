@@ -17,6 +17,7 @@ namespace KrakenBot
         private const int RETRY_DELAY = 750;
 
         private readonly Logger _logger;
+        private readonly long _nonceOffset;
         private readonly WebProxy _webProxy;
 
 
@@ -30,6 +31,10 @@ namespace KrakenBot
                 _webProxy = new WebProxy(proxyHost, int.Parse(proxyPort));
                 _webProxy.Credentials = CredentialCache.DefaultCredentials;
             }
+
+            var nonceOffset = Configuration.GetValue("nonce_offset");
+            if (!String.IsNullOrEmpty(nonceOffset))
+                _nonceOffset = long.Parse(nonceOffset);
         }
 
 
@@ -176,6 +181,7 @@ namespace KrakenBot
         {
             // generate a 64 bit nonce using a timestamp at tick resolution
             Int64 nonce = DateTime.Now.Ticks;
+            nonce += _nonceOffset;
             postData = "nonce=" + nonce + postData;
 
             string path = "/0/private/" + method;
