@@ -57,13 +57,14 @@
     <Compile Include="BtcChinaRequestHelper.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\Common\Common.csproj">
       <Project>{2EEF9328-252F-4889-804D-E6071F1DA8F0}</Project>
       <Name>Common</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="DataSamples\GetAccountInfo.json.js" />
+    <Content Include="DataSamples\GetMarketDepth2.json.js" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

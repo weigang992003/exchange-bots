@@ -56,7 +56,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
     <Content Include="DataSamples\candles_1m.json.js" />
     <Content Include="DataSamples\get_account_info.json.js" />
   </ItemGroup>

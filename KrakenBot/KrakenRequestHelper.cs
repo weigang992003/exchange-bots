@@ -72,6 +72,10 @@ namespace KrakenBot
             var data = client.DownloadString("https://api.kraken.com/0/public/Trades?pair=XXBTZEUR");
             var trades = Helpers.DeserializeJSON<TradeHistoryResponse>(data);
 
+            //DEBUG, TODO: remove
+            if (null == trades.result)
+                _logger.AppendMessage("TradeHistory response not as expected. Data:" + Environment.NewLine + data, true, ConsoleColor.Red);
+
             return trades;
         }
 
@@ -89,6 +93,14 @@ namespace KrakenBot
             data = data.Replace(orderId, "orderData");
 
             var order = Helpers.DeserializeJSON<OrderInfoResponse>(data);
+
+
+            //DEBUG, TODO: remove
+            if (null == order.result)
+                _logger.AppendMessage("OrderInfo response not as expected. Data:" + Environment.NewLine + data, true, ConsoleColor.Red);
+
+
+
             return order;
         }
 
