@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using Common;
 using KrakenBot.Business;
 
@@ -40,43 +41,20 @@ namespace KrakenBot
 
         internal DateTime GetServerTime()
         {
-            var client = new WebClient();
-
-            if (null != _webProxy)
-                client.Proxy = _webProxy;
-
-            var data = client.DownloadString("https://api.kraken.com/0/public/Time");
+            var data = sendGetRequest("https://api.kraken.com/0/public/Time");
             return Helpers.DeserializeJSON<TimeResponse>(data).result.TimeTyped;
         }
 
         internal MarketDepthResponse GetMarketDepth(byte maxItems = 15)
         {
-            var client = new WebClient();
-
-            if (null != _webProxy)
-                client.Proxy = _webProxy;
-
-            var data = client.DownloadString("https://api.kraken.com/0/public/Depth?pair=XXBTZEUR&count=" + maxItems);
-            var market = Helpers.DeserializeJSON<MarketDepthResponse>(data);
-
-            return market;
+            var data = sendGetRequest("https://api.kraken.com/0/public/Depth?pair=XXBTZEUR&count=" + maxItems);
+            return Helpers.DeserializeJSON<MarketDepthResponse>(data);
         }
 
         internal TradeHistoryResponse GetTradeHistory()
         {
-            var client = new WebClient();
-
-            if (null != _webProxy)
-                client.Proxy = _webProxy;
-
-            var data = client.DownloadString("https://api.kraken.com/0/public/Trades?pair=XXBTZEUR");
-            var trades = Helpers.DeserializeJSON<TradeHistoryResponse>(data);
-
-            //DEBUG, TODO: remove
-            if (null == trades.result)
-                _logger.AppendMessage("TradeHistory response not as expected. Data:" + Environment.NewLine + data, true, ConsoleColor.Red);
-
-            return trades;
+            var data = sendGetRequest("https://api.kraken.com/0/public/Trades?pair=XXBTZEUR");
+            return Helpers.DeserializeJSON<TradeHistoryResponse>(data);
         }
 
         internal BalanceResponse GetAccountBalance()
@@ -91,17 +69,7 @@ namespace KrakenBot
 
             //NOTE: there's variable with dynamic name of order ID. It's replaced with constant string to avoid tricky JSON parsing
             data = data.Replace(orderId, "orderData");
-
-            var order = Helpers.DeserializeJSON<OrderInfoResponse>(data);
-
-
-            //DEBUG, TODO: remove
-            if (null == order.result)
-                _logger.AppendMessage("OrderInfo response not as expected. Data:" + Environment.NewLine + data, true, ConsoleColor.Red);
-
-
-
-            return order;
+            return Helpers.DeserializeJSON<OrderInfoResponse>(data);
         }
 
         internal string PlaceBuyOrder(double? price, double amount)
@@ -189,6 +157,32 @@ namespace KrakenBot
 
         #region private helpers
 
+        private string sendGetRequest(string url)
+        {
+            var client = new WebClient();
+
+            if (null != _webProxy)
+                client.Proxy = _webProxy;
+
+            WebException exc = null;
+            for (int i = 1; i <= RETRY_COUNT; i++)
+            {
+                try
+                {
+                    return client.DownloadString(url);
+                }
+                catch (WebException we)
+                {
+                    var text = String.Format("(ATTEMPT {0}/{1}) Web request failed with exception={2}; status={3}", i, RETRY_COUNT, we.Message, we.Status);
+                    _logger.AppendMessage(text, true, ConsoleColor.Yellow);
+                    exc = we;
+                    Thread.Sleep(RETRY_DELAY);
+                }
+            }
+
+            throw new Exception(String.Format("Web request failed {0} times in a row with error '{1}'. Giving up.", RETRY_COUNT, exc.Message));
+        }
+
         private string sendPostRequest(string method, string postData = null)
         {
             // generate a 64 bit nonce using a timestamp at tick resolution
@@ -198,7 +192,7 @@ namespace KrakenBot
 
             string path = "/0/private/" + method;
             string address = BASE_URL + path;
-            HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(address);
+            var webRequest = (HttpWebRequest)WebRequest.Create(address);
             webRequest.ContentType = "application/x-www-form-urlencoded";
             webRequest.Method = "POST";
             webRequest.Headers.Add("API-Key", Configuration.AccessKey);
@@ -224,17 +218,33 @@ namespace KrakenBot
                 writer.Write(postData);
             }
             
-            using (WebResponse webResponse = webRequest.GetResponse())
+            WebException exc = null;
+            for (int i = 1; i <= RETRY_COUNT; i++)
             {
-                using (Stream stream = webResponse.GetResponseStream())
+                try
                 {
-                    using (StreamReader reader = new StreamReader(stream))
+                    using (WebResponse webResponse = webRequest.GetResponse())
                     {
-                        var text = reader.ReadToEnd();
-                        return text;
+                        using (Stream stream = webResponse.GetResponseStream())
+                        {
+                            using (StreamReader reader = new StreamReader(stream))
+                            {
+                                var text = reader.ReadToEnd();
+                                return text;
+                            }
+                        }
                     }
                 }
+                catch (WebException we)
+                {
+                    var text = String.Format("(ATTEMPT {0}/{1}) Web request failed with exception={2}; status={3}", i, RETRY_COUNT, we.Message, we.Status);
+                    _logger.AppendMessage(text, true, ConsoleColor.Yellow);
+                    exc = we;
+                    Thread.Sleep(RETRY_DELAY);
+                }
             }
+
+            throw new Exception(String.Format("Web request failed {0} times in a row with error '{1}'. Giving up.", RETRY_COUNT, exc.Message));
         }
 
         private static byte[] sha256_hash(String value)
