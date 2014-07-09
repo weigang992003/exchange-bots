@@ -100,7 +100,7 @@ namespace BitfinexBot
                         //Untouched
                         if (sellOrder.Amount.eq(_sellOrderAmount))
                         {
-                            log("SELL order ID={0} untouched (amount={1} BTC, price={2} EUR)", _sellOrderId, _sellOrderAmount, _sellOrderPrice);
+                            log("SELL order ID={0} untouched (amount={1} BTC, price={2} USD)", _sellOrderId, _sellOrderAmount, _sellOrderPrice);
 
                             double price = suggestSellPrice(market);
                             var newAmount = _operativeAmount - _buyOrderAmount;
@@ -111,28 +111,28 @@ namespace BitfinexBot
                                 _sellOrderId = _requestor.UpdateSellOrder(_sellOrderId, price, ref newAmount);
                                 _sellOrderAmount = newAmount;
                                 _sellOrderPrice = price;
-                                log("Updated SELL order ID={0}; amount={1} BTC; price={2} EUR", _sellOrderId, _sellOrderAmount, price);
+                                log("Updated SELL order ID={0}; amount={1} BTC; price={2} USD", _sellOrderId, _sellOrderAmount, price);
                             }
                         }
                         else    //Partially filled
                         {
                             _executedSellPrice = sellOrder.Price;
                             _sellOrderAmount = sellOrder.Amount;
-                            log("SELL order ID={0} partially filled at price={1} EUR. Remaining amount={2} BTC;", ConsoleColor.Green, _sellOrderId, _executedSellPrice, sellOrder.Amount);
+                            log("SELL order ID={0} partially filled at price={1} USD. Remaining amount={2} BTC;", ConsoleColor.Green, _sellOrderId, _executedSellPrice, sellOrder.Amount);
                             var price = suggestSellPrice(market);
                             //The same price is totally unlikely, so we don't check it here
                             var amount = sellOrder.Amount;
                             _sellOrderId = _requestor.UpdateSellOrder(_sellOrderId, price, ref amount);
                             _sellOrderAmount = amount;
                             _sellOrderPrice = price;
-                            log("Updated SELL order ID={0}; amount={1} BTC; price={2} EUR", _sellOrderId, _sellOrderAmount, _sellOrderPrice);
+                            log("Updated SELL order ID={0}; amount={1} BTC; price={2} USD", _sellOrderId, _sellOrderAmount, _sellOrderPrice);
                         }
                         break;
                     }
                     case OrderStatus.Closed:
                     {
                         _executedSellPrice = sellOrder.Price;
-                        log("SELL order ID={0} (amount={1} BTC) was closed at price={2} EUR", ConsoleColor.Green, _sellOrderId, _sellOrderAmount, _executedSellPrice);
+                        log("SELL order ID={0} (amount={1} BTC) was closed at price={2} USD", ConsoleColor.Green, _sellOrderId, _sellOrderAmount, _executedSellPrice);
                         _sellOrderId = -1;
                         _sellOrderAmount = 0;
                         break;
@@ -149,7 +149,7 @@ namespace BitfinexBot
                 var amount = _operativeAmount - _buyOrderAmount;
                 _sellOrderId = _requestor.PlaceSellOrder(_sellOrderPrice, ref amount);
                 _sellOrderAmount = amount;
-                log("Successfully created SELL order with ID={0}; amount={1} BTC; price={2} EUR", ConsoleColor.Cyan, _sellOrderId, _sellOrderAmount, _sellOrderPrice);
+                log("Successfully created SELL order with ID={0}; amount={1} BTC; price={2} USD", ConsoleColor.Cyan, _sellOrderId, _sellOrderAmount, _sellOrderPrice);
             }
 
             //Handle BUY order
@@ -164,18 +164,18 @@ namespace BitfinexBot
                     {
                         case OrderStatus.Open:
                             {
-                                log("BUY order ID={0} open (amount={1} BTC, price={2} EUR)", _buyOrderId, buyOrder.Amount, _buyOrderPrice);
+                                log("BUY order ID={0} open (amount={1} BTC, price={2} USD)", _buyOrderId, buyOrder.Amount, _buyOrderPrice);
 
                                 double price = suggestBuyPrice(market);
 
                                 //Partially filled
                                 if (!buyOrder.Amount.eq(_buyOrderAmount))
                                 {
-                                    log("BUY order ID={0} partially filled at price={1} EUR. Remaining amount={2} BTC;", ConsoleColor.Green, _buyOrderId, buyOrder.price, buyOrder.Amount);
+                                    log("BUY order ID={0} partially filled at price={1} USD. Remaining amount={2} BTC;", ConsoleColor.Green, _buyOrderId, buyOrder.price, buyOrder.Amount);
                                     _buyOrderId = _requestor.UpdateBuyOrder(_buyOrderId, price, buyOrder.Amount);
                                     _buyOrderAmount = buyOrder.Amount;
                                     _buyOrderPrice = price;
-                                    log("Updated BUY order ID={0}; amount={1} BTC; price={2} EUR", _buyOrderId, _buyOrderAmount, price);
+                                    log("Updated BUY order ID={0}; amount={1} BTC; price={2} USD", _buyOrderId, _buyOrderAmount, price);
                                 }
                                 //If there were some money released by filling a BUY order, increase this SELL order
                                 else if (_operativeAmount - _sellOrderAmount > _buyOrderAmount)
@@ -185,20 +185,20 @@ namespace BitfinexBot
                                     _buyOrderId = _requestor.UpdateBuyOrder(_buyOrderId, price, newAmount);
                                     _buyOrderAmount = newAmount;
                                     _buyOrderPrice = price;
-                                    log("Updated BUY order ID={0}; amount={1} BTC; price={2} EUR", _buyOrderId, _buyOrderAmount, price);
+                                    log("Updated BUY order ID={0}; amount={1} BTC; price={2} USD", _buyOrderId, _buyOrderAmount, price);
                                 }
                                 //Or if we simply need to change price.
                                 else if (!_buyOrderPrice.eq(price))
                                 {
                                     _buyOrderId = _requestor.UpdateBuyOrder(_buyOrderId, price, _buyOrderAmount);
                                     _buyOrderPrice = price;
-                                    log("Updated BUY order ID={0}; amount={1} BTC; price={2} EUR", _buyOrderId, _buyOrderAmount, price);
+                                    log("Updated BUY order ID={0}; amount={1} BTC; price={2} USD", _buyOrderId, _buyOrderAmount, price);
                                 }
                                 break;
                             }
                         case OrderStatus.Closed:
                             {
-                                log("BUY order ID={0} (amount={1} BTC) was closed at price={2} EUR", ConsoleColor.Green, _buyOrderId, _buyOrderAmount, buyOrder.Price);
+                                log("BUY order ID={0} (amount={1} BTC) was closed at price={2} USD", ConsoleColor.Green, _buyOrderId, _buyOrderAmount, buyOrder.Price);
                                 _buyOrderAmount = 0;
                                 _buyOrderId = -1;
                                 break;
@@ -214,7 +214,7 @@ namespace BitfinexBot
                     _buyOrderPrice = suggestBuyPrice(market);
                     _buyOrderAmount = _operativeAmount - _sellOrderAmount;
                     _buyOrderId = _requestor.PlaceBuyOrder(_buyOrderPrice, _buyOrderAmount);
-                    log("Successfully created BUY order with ID={0}; amount={1} BTC; price={2} EUR", ConsoleColor.Cyan, _buyOrderId, _buyOrderAmount, _buyOrderPrice);
+                    log("Successfully created BUY order with ID={0}; amount={1} BTC; price={2} USD", ConsoleColor.Cyan, _buyOrderId, _buyOrderAmount, _buyOrderPrice);
                 }
             }
 
