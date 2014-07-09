@@ -51,7 +51,7 @@
     <Compile Include="Business\TimeResult.cs" />
     <Compile Include="Business\TradeHistory.cs" />
     <Compile Include="CrazyBuyerTrap.cs" />
-    <Compile Include="KrakenRequestHelper.cs" />
+    <Compile Include="KrakenApi.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TradeHelpers.cs" />

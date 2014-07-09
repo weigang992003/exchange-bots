@@ -16,7 +16,7 @@ namespace BtcChinaBot
         private bool _killSignal;
         private bool _verbose = true;
         private readonly Logger _logger;
-        private readonly BtcChinaRequestHelper _requestor;
+        private readonly BtcChinaApi _requestor;
         private int _intervalMs;
 
         //BTC amount to trade
@@ -49,7 +49,7 @@ namespace BtcChinaBot
             _logger = logger;
             _operativeAmount = double.Parse(Configuration.GetValue("operative_amount"));
             _logger.AppendMessage("Nightly Frog Boiling trader initialized with operative amount " + _operativeAmount + " BTC");
-            _requestor = new BtcChinaRequestHelper(logger);
+            _requestor = new BtcChinaApi(logger);
         }
 
         public void StartTrading()

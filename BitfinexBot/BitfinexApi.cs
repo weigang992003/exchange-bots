@@ -20,6 +20,7 @@ namespace BitfinexBot
         private const int RETRY_DELAY = 750;
 
         private readonly Logger _logger;
+        private readonly long _nonceOffset;
         private readonly WebProxy _webProxy;
 
         public BitfinexApi(Logger logger)
@@ -32,6 +33,10 @@ namespace BitfinexBot
                 _webProxy = new WebProxy(proxyHost, int.Parse(proxyPort));
                 _webProxy.Credentials = CredentialCache.DefaultCredentials;
             }
+
+            var nonceOffset = Configuration.GetValue("nonce_offset");
+            if (!String.IsNullOrEmpty(nonceOffset))
+                _nonceOffset = long.Parse(nonceOffset);
         }
 
 
@@ -177,9 +182,8 @@ namespace BitfinexBot
                 throw new Exception(String.Format("Error cancelling order ID={0}. Message={1}", orderId, error.message));
             }
 
-//todo            var response = Helpers.DeserializeJSON<OrderInforResponse>(data);
-//            return response.id;
-            return true;
+            var response = Helpers.DeserializeJSON<OrderInforResponse>(data);
+            return response.is_cancelled;
         }
 
         #region private helpers
@@ -213,6 +217,7 @@ namespace BitfinexBot
         private string sendPostRequest(string method, List<Tuple<string, string>> paramz = null)
         {
             long nonce = DateTime.Now.Ticks;
+            nonce += _nonceOffset;
 
             string path = BASE_URL + method;
             string paramDict = "{" + String.Format("\"request\":\"/v1/{0}\",\"nonce\":\"{1}\"", method, nonce);

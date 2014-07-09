@@ -12,7 +12,7 @@ using HuobiBot.Business;
 
 namespace HuobiBot
 {
-    internal class HuobiRequestHelper
+    internal class HuobiApi
     {
         private const string TICKER_URL = "http://market.huobi.com/staticmarket/ticker_btc_json.js";
         private const string MARKET_URL = "http://market.huobi.com/staticmarket/depth_btc_json.js";
@@ -25,7 +25,7 @@ namespace HuobiBot
         private readonly WebProxy _webProxy;
 
 
-        internal HuobiRequestHelper(Logger logger)
+        internal HuobiApi(Logger logger)
         {
             _logger = logger;
             var proxyHost = Configuration.GetValue("proxyHost");

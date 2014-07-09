@@ -46,7 +46,7 @@ namespace KrakenBot
 
         static void usage()
         {
-            Console.WriteLine("Huobi trading bot. Usage: bot.exe --config=<config file path> --log=<log file path>");
+            Console.WriteLine("Kraken trading bot. Usage: bot.exe --config=<config file path> --log=<log file path>");
             Console.WriteLine("Config is in form key=value on each line. Mandatory keys are 'strategy', 'access_key', 'secret_key'.");
         }
     }

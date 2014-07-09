@@ -12,7 +12,7 @@ namespace BtcChinaBot
         private bool _killSignal;
         private bool _verbose = true;
         private readonly Logger _logger;
-        private readonly BtcChinaRequestHelper _requestor;
+        private readonly BtcChinaApi _requestor;
         private readonly MarketTrend _trend;
         private int _intervalMs;
 
@@ -40,7 +40,7 @@ namespace BtcChinaBot
         {
             _logger = logger;
             _logger.AppendMessage("Naive Bear trader initialized with operative share " + OPERATIVE_AMOUNT + " BTC");
-            _requestor = new BtcChinaRequestHelper(logger);
+            _requestor = new BtcChinaApi(logger);
             _trend = new MarketTrend();
         }
 

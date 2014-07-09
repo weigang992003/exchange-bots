@@ -16,7 +16,7 @@ namespace HuobiBot
         private bool _killSignal;
         private bool _verbose = true;
         private readonly Logger _logger;
-        private readonly HuobiRequestHelper _requestor;
+        private readonly HuobiApi _requestor;
         private int _intervalMs;
 
         //BTC amount to trade
@@ -54,7 +54,7 @@ namespace HuobiBot
             _minWallVolume = double.Parse(Configuration.GetValue("min_volume"));
             _maxWallVolume = double.Parse(Configuration.GetValue("max_volume"));
             _logger.AppendMessage(String.Format("Crazy seller trap trader initialized with operative={0}; MinWall={1}; MaxWall={2}", _operativeAmount, _minWallVolume, _maxWallVolume));
-            _requestor = new HuobiRequestHelper(logger);
+            _requestor = new HuobiApi(logger);
         }
 
         public void StartTrading()

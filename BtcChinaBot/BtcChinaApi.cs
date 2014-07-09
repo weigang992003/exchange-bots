@@ -4,7 +4,6 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Runtime.Serialization.Json;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -14,7 +13,7 @@ using Common;
 
 namespace BtcChinaBot
 {
-    internal class BtcChinaRequestHelper
+    internal class BtcChinaApi
     {
         private const string BASE_URL = "https://api.btcchina.com/api_trade_v1.php";
         private const string TRADE_HISTORY_URL = "http://data.btcchina.com/data/historydata";
@@ -27,7 +26,7 @@ namespace BtcChinaBot
         
 
 
-        internal BtcChinaRequestHelper(Logger logger)
+        internal BtcChinaApi(Logger logger)
         {
             _logger = logger;
             var proxyHost = Configuration.GetValue("proxyHost");

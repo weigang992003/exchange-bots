@@ -51,7 +51,7 @@
     <Compile Include="MarketTrend.cs" />
     <Compile Include="NaiveBear.cs" />
     <Compile Include="TradeHelper.cs" />
-    <Compile Include="HuobiRequestHelper.cs" />
+    <Compile Include="HuobiApi.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

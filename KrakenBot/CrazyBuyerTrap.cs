@@ -12,7 +12,7 @@ namespace KrakenBot
         private bool _killSignal;
         private bool _verbose = true;
         private readonly Logger _logger;
-        private readonly KrakenRequestHelper _requestor;
+        private readonly KrakenApi _requestor;
         private int _intervalMs;
 
         //BTC amount to trade
@@ -50,7 +50,7 @@ namespace KrakenBot
             _minWallVolume = double.Parse(Configuration.GetValue("min_volume"));
             _maxWallVolume = double.Parse(Configuration.GetValue("max_volume"));
             _logger.AppendMessage(String.Format("Crazy buyer trap trader initialized with operative={0}; MinWall={1}; MaxWall={2}", _operativeAmount, _minWallVolume, _maxWallVolume));
-            _requestor = new KrakenRequestHelper(logger);
+            _requestor = new KrakenApi(logger);
         }
 
 

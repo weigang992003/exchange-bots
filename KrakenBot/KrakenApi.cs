@@ -11,7 +11,7 @@ using KrakenBot.Business;
 
 namespace KrakenBot
 {
-    internal class KrakenRequestHelper
+    internal class KrakenApi
     {
         private const string BASE_URL = "https://api.kraken.com";
         private const byte RETRY_COUNT = 5;
@@ -22,7 +22,7 @@ namespace KrakenBot
         private readonly WebProxy _webProxy;
 
 
-        public KrakenRequestHelper(Logger logger)
+        public KrakenApi(Logger logger)
         {
             _logger = logger;
             var proxyHost = Configuration.GetValue("proxyHost");

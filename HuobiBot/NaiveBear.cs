@@ -12,7 +12,7 @@ namespace HuobiBot
         private bool _killSignal;
         private bool _verbose = true;
         private readonly Logger _logger;
-        private readonly HuobiRequestHelper _requestor;
+        private readonly HuobiApi _requestor;
         private readonly MarketTrend _trend;
         private int _intervalMs;
 
@@ -40,7 +40,7 @@ namespace HuobiBot
         {
             _logger = logger;
             _logger.AppendMessage("Naive Bear trader initialized with operative share " + OPERATIVE_AMOUNT + " BTC");
-            _requestor = new HuobiRequestHelper(logger);
+            _requestor = new HuobiApi(logger);
             _trend = new MarketTrend();
         }
 
