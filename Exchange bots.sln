@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.21005.1
+VisualStudioVersion = 12.0.30501.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BtcChinaBot", "BtcChinaBot\BtcChinaBot.csproj", "{A9750DB3-A398-44DB-BFE0-A56BDBC5986B}"
 EndProject
@@ -10,6 +10,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "Common\Common.csproj", "{2EEF9328-252F-4889-804D-E6071F1DA8F0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KrakenBot", "KrakenBot\KrakenBot.csproj", "{FAF7ED45-7CE5-4CA0-B0E1-8F14CC84C670}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BitfinexBot", "BitfinexBot\BitfinexBot.csproj", "{061C0116-3492-4C33-BE28-FA8F451B97A6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{FAF7ED45-7CE5-4CA0-B0E1-8F14CC84C670}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FAF7ED45-7CE5-4CA0-B0E1-8F14CC84C670}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FAF7ED45-7CE5-4CA0-B0E1-8F14CC84C670}.Release|Any CPU.Build.0 = Release|Any CPU
+		{061C0116-3492-4C33-BE28-FA8F451B97A6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{061C0116-3492-4C33-BE28-FA8F451B97A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{061C0116-3492-4C33-BE28-FA8F451B97A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{061C0116-3492-4C33-BE28-FA8F451B97A6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

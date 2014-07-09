@@ -1,11 +1,14 @@
 # Visual Studio scaffolding files
 Exchange bots.v12.suo
 Exchange bots.sln.DotSettings.user
+BitfinexBot/BitfinexBot.csproj.user
 BtcChinaBot/BtcChinaBot.csproj.user
 HuobiBot/HuobiBot.csproj.user
 KrakenBot/KrakenBot.csproj.user
 
 # Compiled assemblies
+BitfinexBot/bin/*
+BitfinexBot/obj/*
 BtcChinaBot/bin/*
 BtcChinaBot/obj/*
 Common/bin/*

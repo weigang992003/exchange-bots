@@ -1,18 +1,18 @@
 ﻿using System;
 using System.Linq;
 using System.Threading;
+using BitfinexBot.Business;
 using Common;
-using KrakenBot.Business;
 
 
-namespace KrakenBot
+namespace BitfinexBot
 {
     internal class CrazyBuyerTrap : ITrader
     {
         private bool _killSignal;
         private bool _verbose = true;
         private readonly Logger _logger;
-        private readonly KrakenRequestHelper _requestor;
+        private readonly BitfinexApi _requestor;
         private int _intervalMs;
 
         //BTC amount to trade
@@ -22,19 +22,19 @@ namespace KrakenBot
         //Volumen of BTC necessary to accept our offer
         private double _volumeWall;
         //Minimum difference between SELL price and subsequent BUY price (so we have at least some profit)
-        private const double MIN_DIFFERENCE = 1.7;      //TODO: dynamic by current price, volume and fee
+        private const double MIN_DIFFERENCE = 0.06;
         //Tolerance of SELL price (factor). Usefull if possible price change is minor, to avoid frequent order updates.
-        private const double PRICE_DELTA = 0.05;    //5%
+        private const double PRICE_DELTA = 0.03;    //3%
 
         //Active SELL order ID
-        private string _sellOrderId;
+        private int _sellOrderId = -1;
         //Active SELL order amount
         private double _sellOrderAmount;
         //Active SELL order price
         private double _sellOrderPrice;
 
         //Active BUY order ID
-        private string _buyOrderId;
+        private int _buyOrderId = -1;
         //Active BUY order amount
         private double _buyOrderAmount;
         //Active BUY order price
@@ -49,10 +49,9 @@ namespace KrakenBot
             _operativeAmount = double.Parse(Configuration.GetValue("operative_amount"));
             _minWallVolume = double.Parse(Configuration.GetValue("min_volume"));
             _maxWallVolume = double.Parse(Configuration.GetValue("max_volume"));
-            _logger.AppendMessage(String.Format("Crazy buyer trap trader initialized with operative={0}; MinWall={1}; MaxWall={2}", _operativeAmount, _minWallVolume, _maxWallVolume));
-            _requestor = new KrakenRequestHelper(logger);
+            _logger.AppendMessage(String.Format("Bitfinex Crazy buyer trap trader initialized with operative={0}; MinWall={1}; MaxWall={2}", _operativeAmount, _minWallVolume, _maxWallVolume));
+            _requestor = new BitfinexApi(logger);
         }
-
 
         public void StartTrading()
         {
@@ -77,37 +76,22 @@ namespace KrakenBot
             log("Crazy Buyer Trap trader received kill signal. Good bye.");
         }
 
-
         /// <summary>The core method to do one iteration of orders' check and updates</summary>
         private void check()
         {
-            var market = _requestor.GetMarketDepth().result;
-            var tradeHistory = _requestor.GetTradeHistory().result;
+            var market = _requestor.GetMarketDepth();
+            var tradeHistory = _requestor.GetTradeHistory();
             var serverTime = _requestor.GetServerTime();
 
             var coef = TradeHelpers.GetMadness(tradeHistory, serverTime);
             _volumeWall = Helpers.SuggestWallVolume(coef, _minWallVolume, _maxWallVolume);
-            _intervalMs = Helpers.SuggestInterval(coef, 4000, 13000);
-            log("Volume={0} BTC; Interval={1} ms; ", _volumeWall, _intervalMs);
+            _intervalMs = Helpers.SuggestInterval(coef, 5000, 18000);
+            log("Coef={0}, Volume={1} BTC; Interval={2} ms; ", coef, _volumeWall, _intervalMs);
 
             //We have active SELL order
-            if (null != _sellOrderId)
+            if (-1 != _sellOrderId)
             {
-                //DEBUG, TODO: delete
-                var sellOrderData = _requestor.GetOrderInfo(_sellOrderId);
-                if (null == sellOrderData)
-                {
-                    log("sellOrderData==NULL", ConsoleColor.Red);
-                    return;
-                }
-                if (null == sellOrderData.result)
-                {
-                    log("sellOrderData.result==NULL", ConsoleColor.Red);
-                    return;
-                }
-
-
-                var sellOrder = sellOrderData.result.orderData;//_requestor.GetOrderInfo(_sellOrderId).result.orderData;
+                var sellOrder = _requestor.GetOrderInfo(_sellOrderId);
 
                 switch (sellOrder.Status)
                 {
@@ -146,20 +130,15 @@ namespace KrakenBot
                         break;
                     }
                     case OrderStatus.Closed:
-                        {
-                            _executedSellPrice = sellOrder.Price;
-                            log("SELL order ID={0} (amount={1} BTC) was closed at price={2} EUR", ConsoleColor.Green, _sellOrderId, _sellOrderAmount, _executedSellPrice);
-                            _sellOrderId = null;
-                            _sellOrderAmount = 0;
-                            break;
-                        }
-                    case OrderStatus.Pending:
-                        {
-                            log("SELL order ID={0} is in status Pending", _sellOrderId);
-                            break;
-                        }
+                    {
+                        _executedSellPrice = sellOrder.Price;
+                        log("SELL order ID={0} (amount={1} BTC) was closed at price={2} EUR", ConsoleColor.Green, _sellOrderId, _sellOrderAmount, _executedSellPrice);
+                        _sellOrderId = -1;
+                        _sellOrderAmount = 0;
+                        break;
+                    }
                     default:
-                        var message = String.Format("SELL order ID={0} has unexpected status '{1}'", _sellOrderId, sellOrder.status);
+                        var message = String.Format("SELL order ID={0} has unexpected status '{1}'", _sellOrderId, sellOrder.Status);
                         log(message, ConsoleColor.Red);
                         throw new Exception(message);
                 }
@@ -177,9 +156,9 @@ namespace KrakenBot
             if (_operativeAmount - _sellOrderAmount > 0.00001)
             {
                 //BUY order already existed
-                if (null != _buyOrderId)
+                if (-1 != _buyOrderId)
                 {
-                    var buyOrder = _requestor.GetOrderInfo(_buyOrderId).result.orderData;
+                    var buyOrder = _requestor.GetOrderInfo(_buyOrderId);
 
                     switch (buyOrder.Status)
                     {
@@ -219,18 +198,13 @@ namespace KrakenBot
                             }
                         case OrderStatus.Closed:
                             {
-                                log("BUY order ID={0} (amount={1} BTC) was closed at price={2} EUR", ConsoleColor.Green, _buyOrderId, _buyOrderAmount, buyOrder.price);
+                                log("BUY order ID={0} (amount={1} BTC) was closed at price={2} EUR", ConsoleColor.Green, _buyOrderId, _buyOrderAmount, buyOrder.Price);
                                 _buyOrderAmount = 0;
-                                _buyOrderId = null;
-                                break;
-                            }
-                        case OrderStatus.Pending:
-                            {
-                                log("BUY order ID={0} is in status Pending", _buyOrderId);
+                                _buyOrderId = -1;
                                 break;
                             }
                         default:
-                            var message = String.Format("BUY order ID={0} has unexpected status '{1}", _buyOrderId, buyOrder.status);
+                            var message = String.Format("BUY order ID={0} has unexpected status '{1}", _buyOrderId, buyOrder.Status);
                             log(message, ConsoleColor.Red);
                             throw new Exception(message);
                     }
@@ -247,20 +221,20 @@ namespace KrakenBot
             log(new string('=', 84));
         }
 
-        private double suggestSellPrice(MarketDepth market)
+        private double suggestSellPrice(MarketDepthResponse market)
         {
             double sum = 0;
             var minDiff = _volumeWall * PRICE_DELTA;
-            var highestBid = market.XXBTZEUR.Bids.First().Price;
+            var highestBid = market.bids.First().Price;
 
-            foreach (var ask in market.XXBTZEUR.Asks)
+            foreach (var ask in market.asks)
             {
                 if (sum + _operativeAmount > _volumeWall && ask.Price - MIN_DIFFERENCE > highestBid)
                 {
                     double sellPrice = Math.Round(ask.Price - 0.001, 3);
 
                     //The difference is too small and we'd be not the first SELL order. Leave previous price to avoid server call
-                    if (null != _sellOrderId && sellPrice > market.XXBTZEUR.Asks[0].Price && Math.Abs(sellPrice - _sellOrderPrice) < minDiff)
+                    if (-1 != _sellOrderId && sellPrice > market.asks[0].Price && Math.Abs(sellPrice - _sellOrderPrice) < minDiff)
                     {
                         log("DEBUG: SELL price {0} too similar, using previous", sellPrice);
                         return _sellOrderPrice;
@@ -276,18 +250,18 @@ namespace KrakenBot
             }
 
             //Market too dry, use SELL order before last, so we see it in chart
-            var price = market.XXBTZEUR.Asks.Last().Price - 0.001;
-            if (null != _sellOrderId && Math.Abs(price - _sellOrderPrice) < minDiff)
+            var price = market.asks.Last().Price - 0.001;
+            if (-1 != _sellOrderId && Math.Abs(price - _sellOrderPrice) < minDiff)
                 return _sellOrderPrice;
             return Math.Round(price, 3);
         }
 
-        private double suggestBuyPrice(MarketDepth market)
+        private double suggestBuyPrice(MarketDepthResponse market)
         {
             const double MIN_WALL_VOLUME = 0.1;
 
             double sumVolume = 0.0;
-            foreach (var bid in market.XXBTZEUR.Bids)
+            foreach (var bid in market.bids)
             {
                 //Don't count self
                 if (bid.Price.eq(_buyOrderPrice) && bid.Amount.eq(_buyOrderAmount))
