@@ -23,8 +23,8 @@ namespace BitfinexBot
         private double _volumeWall;
         //Minimum difference between SELL price and subsequent BUY price (so we have at least some profit)
         private const double MIN_DIFFERENCE = 0.06;
-        //Tolerance of SELL price (factor). Usefull if possible price change is minor, to avoid frequent order updates.
-        private const double PRICE_DELTA = 0;//todo 0.03;    //3%
+        //Tolerance of SELL price (absolute value in USD). Usefull if possible price change is minor, to avoid frequent order updates.
+        private const double MIN_PRICE_DELTA = 0.02;    //2 cents per LTC
 
         //Active SELL order ID
         private int _sellOrderId = -1;
@@ -224,7 +224,6 @@ namespace BitfinexBot
         private double suggestSellPrice(MarketDepthResponse market)
         {
             double sum = 0;
-            var minDiff = _volumeWall * PRICE_DELTA;
             var highestBid = market.bids.First().Price;
 
             foreach (var ask in market.asks)
@@ -234,7 +233,7 @@ namespace BitfinexBot
                     double sellPrice = Math.Round(ask.Price - 0.001, 3);
 
                     //The difference is too small and we'd be not the first SELL order. Leave previous price to avoid server call
-                    if (-1 != _sellOrderId && sellPrice > market.asks[0].Price && Math.Abs(sellPrice - _sellOrderPrice) < minDiff)
+                    if (-1 != _sellOrderId && sellPrice > market.asks[0].Price && Math.Abs(sellPrice - _sellOrderPrice) < MIN_PRICE_DELTA)
                     {
                         log("DEBUG: SELL price {0} too similar, using previous", sellPrice);
                         return _sellOrderPrice;
@@ -251,7 +250,7 @@ namespace BitfinexBot
 
             //Market too dry, use SELL order before last, so we see it in chart
             var price = market.asks.Last().Price - 0.001;
-            if (-1 != _sellOrderId && Math.Abs(price - _sellOrderPrice) < minDiff)
+            if (-1 != _sellOrderId && Math.Abs(price - _sellOrderPrice) < MIN_PRICE_DELTA)
                 return _sellOrderPrice;
             return Math.Round(price, 3);
         }

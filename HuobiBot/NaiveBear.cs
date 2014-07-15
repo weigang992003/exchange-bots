@@ -214,13 +214,37 @@ namespace HuobiBot
         private void log(string message, ConsoleColor color, params object[] args)
         {
             if (_verbose) //TODO: select verbose and non-verbose messages
-                _logger.AppendMessage(String.Format(message, args), true, color);
+            {
+                try
+                {
+                    _logger.AppendMessage(String.Format(message, args), true, color);
+                }
+                catch (FormatException)
+                {
+                    var argz = null == args || 0 == args.Length
+                        ? "NULL"
+                        : String.Join(",", args);
+                    _logger.AppendMessage("Couldn't log message '" + message + "',  args=" + argz, true, ConsoleColor.Red);
+                }
+            }
         }
 
         private void log(string message, params object[] args)
         {
             if (_verbose) //TODO: select verbose and non-verbose messages
-                _logger.AppendMessage(String.Format(message, args));
+            {
+                try
+                {
+                    _logger.AppendMessage(String.Format(message, args));
+                }
+                catch (FormatException)
+                {
+                    var argz = null == args || 0 == args.Length
+                        ? "NULL"
+                        : String.Join(",", args);
+                    _logger.AppendMessage("Couldn't log message '" + message + "',  args=" + argz, true, ConsoleColor.Red);
+                }
+            }
         }
     }
 }
