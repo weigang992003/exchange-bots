@@ -42,7 +42,7 @@ namespace HuobiBot
         /// </summary>
         internal string ReasonToSell(List<Candle> candles, TradeStatisticsResponse tradeHistory)
         {
-            if (runningSelloff(tradeHistory))
+            if (dump(tradeHistory))
                 return "DUMP";
             if (volumeDeclineAfterPriceRise(candles))
                 return "Volume and price decline after price rise";
@@ -55,13 +55,13 @@ namespace HuobiBot
         /// <summary>
         /// Returns non-NULL description of BUY reason for bearish bot.
         /// </summary>
-        internal string ReasonToBuyBack(List<Candle> tradeHistory)
+        internal string ReasonToBuyBack(List<Candle> candles, TradeStatisticsResponse tradeHistory)
         {
-            if (declineIsSlowing(tradeHistory))
-                return "Decline slowing down";
-            if (isRising(tradeHistory))
+            if (pump(tradeHistory))
+                return "PUMP";
+            if (isRising(candles))
                 return "Significant rise";
-            //TODO: all the strategies
+
             return null;
         }
 
@@ -69,7 +69,7 @@ namespace HuobiBot
         #region private helpers
 
         /// <summary>There's a dump on market, best time to SELL.</summary>
-        private static bool runningSelloff(TradeStatisticsResponse tradeHistory)
+        private static bool dump(TradeStatisticsResponse tradeHistory)
         {
             //TODO: do lot of vain runs, watch carefully and tune the magic numbers here
 
@@ -80,11 +80,14 @@ namespace HuobiBot
             var uniqueTradesCount = 1;
             var upTrades = 0;
             var downTrades = 0;
-            var lastTime = tradeHistory.trades.First().TimeTyped;
-            var lastPrice = tradeHistory.trades.First().price;
+            var lastTime = tradeHistory.trades.Last().TimeTyped;
+            var lastPrice = tradeHistory.trades.Last().price;
             double totalSeconds = 0.0;
-            foreach (var trade in tradeHistory.trades)
+
+            for (int i = tradeHistory.trades.Count-1; i >= 0; i--)
             {
+                var trade = tradeHistory.trades[i];
+
                 if (trade.TimeTyped != lastTime)
                 {
                     totalSeconds += (trade.TimeTyped - lastTime).TotalSeconds;
@@ -102,14 +105,14 @@ namespace HuobiBot
             if (avgSeconds > MAX_SPEED)
                 return false;
 
-            //Trend criterion: at least 80% of recent trades are down trend, means lower price than previous trade
-            const double MIN_DOWN_TRADES = 0.8;
+            //Trend criterion: at least 75% of recent trades are down trend, means lower price than previous trade
+            const double MIN_DOWN_TRADES = 0.75;
             double downPercentage = (double)downTrades / (upTrades + downTrades);
             if (downPercentage < MIN_DOWN_TRADES)
                 return false;
 
-            //Price criterion: price has fallen enough, that is at least 8 CNY per BTC
-            const double MIN_PRICE_DIFF = 8.0;
+            //Price criterion: price has fallen enough, that is at least 6 CNY per BTC
+            const double MIN_PRICE_DIFF = 6.0;
 
             var startPrice = tradeHistory.trades.First().price;
             var endPrice = tradeHistory.trades.Last().price;
@@ -139,6 +142,7 @@ namespace HuobiBot
                     candles[c].ClosingPrice > prevClosePrice + SIGNIFICANT_RISE)
                 {
                     prevClosePrice = candles[c].ClosingPrice;
+                    rises++;
                 }
                 else if (candles[c].ClosingPrice < candles[c].OpeningPrice - PRICE_SIGNIFICANCE_LIMIT)
                     return false; //fall, good bye
@@ -157,10 +161,54 @@ namespace HuobiBot
             return candles[6].ClosingPrice < candles[5].ClosingPrice;
         }
 
-        private bool declineIsSlowing(List<Candle> tradeHistory)
+        private bool pump(TradeStatisticsResponse tradeHistory)
         {
-            return false;
-            //TODO
+            //TODO: do lot of vain runs, watch carefully and tune the magic numbers here
+
+
+            //Activity criterion: if mean time between recent trades is 5 seconds or less, it's high activity
+            const int MAX_SPEED = 5;
+
+            var uniqueTradesCount = 1;
+            var upTrades = 0;
+            var downTrades = 0;
+            var lastTime = tradeHistory.trades.Last().TimeTyped;
+            var lastPrice = tradeHistory.trades.Last().price;
+            double totalSeconds = 0.0;
+
+            for (int i = tradeHistory.trades.Count - 1; i >= 0; i--)
+            {
+                var trade = tradeHistory.trades[i];
+
+                if (trade.TimeTyped != lastTime)
+                {
+                    totalSeconds += (trade.TimeTyped - lastTime).TotalSeconds;
+                    if (trade.price <= lastPrice)
+                        downTrades++;
+                    else upTrades++;
+
+                    uniqueTradesCount++;
+                    lastTime = trade.TimeTyped;
+                    lastPrice = trade.price;
+                }
+            }
+
+            double avgSeconds = totalSeconds / uniqueTradesCount;
+            if (avgSeconds > MAX_SPEED)
+                return false;
+
+            //Trend criterion: at least 75% of recent trades are up trend, means higher price than previous trade
+            const double MIN_UP_TRADES = 0.75;
+            double upPercentage = (double)upTrades / (upTrades + downTrades);
+            if (upPercentage < MIN_UP_TRADES)
+                return false;
+
+            //Price criterion: price has fallen enough, that is at least 5 CNY per BTC
+            const double MIN_PRICE_DIFF = 5.0;
+
+            var startPrice = tradeHistory.trades.First().price;
+            var endPrice = tradeHistory.trades.Last().price;
+            return (startPrice < endPrice && endPrice - startPrice >= MIN_PRICE_DIFF);
         }
 
         private bool isRising(List<Candle> candles)
@@ -182,115 +230,5 @@ namespace HuobiBot
         }
 
         #endregion
-
-
-        /*internal struct candle
-        {
-            internal readonly TradeStatisticsResponse Trades;
-            internal readonly DateTime IntervalStart;
-            internal readonly TimeSpan IntervalLength;
-            //TODO: weighted average price?
-
-            private double _openPrice;
-            internal double OpeningPrice
-            {
-                //NOTE: quietly relies that will be called when Trades is fully filled and will not change
-                get
-                {
-                    if (_openPrice < 0.0)
-                    {
-                        DateTime first = DateTime.MaxValue;
-                        foreach (var trade in Trades)
-                        {
-                            if (trade.TimeTyped < first)
-                            {
-                                first = trade.TimeTyped;
-                                _openPrice = trade.price;
-                            }
-                        }
-                    }
-                    return _openPrice;
-                }
-            }
-
-            private double _closePrice;
-            internal double ClosingPrice
-            {
-                //NOTE: quietly relies that will be called when Trades is fully filled and will not change
-                get
-                {
-                    if (_closePrice < 0.0)
-                    {
-                        var last = DateTime.MinValue;
-                        foreach (var trade in Trades)
-                        {
-                            if (trade.TimeTyped > last)
-                            {
-                                last = trade.TimeTyped;
-                                _closePrice = trade.price;
-                            }
-                        }
-                    }
-                    return _closePrice;
-                }
-            }
-
-            private double _btcVolume;
-            internal double BtcVolume
-            {
-                get
-                {
-                    if (_btcVolume < 0.0)
-                    {
-                        _btcVolume = 0.0;
-                        foreach (var trade in Trades)
-                            _btcVolume += trade.amount;
-                    }
-
-                    return _btcVolume;
-                }
-            }
-
-            private double _avgVolume;
-            /// <summary>Mean BTC volume per trade.</summary>
-            internal double AverageVolume
-            {
-                get
-                {
-                    if (_avgVolume < 0.0)
-                    {
-                        //Group by time
-                        var volumes = new Dictionary<string, double>();
-                        foreach (var trade in Trades)
-                        {
-                            if (!volumes.ContainsKey(trade.date))
-                                volumes.Add(trade.date, 0.0);
-                            volumes[trade.date] += trade.amount;
-                        }
-
-                        _avgVolume = volumes.Values.Sum() / volumes.Count;
-                    }
-
-                    return _avgVolume;
-                }
-            }
-
-            internal candle(DateTime start, TimeSpan length)
-            {
-                Trades = new List<TradeResponse>();
-                IntervalStart = start;
-                IntervalLength = length;
-                _openPrice = -1.0;
-                _closePrice = -1.0;
-                _btcVolume = -1.0;
-                _avgVolume = -1.0;
-            }
-
-            public override string ToString()
-            {
-                return String.Format("OPEN={0:0.00} ({1:hh:mm:ss})  |  CLOSE={2:0.00} ({3:hh:mm:ss})  |  SumVolume={4:0.00}  |  AvgVolume={5:0.00}",
-                                     OpeningPrice, IntervalStart, ClosingPrice, IntervalStart.Add(IntervalLength), BtcVolume, AverageVolume);
-            }
-        }*/
     }
 }

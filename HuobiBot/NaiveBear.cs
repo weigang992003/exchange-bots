@@ -111,7 +111,7 @@ namespace HuobiBot
                 }
                 else log("No reason to SELL...");
 
-                var buyBackReason = _trend.ReasonToBuyBack(candles);
+                var buyBackReason = _trend.ReasonToBuyBack(candles, tradeStats);
                 if (null != buyBackReason)
                 {
                     log("DEBUG: Reason to BUY back=" + buyBackReason, ConsoleColor.Cyan);

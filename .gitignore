@@ -5,6 +5,7 @@ BitfinexBot/BitfinexBot.csproj.user
 BtcChinaBot/BtcChinaBot.csproj.user
 HuobiBot/HuobiBot.csproj.user
 KrakenBot/KrakenBot.csproj.user
+RippleBot/RippleBot.csproj.user
 
 # Compiled assemblies
 BitfinexBot/bin/*
@@ -17,3 +18,5 @@ HuobiBot/bin/*
 HuobiBot/obj/*
 KrakenBot/bin/*
 KrakenBot/obj/*
+RippleBot/bin/*
+RippleBot/obj/*

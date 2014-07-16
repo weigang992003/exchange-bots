@@ -28,7 +28,7 @@ namespace Common
             return (minVolume + (madnessCoef * (maxVolue - minVolume)));
         }
 
-        public static T DeserializeJSON<T>(string json)
+        public static T DeserializeJSON<T>(string json, bool burkeErrors = true) where T : new()
         {
             using (var ms = new MemoryStream(Encoding.Unicode.GetBytes(json)))
             {
@@ -39,6 +39,9 @@ namespace Common
                 }
                 catch (Exception e)
                 {
+                    if (burkeErrors)
+                        return new T();     //TODO: when really lot of time, try to heal the broken JSON by closing the open elements and deserialize at least that
+
                     throw new Exception("JSON deserialization problem. The input string was:" + Environment.NewLine + json, e);
                 }
             }
