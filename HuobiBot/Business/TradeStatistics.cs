@@ -67,14 +67,14 @@ namespace HuobiBot.Business
         }
 
 
-        internal string Type
+        internal TradeType Type
         {
             get
             {
                 if (SELL_TYPE_CODE == type)
-                    return "SELL";
+                    return TradeType.SELL;
                 if (BUY_TYPE_CODE == type)
-                    return "BUY";
+                    return TradeType.BUY;
                 throw new InvalidOperationException("Unrecognized trade type code " + type);
             }
         }
@@ -96,5 +96,12 @@ namespace HuobiBot.Business
         [DataMember] internal int level { get; set; }
         [DataMember] internal double amount { get; set; }
         [DataMember] internal double accu { get; set; }
+    }
+
+
+    internal enum TradeType
+    {
+        BUY,
+        SELL
     }
 }

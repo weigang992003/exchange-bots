@@ -19,7 +19,7 @@ namespace HuobiBot
         private const string TRADE_STATS_URL = "http://market.huobi.com/staticmarket/detail_btc_json.js";
         private const string TRADING_API_URL = "https://api.huobi.com/api.php";
         private const byte RETRY_COUNT = 5;
-        private const int RETRY_DELAY = 750;
+        private const int RETRY_DELAY = 1000;
 
         private readonly Logger _logger;
         private readonly WebProxy _webProxy;
@@ -255,8 +255,10 @@ namespace HuobiBot
             var postData = buildQueryString(parameters);
 
             WebException exc = null;
+            var delay = 0;
             for (int i = 1; i <= RETRY_COUNT; i++)
             {
+                delay += RETRY_DELAY;
                 try
                 {
                     return sendPostRequest(TRADING_API_URL, postData);
@@ -266,7 +268,7 @@ namespace HuobiBot
                     var text = String.Format("(ATTEMPT {0}/{1}) Web request failed with exception={2}; status={3}", i, RETRY_COUNT, we.Message, we.Status);
                     _logger.AppendMessage(text, true, ConsoleColor.Yellow);
                     exc = we;
-                    Thread.Sleep(RETRY_DELAY);
+                    Thread.Sleep(delay);
                 }
             }
 

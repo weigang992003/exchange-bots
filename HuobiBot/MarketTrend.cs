@@ -12,8 +12,8 @@ namespace HuobiBot
     /// </summary>
     internal class MarketTrend
     {
-        //When price moved <= 2.0 CNY in one candle, it's not rise/fall
-        private const double PRICE_SIGNIFICANCE_LIMIT = 2.0;
+        //When price moved <= 1.5 CNY in one candle, it's not rise/fall
+        private const double PRICE_SIGNIFICANCE_LIMIT = 1.5;
         //Average volume limit, to avoid price swings by single whale trade
         private const double AVG_VOLUME_LIMIT = 0.15;
         //Interval length in minutes
@@ -93,7 +93,12 @@ namespace HuobiBot
                     totalSeconds += (trade.TimeTyped - lastTime).TotalSeconds;
                     if (trade.price < lastPrice)
                         downTrades++;
-                    else upTrades++;
+                    else if (trade.price > lastPrice)
+                        upTrades++;
+                    else if (TradeType.SELL == trade.Type)
+                        downTrades++;
+                    else
+                        upTrades++;
 
                     uniqueTradesCount++;
                     lastTime = trade.TimeTyped;
@@ -183,9 +188,14 @@ namespace HuobiBot
                 if (trade.TimeTyped != lastTime)
                 {
                     totalSeconds += (trade.TimeTyped - lastTime).TotalSeconds;
-                    if (trade.price <= lastPrice)
+                    if (trade.price < lastPrice)
                         downTrades++;
-                    else upTrades++;
+                    else if (trade.price > lastPrice)
+                        upTrades++;
+                    else if (TradeType.BUY == trade.Type)
+                        upTrades++;
+                    else
+                        downTrades++;
 
                     uniqueTradesCount++;
                     lastTime = trade.TimeTyped;

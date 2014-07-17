@@ -17,7 +17,7 @@ namespace BitfinexBot
     {
         private const string BASE_URL = "https://api.bitfinex.com/v1/";
         private const byte RETRY_COUNT = 5;
-        private const int RETRY_DELAY = 750;
+        private const int RETRY_DELAY = 1000;
 
         private readonly Logger _logger;
         private readonly long _nonceOffset;
@@ -196,8 +196,10 @@ namespace BitfinexBot
                 client.Proxy = _webProxy;
 
             WebException exc = null;
+            var delay = 0;
             for (int i = 1; i <= RETRY_COUNT; i++)
             {
+                delay += RETRY_DELAY;
                 try
                 {
                     return client.DownloadString(url);
@@ -207,7 +209,7 @@ namespace BitfinexBot
                     var text = String.Format("(ATTEMPT {0}/{1}) Web request failed with exception={2}; status={3}", i, RETRY_COUNT, we.Message, we.Status);
                     _logger.AppendMessage(text, true, ConsoleColor.Yellow);
                     exc = we;
-                    Thread.Sleep(RETRY_DELAY);
+                    Thread.Sleep(delay);
                 }
             }
 

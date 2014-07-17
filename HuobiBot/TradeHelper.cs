@@ -33,9 +33,9 @@ namespace HuobiBot
                 else
                 {
                     groupped[key].amount += trade.amount;
-                    if ("BUY" == trade.Type && trade.amount > groupped[key].amount)
+                    if (TradeType.BUY == trade.Type && trade.amount > groupped[key].amount)
                         groupped[key].amount = trade.amount;
-                    else if ("SELL" == trade.Type && trade.amount < groupped[key].amount)
+                    else if (TradeType.SELL == trade.Type && trade.amount < groupped[key].amount)
                         groupped[key].amount = trade.amount;
                 }
             }

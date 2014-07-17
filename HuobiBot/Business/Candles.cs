@@ -19,6 +19,10 @@ namespace HuobiBot.Business
         {
             var merged = new Dictionary<DateTime, Candle>();
 
+            //In case Huobi returned bad data
+            if (null == candleData || !candleData.Any())
+                return new List<Candle>();
+
             foreach (var data in candleData)
             {
                 var timestamp = DateTime.ParseExact(data[0], "yyyyMMddHHmmss000", CultureInfo.InvariantCulture);

@@ -18,7 +18,7 @@ namespace BtcChinaBot
         private const string BASE_URL = "https://api.btcchina.com/api_trade_v1.php";
         private const string TRADE_HISTORY_URL = "http://data.btcchina.com/data/historydata";
         private const byte RETRY_COUNT = 5;
-        private const int RETRY_DELAY = 750;
+        private const int RETRY_DELAY = 1000;
 
         private readonly Logger _logger;
         private readonly WebProxy _webProxy;
@@ -225,18 +225,20 @@ namespace BtcChinaBot
             string postData = "{\"method\":\"" + methodName + "\",\"params\":[" + paramString + "],\"id\":" + id + "}";
 
             WebException error = null;
+            var delay = 0;
             for (int i = 0; i < RETRY_COUNT; i++)
             {
+                delay += RETRY_DELAY;
                 try
                 {
                     return sendPostRequest(BASE_URL, base64String, tonce, postData);
                 }
                 catch (WebException we)
                 {
-                    var text = String.Format("(ATTEMPT {0}/3) Web request failed with exception={1}; status={2}", i, we.Message, we.Status);
+                    var text = String.Format("(ATTEMPT {0}/{1}) Web request failed with exception={2}; status={3}", i, RETRY_COUNT, we.Message, we.Status);
                     _logger.AppendMessage(text, true, ConsoleColor.Yellow);
                     error = we;
-                    Thread.Sleep(RETRY_DELAY);
+                    Thread.Sleep(delay);
                 }
             }
 
