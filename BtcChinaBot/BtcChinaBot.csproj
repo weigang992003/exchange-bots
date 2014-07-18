@@ -63,8 +63,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="DataSamples\GetAccountInfo.json.js" />
-    <Content Include="DataSamples\GetMarketDepth2.json.js" />
+    <None Include="DataSamples\GetAccountInfo.json" />
+    <None Include="DataSamples\GetMarketDepth2.json" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

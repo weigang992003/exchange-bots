@@ -56,8 +56,8 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="DataSamples\candles_1m.json.js" />
-    <Content Include="DataSamples\get_account_info.json.js" />
+    <None Include="DataSamples\candles_1m.json" />
+    <None Include="DataSamples\get_account_info.json" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.csproj">
@@ -66,10 +66,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="DataSamples\market.json.js" />
-    <Content Include="DataSamples\error.json.js" />
-    <Content Include="DataSamples\order_info.json.js" />
-    <Content Include="DataSamples\tradeStatistics.json.js" />
+    <None Include="DataSamples\market.json" />
+    <None Include="DataSamples\error.json" />
+    <None Include="DataSamples\order_info.json" />
+    <None Include="DataSamples\tradeStatistics.json" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

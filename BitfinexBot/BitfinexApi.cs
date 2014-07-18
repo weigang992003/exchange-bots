@@ -16,7 +16,7 @@ namespace BitfinexBot
     internal class BitfinexApi
     {
         private const string BASE_URL = "https://api.bitfinex.com/v1/";
-        private const byte RETRY_COUNT = 5;
+        private const byte RETRY_COUNT = 6;
         private const int RETRY_DELAY = 1000;
 
         private readonly Logger _logger;

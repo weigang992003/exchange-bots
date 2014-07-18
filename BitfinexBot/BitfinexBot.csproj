@@ -62,11 +62,11 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
-    <Content Include="DataSamples\balances.json.js" />
-    <Content Include="DataSamples\error.json.js" />
-    <Content Include="DataSamples\orderbook.json.js" />
-    <Content Include="DataSamples\orderStatus.json.js" />
-    <Content Include="DataSamples\trades.json.js" />
+    <None Include="DataSamples\balances.json" />
+    <None Include="DataSamples\error.json" />
+    <None Include="DataSamples\orderbook.json" />
+    <None Include="DataSamples\orderStatus.json" />
+    <None Include="DataSamples\trades.json" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

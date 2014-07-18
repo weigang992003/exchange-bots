@@ -71,6 +71,10 @@ namespace HuobiBot
         /// <summary>There's a dump on market, best time to SELL.</summary>
         private static bool dump(TradeStatisticsResponse tradeHistory)
         {
+            //Safety in case Huobi returned broken response
+            if (null == tradeHistory.trades)
+                return false;
+
             //TODO: do lot of vain runs, watch carefully and tune the magic numbers here
 
 
@@ -156,8 +160,8 @@ namespace HuobiBot
                 return false;
 
             //5th candle
-            if (candles[4].ClosingPrice + PRICE_SIGNIFICANCE_LIMIT > candles[4].OpeningPrice || candles[4].Volume > candles[3].Volume)
-                return false;   //Not fall or volume still rising
+            if (candles[4].ClosingPrice + PRICE_SIGNIFICANCE_LIMIT > candles[4].OpeningPrice)
+                return false;   //Not fall
             //6th candle (before last)
             if (candles[5].ClosingPrice + PRICE_SIGNIFICANCE_LIMIT > candles[5].OpeningPrice || candles[5].Volume > candles[4].Volume)
                 return false;   //Not fall or volume still rising
@@ -168,6 +172,9 @@ namespace HuobiBot
 
         private bool pump(TradeStatisticsResponse tradeHistory)
         {
+            //Safety in case Huobi returned broken response
+            if (null == tradeHistory.trades)
+                return false;
             //TODO: do lot of vain runs, watch carefully and tune the magic numbers here
 
 

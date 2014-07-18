@@ -91,7 +91,6 @@ namespace HuobiBot
             log("Madness={0}, Interval={1} ms; ", coef, _intervalMs);
 
             //TODO: log(some description of market condition based on recent trades)
-            candles = candles.TakeLast(8).ToList();
 
             //We have BTC to SELL
             if (OPERATIVE_AMOUNT - _buyOrderAmount > 0.00001)

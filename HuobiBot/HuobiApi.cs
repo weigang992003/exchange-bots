@@ -18,7 +18,7 @@ namespace HuobiBot
         private const string MARKET_URL = "http://market.huobi.com/staticmarket/depth_btc_json.js";
         private const string TRADE_STATS_URL = "http://market.huobi.com/staticmarket/detail_btc_json.js";
         private const string TRADING_API_URL = "https://api.huobi.com/api.php";
-        private const byte RETRY_COUNT = 5;
+        private const byte RETRY_COUNT = 6;
         private const int RETRY_DELAY = 1000;
 
         private readonly Logger _logger;
