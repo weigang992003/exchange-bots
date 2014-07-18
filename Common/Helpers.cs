@@ -46,5 +46,17 @@ namespace Common
                 }
             }
         }
+
+        public static string SerializeJson<T>(T dataObject)
+        {
+            var serializer = new DataContractJsonSerializer(typeof(T));
+            var stream = new MemoryStream();
+            serializer.WriteObject(stream, dataObject);
+
+            stream.Position = 0;
+            var reader = new StreamReader(stream);
+            var text = reader.ReadToEnd();
+            return text;
+        }
     }
 }

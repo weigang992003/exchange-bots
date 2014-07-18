@@ -1,6 +1,8 @@
-﻿using System;
+﻿using Common;
+using System;
 using System.IO;
 using System.Net;
+using System.Threading;
 
 
 namespace RippleBot
@@ -9,43 +11,27 @@ namespace RippleBot
     {
         static void Main(string[] args)
         {
-            const string BASE_URL = "http://s-west.ripple.com:443/";
+            //TODO: standard code
 
-            var postData = "{ \"method\" : \"account_info\", \"params\" : [ { \"account\" : \"rpMV1zYgR5P6YWA2JSXDPcbsbqivkooKVY\"} ], \"id\" : \"1\" }";
+            var strategy = "cst";
+            var logger = new Logger("C:\\temp\\ripple_test.log");
 
-            Console.WriteLine(post(BASE_URL, postData));
-
-/*            var postData2 = "{ \"id\": 1, \"command\": \"account_info\", \"account\": \"r9cZA1mLK5R5Am25ArfXFmqgNwjZgnfk59\" }";
-            Console.WriteLine(post("https://ripple.com/tools/api/", postData2));*/
-        }
-
-
-        private static string post(string url, string postData)
-        {
-            var webRequest = (HttpWebRequest)WebRequest.Create(url);
-            webRequest.ContentType = "application/json";
-            webRequest.Method = "POST";
-
-            var _webProxy = new WebProxy("wsproxybra.ext.crifnet.com", 8080);
-            _webProxy.Credentials = CredentialCache.DefaultCredentials;
-            webRequest.Proxy = _webProxy;
-
-            using (var writer = new StreamWriter(webRequest.GetRequestStream()))
+            ITrader trader;
+            switch (strategy.ToLower())
             {
-                writer.Write(postData);
+                case "cst":
+                    trader = new CrazySellerTrap(logger);
+                    break;
+                default:
+                    throw new ArgumentException("Unknown strategy " + strategy);
             }
 
-            using (WebResponse webResponse = webRequest.GetResponse())
-            {
-                using (Stream stream = webResponse.GetResponseStream())
-                {
-                    using (StreamReader reader = new StreamReader(stream))
-                    {
-                        var text = reader.ReadToEnd();
-                        return text;
-                    }
-                }
-            }
+            Thread t = new Thread(trader.StartTrading);
+            t.Start();
+
+            Console.WriteLine("ENTER quits this app...");
+            Console.ReadLine();
+            trader.Kill();
         }
     }
 }

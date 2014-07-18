@@ -43,12 +43,20 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Business\Balances.cs" />
+    <Compile Include="Business\Payment.cs" />
+    <Compile Include="CrazySellerTrap.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RippleRestApi.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="DataSamples\balances.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Common\Common.csproj">
+      <Project>{2eef9328-252f-4889-804d-e6071f1da8f0}</Project>
+      <Name>Common</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
