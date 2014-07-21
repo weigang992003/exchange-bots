@@ -15,7 +15,7 @@ namespace RippleBot
         private bool _killSignal;
         private bool _verbose = true;
         private readonly Logger _logger;
-        private readonly RippleRestApi _requestor;
+        private readonly RippleWebSocketApi _requestor;
         private int _intervalMs;
 
         //BTC amount to trade
@@ -48,7 +48,8 @@ namespace RippleBot
         public CrazySellerTrap(Logger logger)
         {
             _logger = logger;
-            _requestor = new RippleRestApi(logger);
+            _requestor = new RippleWebSocketApi(logger);
+            _requestor.Init();
         }
 
         public void StartTrading()
@@ -71,6 +72,7 @@ namespace RippleBot
         public void Kill()
         {
             _killSignal = true;
+            _requestor.Close();
             log("Crazy Seller Trap trader received kill signal. Good bye.");
         }
 
@@ -79,8 +81,7 @@ namespace RippleBot
         {
             var myAddress = "rpMV1zYgR5P6YWA2JSXDPcbsbqivkooKVY";    //TODO: from config as ACCESS_KEY
 
-            var balances = _requestor.GetAccountBalance(myAddress);
-
+/*            var balances = _requestor.GetAccountBalance(myAddress);
             log("XRP balance={0}; USD balance={1}", balances.AvailableXrp, balances.AvailableUsd);
 
             var payment = new Payment
@@ -92,7 +93,10 @@ namespace RippleBot
             };
 
             var json = Helpers.SerializeJson(payment);
-            log(json);
+            log(json);*/
+
+            var debug = _requestor.GetOrderInfo(133);
+            log(debug.Type + " " + debug.AmountXrp + " for " + debug.AmountUsd + " USD");
         }
 
 

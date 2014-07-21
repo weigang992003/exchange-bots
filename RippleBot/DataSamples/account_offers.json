@@ -1,0 +1,50 @@
+﻿{
+  "id": 1,
+  "result": {
+    "account": "rpMV1zYgR5P6YWA2JSXDPcbsbqivkooKVY",
+    "offers": [
+      {
+        "flags": 0,
+        "seq": 129,
+        "taker_gets": {
+          "currency": "USD",
+          "issuer": "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",
+          "value": "33.08"
+        },
+        "taker_pays": "10000000000"
+      },
+      {
+        "flags": 0,
+        "seq": 133,
+        "taker_gets": {
+          "currency": "USD",
+          "issuer": "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",
+          "value": "130.05"
+        },
+        "taker_pays": "30000000000"
+      },
+      {
+        "flags": 131072,
+        "seq": 157,
+        "taker_gets": "555000000",
+        "taker_pays": {
+          "currency": "USD",
+          "issuer": "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",
+          "value": "3.14685"
+        }
+      },
+      {
+        "flags": 131072,
+        "seq": 160,
+        "taker_gets": "700000000",
+        "taker_pays": {
+          "currency": "USD",
+          "issuer": "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",
+          "value": "3.8178"
+        }
+      }
+    ]
+  },
+  "status": "success",
+  "type": "response"
+}
