@@ -59,6 +59,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Business\Balances.cs" />
+    <Compile Include="Business\DataApi\Candles.cs" />
     <Compile Include="Business\Offers.cs" />
     <Compile Include="Business\Payment.cs" />
     <Compile Include="CrazySellerTrap.cs" />
@@ -70,6 +71,7 @@
   <ItemGroup>
     <None Include="DataSamples\account_offers.json" />
     <None Include="DataSamples\balances.json" />
+    <None Include="DataSamples\Data API\offers_executed.json" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.csproj">

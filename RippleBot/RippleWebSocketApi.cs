@@ -1,19 +1,22 @@
-﻿using Common;
+﻿using System.IO;
+using System.Net;
+using System.Text;
+using Common;
 using RippleBot.Business;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
+using RippleBot.Business.DataApi;
 using WebSocket4Net;
 
 
 namespace RippleBot
 {
+    //TODO: not the best name, we're calling data (charts) API too, and it's simple REST
     internal class RippleWebSocketApi : IDisposable
     {
-        private const string BASE_URL = "wss://s-west.ripple.com:443";
+        private const string TRADE_BASE_URL = "wss://s-west.ripple.com:443";
+        private const string CHARTS_BASE_URL = "http://api.ripplecharts.com/api/";
         private const byte RETRY_COUNT = 6;
         private const int RETRY_DELAY = 1000;
 
@@ -24,6 +27,7 @@ namespace RippleBot
         private bool _open;
 
         private readonly WebSocket _webSocket;
+        private readonly WebProxy _webProxy;
 
         private string _lastResponse;
 
@@ -31,12 +35,15 @@ namespace RippleBot
         internal RippleWebSocketApi(Logger logger)
         {
             _logger = logger;
-            _webSocket = new WebSocket(BASE_URL);
 
+            _webProxy = new WebProxy("wsproxybra.ext.crifnet.com", 8080);      //TODO
+            _webProxy.Credentials = CredentialCache.DefaultCredentials;
+
+            _webSocket = new WebSocket(TRADE_BASE_URL);
             _webSocket.Opened += websocket_Opened;
             _webSocket.Error += websocket_Error;
             _webSocket.Closed += websocket_Closed;
-            _webSocket.MessageReceived += websocket_MessageReceived;            
+            _webSocket.MessageReceived += websocket_MessageReceived;
         }
 
         internal void Init()
@@ -66,6 +73,27 @@ namespace RippleBot
         public void Dispose()
         {
             Close();
+        }
+
+
+        /// <summary>Get trade statistics</summary>
+        /// <param name="age">First candle will start on now-age</param>
+        internal CandlesResponse GetTradeStatistics(TimeSpan age)
+        {
+            var input = new CandlesRequest
+            {
+                @base = new Base {currency = "XRP"},
+                counter = new Counter { currency = "USD", issuer = "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"/*BitStamp ripple address*/ },
+                startTime = DateTime.UtcNow.Subtract(age).ToString("s"),    //"2014-07-22T10:00:00"
+                endTime = DateTime.UtcNow.ToString("s"),
+                timeIncrement = "minute",
+                timeMultiple = 5,
+                format = "json"
+            };
+            var jsonParams = Helpers.SerializeJson(input);
+
+            var data = sendPostRequest("offers_exercised", jsonParams);
+            return Helpers.DeserializeJSON<CandlesResponse>(data);
         }
 
         #region private helpers
@@ -105,6 +133,50 @@ namespace RippleBot
         {
             _logger.AppendMessage("WebSocket connection was closed", true, ConsoleColor.Yellow);
             _open = false;
+        }
+
+        private string sendPostRequest(string method, string postData)
+        {
+            string address = CHARTS_BASE_URL + method;
+            var webRequest = (HttpWebRequest)WebRequest.Create(address);
+            webRequest.ContentType = "application/json";
+            webRequest.Method = "POST";
+
+            if (null != _webProxy)
+                webRequest.Proxy = _webProxy;
+
+            using (var writer = new StreamWriter(webRequest.GetRequestStream()))
+            {
+                writer.Write(postData);
+            }
+
+            WebException exc = null;
+            for (int i = 1; i <= RETRY_COUNT; i++)
+            {
+                try
+                {
+                    using (WebResponse webResponse = webRequest.GetResponse())
+                    {
+                        using (Stream stream = webResponse.GetResponseStream())
+                        {
+                            using (StreamReader reader = new StreamReader(stream))
+                            {
+                                var text = reader.ReadToEnd();
+                                return text;
+                            }
+                        }
+                    }
+                }
+                catch (WebException we)
+                {
+                    var text = String.Format("(ATTEMPT {0}/{1}) Web request failed with exception={2}; status={3}", i, RETRY_COUNT, we.Message, we.Status);
+                    _logger.AppendMessage(text, true, ConsoleColor.Yellow);
+                    exc = we;
+                    Thread.Sleep(RETRY_DELAY);
+                }
+            }
+
+            throw new Exception(String.Format("Web request failed {0} times in a row with error '{1}'. Giving up.", RETRY_COUNT, exc.Message));
         }
         #endregion
     }
