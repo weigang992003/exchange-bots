@@ -112,6 +112,35 @@ namespace RippleBot
             return market;
         }
 
+        internal int PlaceBuyOrder(double price, double amount)
+        {
+            long amountXrpDrops = (long)Math.Round(amount*1000000);
+            double amountUsd = price * amount;
+
+            var command = new CreateOrderRequest
+            {
+                command = "submit",     //TODO: constant
+                tx_json = new COR_TxJson
+                {
+                    TransactionType = "OfferCreate",
+                    Account = _walletAddress,
+                    TakerGets = new Take
+                    {
+                        currency = "USD",
+                        value = amountUsd.ToString("0.00000"),
+                        issuer = USD_ISSUER_ADDRESS
+                    },
+                    TakerPays = amountXrpDrops.ToString()
+                },
+                secret = Configuration.SecretKey
+            };
+
+            var data = sendToRippleNet(Helpers.SerializeJson(command));
+            var response = Helpers.DeserializeJSON<NewBuyOrderResponse>(data);
+
+            return response.result.tx_json.Sequence;
+        }
+
         internal void Close()
         {
             if (_open)

@@ -27,8 +27,7 @@ namespace RippleBot.Business
         [DataMember] internal int flags { get; set; }
         [DataMember] internal int seq { get; set; }
         [DataMember] internal Take taker_gets { get; set; }
-        [DataMember]
-        internal Take taker_pays { get; set; }
+        [DataMember] internal Take taker_pays { get; set; }
 
         internal OrderType Type
         {

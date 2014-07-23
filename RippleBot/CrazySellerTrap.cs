@@ -58,19 +58,19 @@ namespace RippleBot
 
         public void StartTrading()
         {
-            do
+/*            do
             {
                 try
-                {
+                {*/
                     check();
-                    Thread.Sleep(_intervalMs);
+/*                    Thread.Sleep(_intervalMs);
                 }
                 catch (Exception ex)
                 {
                     log("ERROR: " + ex.Message + Environment.NewLine + ex.StackTrace);
                     throw;
                 }
-            } while (!_killSignal);
+            } while (!_killSignal);*/
         }
 
         public void Kill()
@@ -87,9 +87,7 @@ namespace RippleBot
             log("XRP balance={0}; USD balance={1}", balances.AvailableXrp, balances.AvailableUsd);
 */
 
-            var debug = _requestor.GetOrderInfo(133);
-            log(debug.Type + " " + debug.AmountXrp + " for " + debug.AmountUsd + " USD");
-            log("==================");
+            
 
             var candles = _requestor.GetTradeStatistics(new TimeSpan(2, 0, 0));
 
@@ -108,6 +106,12 @@ namespace RippleBot
             _intervalMs = Helpers.SuggestInterval(coef, 8000, 20000);
             log("Madness={0}; Volume={1} BTC; Interval={2} ms;", coef, _volumeWall, _intervalMs);
 
+
+            var buyId = _requestor.PlaceBuyOrder(0.00456, 22);
+            log("Success created BUY order with ID " + buyId);
+            log("==================");
+            var debug = _requestor.GetOrderInfo(buyId);
+            log(debug.Type + " " + debug.AmountXrp + " for " + debug.AmountUsd + " USD");
 
             log(new string('=', 80));
         }

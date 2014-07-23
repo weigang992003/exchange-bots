@@ -59,12 +59,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Business\Balances.cs" />
+    <Compile Include="Business\CreateOrderRequest.cs" />
     <Compile Include="Business\DataApi\Candles.cs" />
     <Compile Include="Business\Market.cs" />
     <Compile Include="Business\MarketDepthAsks.cs" />
     <Compile Include="Business\MarketDepthRequest.cs" />
     <Compile Include="Business\Error.cs" />
     <Compile Include="Business\MarketDepthBids.cs" />
+    <Compile Include="Business\NewBuyOrder.cs" />
     <Compile Include="Business\Offers.cs" />
     <Compile Include="Business\OrderInfoRequest.cs" />
     <Compile Include="Business\Payment.cs" />
@@ -72,6 +74,7 @@
     <Compile Include="TradeHelper.cs" />
     <None Include="DataSamples\WebSocket API\book_offers.asks.json" />
     <None Include="DataSamples\WebSocket API\book_offers.bids.json" />
+    <None Include="DataSamples\WebSocket API\createOffer.buy.json" />
     <None Include="DataSamples\WebSocket API\Error.json" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

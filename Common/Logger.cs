@@ -12,7 +12,7 @@ namespace Common
         {
             var stream = new FileStream(logFilePath, FileMode.Create, FileAccess.Write);
             _writer = new StreamWriter(stream);
-            _writer.WriteLine("BTCChina trading bot started at " + DateTime.Now);
+            _writer.WriteLine("Trading bot log initialized at " + DateTime.Now);
             _writer.WriteLine("=============================================================================");
             _writer.Flush();
         }
