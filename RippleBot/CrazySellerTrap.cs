@@ -48,25 +48,29 @@ namespace RippleBot
         public CrazySellerTrap(Logger logger)
         {
             _logger = logger;
+            _operativeAmount = double.Parse(Configuration.GetValue("operative_amount"));
+            _minWallVolume = double.Parse(Configuration.GetValue("min_volume"));
+            _maxWallVolume = double.Parse(Configuration.GetValue("max_volume"));
+            _logger.AppendMessage(String.Format("Crazy seller trap trader initialized with operative={0}; MinWall={1}; MaxWall={2}", _operativeAmount, _minWallVolume, _maxWallVolume));
             _requestor = new RippleWebSocketApi(logger);
             _requestor.Init();
         }
 
         public void StartTrading()
         {
-/*            do
+            do
             {
                 try
-                {*/
+                {
                     check();
-/*                    Thread.Sleep(_intervalMs);
+                    Thread.Sleep(_intervalMs);
                 }
                 catch (Exception ex)
                 {
                     log("ERROR: " + ex.Message + Environment.NewLine + ex.StackTrace);
                     throw;
                 }
-            } while (!_killSignal);*/
+            } while (!_killSignal);
         }
 
         public void Kill()
@@ -79,30 +83,17 @@ namespace RippleBot
 
         private void check()
         {
-            var myAddress = "rpMV1zYgR5P6YWA2JSXDPcbsbqivkooKVY";    //TODO: from config as ACCESS_KEY
-
 /*            var balances = _requestor.GetAccountBalance(myAddress);
             log("XRP balance={0}; USD balance={1}", balances.AvailableXrp, balances.AvailableUsd);
-
-            var payment = new Payment
-            {
-                source_account = "rSourceAccountAddressXXXXXxxx",
-                source_tag = "",
-                source_amount = new PaymentAmount { value = "0.123", currency = "XRP", issuer = "" },
-                hash = "harash"
-            };
-
-            var json = Helpers.SerializeJson(payment);
-            log(json);*/
+*/
 
             var debug = _requestor.GetOrderInfo(133);
             log(debug.Type + " " + debug.AmountXrp + " for " + debug.AmountUsd + " USD");
             log("==================");
 
-            var debug2 = _requestor.GetTradeStatistics(new TimeSpan(2, 0, 0));
-            log("Open price = " + debug2.results.First().open);
+            var candles = _requestor.GetTradeStatistics(new TimeSpan(2, 0, 0));
 
-            var market = _requestor.GetMarketDepth();
+/*            var market = _requestor.GetMarketDepth();
             log("BIDs:");
             foreach (var bid in market.Bids)
                 log("BUY " + bid.Amount + " for " + bid.Price + " USD");
@@ -110,7 +101,15 @@ namespace RippleBot
             log("==================");
             log("ASKs:");
             foreach (var ask in market.Asks)
-                log("SELL " + ask.Amount + " for " + ask.Price + " USD");
+                log("SELL " + ask.Amount + " for " + ask.Price + " USD");*/
+
+            var coef = TradeHelper.GetMadness(candles.results);
+            _volumeWall = Helpers.SuggestWallVolume(coef, _minWallVolume, _maxWallVolume);
+            _intervalMs = Helpers.SuggestInterval(coef, 8000, 20000);
+            log("Madness={0}; Volume={1} BTC; Interval={2} ms;", coef, _volumeWall, _intervalMs);
+
+
+            log(new string('=', 80));
         }
 
 

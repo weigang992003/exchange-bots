@@ -14,8 +14,8 @@ namespace KrakenBot
     internal class KrakenApi
     {
         private const string BASE_URL = "https://api.kraken.com";
-        private const byte RETRY_COUNT = 6;
-        private const int RETRY_DELAY = 1000;
+        private const byte RETRY_COUNT = 10;
+        private const int RETRY_DELAY = 1500;
 
         private readonly Logger _logger;
         private readonly long _nonceOffset;

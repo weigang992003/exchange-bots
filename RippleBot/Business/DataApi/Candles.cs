@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Runtime.Serialization;
 
 
@@ -25,7 +26,7 @@ namespace RippleBot.Business.DataApi
         [DataMember] internal Counter counter { get; set; }
         [DataMember] internal string timeIncrement { get; set; }
         [DataMember] internal int timeMultiple { get; set; }
-        [DataMember] internal List<Result> results { get; set; }
+        [DataMember] internal List<Candle> results { get; set; }
     }
 
     [DataContract]
@@ -42,7 +43,7 @@ namespace RippleBot.Business.DataApi
     }
 
     [DataContract]
-    internal class Result
+    internal class Candle
     {
         [DataMember] internal string startTime { get; set; }
         [DataMember] internal string openTime { get; set; }
@@ -56,5 +57,10 @@ namespace RippleBot.Business.DataApi
         [DataMember] internal double close { get; set; }
         [DataMember] internal double vwap { get; set; }
         [DataMember] internal bool partial { get; set; }
+
+        internal DateTime StartTime
+        {
+            get { return DateTime.Parse(startTime); }
+        }
     }
 }

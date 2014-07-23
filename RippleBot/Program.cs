@@ -1,5 +1,6 @@
 ﻿using Common;
 using System;
+using System.Linq;
 using System.Threading;
 
 
@@ -9,10 +10,18 @@ namespace RippleBot
     {
         static void Main(string[] args)
         {
-            //TODO: standard code
+            if (args.Length != 2 || !args.Any(arg => arg.StartsWith("--config=")) || !args.Any(arg => arg.StartsWith("--log=")))
+            {
+                usage();
+                return;
+            }
 
-            var strategy = "cst";
-            var logger = new Logger("C:\\temp\\ripple_test.log");
+            var logFile = args.First(arg => arg.StartsWith("--log=")).Substring("--log=".Length);
+            var logger = new Logger(logFile);
+
+            var configFile = args.First(arg => arg.StartsWith("--config=")).Substring("--config=".Length);
+            Configuration.Load(configFile);
+            var strategy = Configuration.Strategy;
 
             ITrader trader;
             switch (strategy.ToLower())
@@ -20,6 +29,8 @@ namespace RippleBot
                 case "cst":
                     trader = new CrazySellerTrap(logger);
                     break;
+                case "cbt":
+                    throw new NotImplementedException("Soon...");
                 default:
                     throw new ArgumentException("Unknown strategy " + strategy);
             }
@@ -30,6 +41,12 @@ namespace RippleBot
             Console.WriteLine("ENTER quits this app...");
             Console.ReadLine();
             trader.Kill();
+        }
+
+        static void usage()
+        {
+            Console.WriteLine("Ripple trading bot. Usage: bot.exe --config=<config file path> --log=<log file path>");
+            Console.WriteLine("Config is in form key=value on each line. Mandatory keys are 'strategy', 'access_key', 'secret_key'.");
         }
     }
 }

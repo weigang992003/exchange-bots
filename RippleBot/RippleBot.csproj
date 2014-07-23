@@ -66,8 +66,10 @@
     <Compile Include="Business\Error.cs" />
     <Compile Include="Business\MarketDepthBids.cs" />
     <Compile Include="Business\Offers.cs" />
+    <Compile Include="Business\OrderInfoRequest.cs" />
     <Compile Include="Business\Payment.cs" />
     <Compile Include="CrazySellerTrap.cs" />
+    <Compile Include="TradeHelper.cs" />
     <None Include="DataSamples\WebSocket API\book_offers.asks.json" />
     <None Include="DataSamples\WebSocket API\book_offers.bids.json" />
     <None Include="DataSamples\WebSocket API\Error.json" />
@@ -77,7 +79,7 @@
     <Compile Include="RippleWebSocketApi.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="DataSamples\account_offers.json" />
+    <None Include="DataSamples\WebSocket API\account_offers.json" />
     <None Include="DataSamples\balances.json" />
     <None Include="DataSamples\Data API\offers_executed.json" />
   </ItemGroup>

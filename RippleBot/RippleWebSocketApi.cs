@@ -58,9 +58,9 @@ namespace RippleBot
 
         internal Offer GetOrderInfo(int orderId)
         {
-            var command = "{" + String.Format("\"command\":\"account_offers\",\"id\":1,\"account\":\"{0}\"", _walletAddress) + "}";       //TODO: serialize from class
+            var command = new OrderInfoRequest { id = 1, account = _walletAddress };
 
-            var data = sendToRippleNet(command);
+            var data = sendToRippleNet(Helpers.SerializeJson(command));
             var dataFix = _offerPattern.Replace(data, "'taker_${verb}s': {'currency': 'XRP', 'issuer':'ripple labs', 'value': '${value}'}".Replace("'", "\""));
 
             var offerList = Helpers.DeserializeJSON<OffersResponse>(dataFix);
@@ -73,10 +73,8 @@ namespace RippleBot
             var command = new MarketDepthRequest
             {
                 id = 2,
-                command = "book_offers",
                 taker_pays = new Take { currency = "XRP" },
-                taker_gets = new Take { currency = "USD", issuer = USD_ISSUER_ADDRESS },
-                limit = 15
+                taker_gets = new Take { currency = "USD", issuer = USD_ISSUER_ADDRESS }
             };
 
             var bidData = sendToRippleNet(Helpers.SerializeJson(command));
@@ -92,10 +90,8 @@ namespace RippleBot
             command = new MarketDepthRequest
             {
                 id = 3,
-                command = "book_offers",
                 taker_pays = new Take { currency = "USD", issuer = USD_ISSUER_ADDRESS },
-                taker_gets = new Take { currency = "XRP" },
-                limit = 15
+                taker_gets = new Take { currency = "XRP" }
             };
 
             var askData = sendToRippleNet(Helpers.SerializeJson(command));
