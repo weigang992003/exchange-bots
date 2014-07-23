@@ -22,6 +22,7 @@ namespace HuobiBot
         private const int RETRY_DELAY = 1000;
 
         private readonly Logger _logger;
+        private readonly int _timeOffset;
         private readonly WebProxy _webProxy;
 
 
@@ -35,6 +36,10 @@ namespace HuobiBot
                 _webProxy = new WebProxy(proxyHost, int.Parse(proxyPort));
                 _webProxy.Credentials = CredentialCache.DefaultCredentials;
             }
+
+            var timeOffset = Configuration.GetValue("time_offset");
+            if (!String.IsNullOrEmpty(timeOffset))
+                _timeOffset = int.Parse(timeOffset);
         }
 
 
@@ -233,6 +238,7 @@ namespace HuobiBot
             ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
             var serverTimeDiff = new TimeSpan(-2, 0, 0);
             var totalSeconds = (int) Math.Round((DateTime.Now - new DateTime(1970, 1, 1) + serverTimeDiff).TotalSeconds);
+            totalSeconds += _timeOffset;
 
             var parameters = new List<Tuple<string, string>>
             {
