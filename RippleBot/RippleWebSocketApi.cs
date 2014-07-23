@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading;
 using RippleBot.Business.DataApi;
 using WebSocket4Net;
+using System.Text.RegularExpressions;
 
 
 namespace RippleBot
@@ -19,25 +20,26 @@ namespace RippleBot
         private const string CHARTS_BASE_URL = "http://api.ripplecharts.com/api/";
         private const byte RETRY_COUNT = 6;
         private const int RETRY_DELAY = 1000;
+        private const string USD_ISSUER_ADDRESS = "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B";      //BitStamp
 
         private readonly string _walletAddress = "rpMV1zYgR5P6YWA2JSXDPcbsbqivkooKVY";      //TODO: Config.AccessKey
 
         private readonly Logger _logger;
-//TODO        private readonly ??? _webProxy;
         private bool _open;
 
         private readonly WebSocket _webSocket;
         private readonly WebProxy _webProxy;
 
         private string _lastResponse;
+        private readonly Regex _offerPattern = new Regex("\"taker_(?<verb>get|pay)s\":\"(?<value>\\d{1,20})\"");
 
 
         internal RippleWebSocketApi(Logger logger)
         {
             _logger = logger;
 
-            _webProxy = new WebProxy("wsproxybra.ext.crifnet.com", 8080);      //TODO
-            _webProxy.Credentials = CredentialCache.DefaultCredentials;
+//            _webProxy = new WebProxy("wsproxybra.ext.crifnet.com", 8080);      //TODO
+//            _webProxy.Credentials = CredentialCache.DefaultCredentials;
 
             _webSocket = new WebSocket(TRADE_BASE_URL);
             _webSocket.Opened += websocket_Opened;
@@ -59,8 +61,59 @@ namespace RippleBot
             var command = "{" + String.Format("\"command\":\"account_offers\",\"id\":1,\"account\":\"{0}\"", _walletAddress) + "}";       //TODO: serialize from class
 
             var data = sendToRippleNet(command);
-            var offerList = Helpers.DeserializeJSON<OffersResponse>(data);
+            var dataFix = _offerPattern.Replace(data, "'taker_${verb}s': {'currency': 'XRP', 'issuer':'ripple labs', 'value': '${value}'}".Replace("'", "\""));
+
+            var offerList = Helpers.DeserializeJSON<OffersResponse>(dataFix);
             return offerList.result.offers.FirstOrDefault(o => o.seq == orderId);
+        }
+
+        internal Market GetMarketDepth()
+        {
+            //BIDs
+            var command = new MarketDepthRequest
+            {
+                id = 2,
+                command = "book_offers",
+                taker_pays = new Take { currency = "XRP" },
+                taker_gets = new Take { currency = "USD", issuer = USD_ISSUER_ADDRESS },
+                limit = 15
+            };
+
+            var bidData = sendToRippleNet(Helpers.SerializeJson(command));
+
+            /*TODO: should not be needed here
+            var error = Helpers.DeserializeJSON<ErrorResponse>(bidData);
+            if (!String.IsNullOrEmpty(error.error))
+                return error.error + " " + error.error_message;*/
+
+            var bids = Helpers.DeserializeJSON<MarketDepthBidsResponse>(bidData);
+
+            //ASKs
+            command = new MarketDepthRequest
+            {
+                id = 3,
+                command = "book_offers",
+                taker_pays = new Take { currency = "USD", issuer = USD_ISSUER_ADDRESS },
+                taker_gets = new Take { currency = "XRP" },
+                limit = 15
+            };
+
+            var askData = sendToRippleNet(Helpers.SerializeJson(command));
+
+            /*TODO: neither here
+            error = Helpers.DeserializeJSON<ErrorResponse>(askData);
+            if (!String.IsNullOrEmpty(error.error))
+                return error.error + " " + error.error_message;*/
+
+            var asks = Helpers.DeserializeJSON<MarketDepthAsksResponse>(askData);
+
+            var market = new Market
+            {
+                Bids  = bids.result.offers,
+                Asks = asks.result.offers
+            };
+
+            return market;
         }
 
         internal void Close()
@@ -109,7 +162,7 @@ namespace RippleBot
                 Thread.Sleep(50);
 
             var ret = _lastResponse;
-            _lastResponse = ret;
+            _lastResponse = null;
             return ret;
         }
 

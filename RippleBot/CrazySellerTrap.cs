@@ -49,7 +49,7 @@ namespace RippleBot
         {
             _logger = logger;
             _requestor = new RippleWebSocketApi(logger);
-//TODO!!!            _requestor.Init();
+            _requestor.Init();
         }
 
         public void StartTrading()
@@ -95,11 +95,22 @@ namespace RippleBot
             var json = Helpers.SerializeJson(payment);
             log(json);*/
 
-//            var debug = _requestor.GetOrderInfo(133);
-//            log(debug.Type + " " + debug.AmountXrp + " for " + debug.AmountUsd + " USD");
+            var debug = _requestor.GetOrderInfo(133);
+            log(debug.Type + " " + debug.AmountXrp + " for " + debug.AmountUsd + " USD");
+            log("==================");
 
-            var debug = _requestor.GetTradeStatistics(new TimeSpan(2, 0, 0));
-            log("Open price = " + debug.results.First().open);
+            var debug2 = _requestor.GetTradeStatistics(new TimeSpan(2, 0, 0));
+            log("Open price = " + debug2.results.First().open);
+
+            var market = _requestor.GetMarketDepth();
+            log("BIDs:");
+            foreach (var bid in market.Bids)
+                log("BUY " + bid.Amount + " for " + bid.Price + " USD");
+
+            log("==================");
+            log("ASKs:");
+            foreach (var ask in market.Asks)
+                log("SELL " + ask.Amount + " for " + ask.Price + " USD");
         }
 
 

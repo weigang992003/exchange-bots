@@ -1,0 +1,309 @@
+﻿{
+  "id": 3,
+  "result": {
+    "ledger_current_index": 7911632,
+    "offers": [
+      {
+        "Account": "rn7Dk7YcNRmUb9q9WUVX1oh9Kp1Dkuy9xE",
+        "BookDirectory": "DFA3B6DDAB58C7E8E5D944E736DA4B7046C30E4F460FD9DE4C1647279483E44E",
+        "BookNode": "0000000000000000",
+        "Flags": 131072,
+        "LedgerEntryType": "Offer",
+        "OwnerNode": "0000000000000001",
+        "PreviousTxnID": "C43933994A0A2974FBFAE8CF7ECE53258D94FA4B0C634D53594527FE80ADD6EF",
+        "PreviousTxnLgrSeq": 7911630,
+        "Sequence": 162082,
+        "TakerGets": "2499544973",
+        "TakerPays": {
+          "currency": "USD",
+          "issuer": "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",
+          "value": "15.67385869061035"
+        },
+        "index": "FA7BD72D45E6851687C14367125B18A204722B8E56A72195A57A83E49ECDB6C6",
+        "quality": "0.000000006270684808602702"
+      },
+      {
+        "Account": "ra9WsGqkjwVrdWAHnkLaRVqFfAcD4kRgSG",
+        "BookDirectory": "DFA3B6DDAB58C7E8E5D944E736DA4B7046C30E4F460FD9DE4C1648BCCE03F2A6",
+        "BookNode": "0000000000000000",
+        "Flags": 0,
+        "LedgerEntryType": "Offer",
+        "OwnerNode": "0000000000000000",
+        "PreviousTxnID": "31FD7E46DA187F90525A651FD0940B55AD2BD1DC4976686C557F5B6F8FC373ED",
+        "PreviousTxnLgrSeq": 7911628,
+        "Sequence": 104017,
+        "TakerGets": "1007738",
+        "TakerPays": {
+          "currency": "USD",
+          "issuer": "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",
+          "value": "0.00632096126152"
+        },
+        "index": "9E7A2AD02AF81A91380FA521DD56A9B050B2356BB23FC765D96F93BC4FBF2842",
+        "quality": "0.000000006272425235051174"
+      },
+      {
+        "Account": "rPEZyTnSyQyXBCwMVYyaafSVPL8oMtfG6a",
+        "BookDirectory": "DFA3B6DDAB58C7E8E5D944E736DA4B7046C30E4F460FD9DE4C16494A3C15D83F",
+        "BookNode": "0000000000000000",
+        "Flags": 0,
+        "LedgerEntryType": "Offer",
+        "OwnerNode": "0000000000005BC5",
+        "PreviousTxnID": "37E86590D9996DD3EC6953D3272E866146AA13787A7368A12122E258CBBC4493",
+        "PreviousTxnLgrSeq": 7911625,
+        "Sequence": 1043019,
+        "TakerGets": "407409341",
+        "TakerPays": {
+          "currency": "USD",
+          "issuer": "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",
+          "value": "2.55569211293496"
+        },
+        "index": "F66545D8A950AC398B2D40519BEF890ED6405F6BBFFC4EF902EF36D60F6C0D5F",
+        "quality": "0.000000006273032672106559"
+      },
+      {
+        "Account": "rajDteRmFXXs8ALEhfPpwMZy7QuW3o7MtE",
+        "BookDirectory": "DFA3B6DDAB58C7E8E5D944E736DA4B7046C30E4F460FD9DE4C164958D72110F0",
+        "BookNode": "0000000000000000",
+        "Expiration": 459440476,
+        "Flags": 0,
+        "LedgerEntryType": "Offer",
+        "OwnerNode": "00000000000001A6",
+        "PreviousTxnID": "CC9BD6E86A70A5A9A87E3A42DF8E769B242D25861DBBEBBD7B5CAB07A9C0B215",
+        "PreviousTxnLgrSeq": 7911320,
+        "Sequence": 24919,
+        "TakerGets": "15941093444",
+        "TakerPays": {
+          "currency": "USD",
+          "issuer": "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",
+          "value": "100"
+        },
+        "index": "DEEECB30936EE5E6228EBA6C017184B043912DB645200BBC6B1B62F7A2562E4F",
+        "quality": "0.000000006273095402852592"
+      },
+      {
+        "Account": "r94LJBji5JcbLQU66y6Jn26WapWuT5uXU",
+        "BookDirectory": "DFA3B6DDAB58C7E8E5D944E736DA4B7046C30E4F460FD9DE4C164E7FADB3CAB8",
+        "BookNode": "0000000000000000",
+        "Flags": 131072,
+        "LedgerEntryType": "Offer",
+        "OwnerNode": "000000000000000F",
+        "PreviousTxnID": "A957D9348DE8099B28399A3A8C4B4C34857BC5A67E4F1B087E4DE7DEA5DE3B7B",
+        "PreviousTxnLgrSeq": 7911161,
+        "Sequence": 245665,
+        "TakerGets": "992937167",
+        "TakerPays": {
+          "currency": "USD",
+          "issuer": "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",
+          "value": "6.23441393798833"
+        },
+        "index": "B2A98B53BBFFD962BF0AB9E04DE6E2CD105B9359AD17CA53A657982E20AB60A3",
+        "quality": "0.00000000627875976968876",
+        "taker_gets_funded": "168794078",
+        "taker_pays_funded": {
+          "currency": "USD",
+          "issuer": "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",
+          "value": "1.059817466308106"
+        }
+      },
+      {
+        "Account": "rGtb4iQQ429xGkKYSy7gRNRoyEn85DDqh4",
+        "BookDirectory": "DFA3B6DDAB58C7E8E5D944E736DA4B7046C30E4F460FD9DE4C16547F400FEE00",
+        "BookNode": "0000000000000000",
+        "Flags": 0,
+        "LedgerEntryType": "Offer",
+        "OwnerNode": "0000000000000000",
+        "PreviousTxnID": "7037B62C710CD0784B35044E128BBBED6DB9C31CCED000B59D5F82489A933D95",
+        "PreviousTxnLgrSeq": 7911631,
+        "Sequence": 237,
+        "TakerGets": "1000000000",
+        "TakerPays": {
+          "currency": "USD",
+          "issuer": "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",
+          "value": "6.285355"
+        },
+        "index": "A7F043FB468BCA3B4860EC395318704B8BE4B142332C794990211029C35963CD",
+        "quality": "0.000000006285355"
+      },
+      {
+        "Account": "rPEZyTnSyQyXBCwMVYyaafSVPL8oMtfG6a",
+        "BookDirectory": "DFA3B6DDAB58C7E8E5D944E736DA4B7046C30E4F460FD9DE4C16580907041990",
+        "BookNode": "0000000000000000",
+        "Flags": 0,
+        "LedgerEntryType": "Offer",
+        "OwnerNode": "0000000000005BC5",
+        "PreviousTxnID": "E56319AB99B24F860D1E1F31C2F3D8C87FEFF9B3931EF3A46C8627957318735F",
+        "PreviousTxnLgrSeq": 7911492,
+        "Sequence": 1043020,
+        "TakerGets": "13601176063",
+        "TakerPays": {
+          "currency": "USD",
+          "issuer": "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",
+          "value": "85.54113240146836"
+        },
+        "index": "F0D5E0E42F919F8EC06632F5492A3F937022B12DD941BF353BFA1CCE93C16C22",
+        "quality": "0.000000006289245283293584"
+      },
+      {
+        "Account": "r9kzHZAoKk9ESHDYHvXkcGSoJVUTEf7kHZ",
+        "BookDirectory": "DFA3B6DDAB58C7E8E5D944E736DA4B7046C30E4F460FD9DE4C165817ABB82D15",
+        "BookNode": "0000000000000000",
+        "Flags": 0,
+        "LedgerEntryType": "Offer",
+        "OwnerNode": "0000000000000000",
+        "PreviousTxnID": "FD87E4D375CFB3C4BF9579066A784DE28B498AA7D123AFF7A1AE2413745FB066",
+        "PreviousTxnLgrSeq": 7910607,
+        "Sequence": 1722,
+        "TakerGets": "53412888390",
+        "TakerPays": {
+          "currency": "USD",
+          "issuer": "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",
+          "value": "335.9301156678851"
+        },
+        "index": "33902C135EE419A5826F14FD54257FF891E1DB16F127602EA78D44249CCF5D85",
+        "quality": "0.000000006289308176100629"
+      },
+      {
+        "Account": "rQE5Z3FgVnRMbVfS6xiVQFgB4J3X162FVD",
+        "BookDirectory": "DFA3B6DDAB58C7E8E5D944E736DA4B7046C30E4F460FD9DE4C1658359CB61F8A",
+        "BookNode": "0000000000000000",
+        "Flags": 0,
+        "LedgerEntryType": "Offer",
+        "OwnerNode": "0000000000000009",
+        "PreviousTxnID": "197D3A831A85D1E54B1D6C0D87D590D9E9B1BBF1966428CA6A65B4BDD299F0B7",
+        "PreviousTxnLgrSeq": 7911468,
+        "Sequence": 70120,
+        "TakerGets": "40385174246",
+        "TakerPays": {
+          "currency": "USD",
+          "issuer": "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",
+          "value": "254"
+        },
+        "index": "E9BC6BE694AABA8D88E74D449EBE0C545A0FD5514721DEAD70C664ED70433A2B",
+        "quality": "0.00000000628943677332673"
+      },
+      {
+        "Account": "rQE5Z3FgVnRMbVfS6xiVQFgB4J3X162FVD",
+        "BookDirectory": "DFA3B6DDAB58C7E8E5D944E736DA4B7046C30E4F460FD9DE4C165B48ABD81FDD",
+        "BookNode": "0000000000000000",
+        "Flags": 0,
+        "LedgerEntryType": "Offer",
+        "OwnerNode": "0000000000000009",
+        "PreviousTxnID": "0DABD6CBC49BBE0A062E18A50EA8A23F934EF119469A54C83AC872A7522F1F30",
+        "PreviousTxnLgrSeq": 7911626,
+        "Sequence": 70212,
+        "TakerGets": "40363480025",
+        "TakerPays": {
+          "currency": "USD",
+          "issuer": "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",
+          "value": "254"
+        },
+        "index": "24ECF5FAB9A13E17A1900AA2D222757AAD2D63C0A361CD68DF047CEC9A0180B0",
+        "quality": "0.000000006292817166475229"
+      },
+      {
+        "Account": "rNEib8Z73zSTYTi1WqzU4b1BQMXxnpYg1s",
+        "BookDirectory": "DFA3B6DDAB58C7E8E5D944E736DA4B7046C30E4F460FD9DE4C1660E83970B001",
+        "BookNode": "0000000000000000",
+        "Flags": 0,
+        "LedgerEntryType": "Offer",
+        "OwnerNode": "0000000000000000",
+        "PreviousTxnID": "76047799D28048C5BD2C25E32A71248950A604461AC55E71A692109FFECC3D4B",
+        "PreviousTxnLgrSeq": 7910512,
+        "Sequence": 234,
+        "TakerGets": "4841813661",
+        "TakerPays": {
+          "currency": "USD",
+          "issuer": "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",
+          "value": "30.49858425755684"
+        },
+        "index": "0E4E5C065E3651113BB1533455AEF72CBB05965FBC3E202B8348B20DD4604D57",
+        "quality": "0.000000006299000000000001"
+      },
+      {
+        "Account": "rH5wSLPotxA4kfTcAyZiBfqbdCWCBM8ape",
+        "BookDirectory": "DFA3B6DDAB58C7E8E5D944E736DA4B7046C30E4F460FD9DE4C166290C785CA2F",
+        "BookNode": "0000000000000000",
+        "Flags": 131072,
+        "LedgerEntryType": "Offer",
+        "OwnerNode": "000000000000001E",
+        "PreviousTxnID": "392923C75672D297D97F7574CAAE580F510E150B2D956C9729A8A8DB4AF922E6",
+        "PreviousTxnLgrSeq": 7911317,
+        "Sequence": 135184,
+        "TakerGets": "4959619604",
+        "TakerPays": {
+          "currency": "USD",
+          "issuer": "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",
+          "value": "31.24968750337339"
+        },
+        "index": "1F49C9FB6BD0C45EFEC5A8DD135CE781DA2439630EDDB261E0A987F8DE051859",
+        "quality": "0.000000006300823449881135",
+        "taker_gets_funded": "200862088",
+        "taker_pays_funded": {
+          "currency": "USD",
+          "issuer": "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",
+          "value": "1.265596554262488"
+        }
+      },
+      {
+        "Account": "rDbsCJr5m8gHDCNEHCZtFxcXHsD4S9jH83",
+        "BookDirectory": "DFA3B6DDAB58C7E8E5D944E736DA4B7046C30E4F460FD9DE4C1668DA5F911A5D",
+        "BookNode": "0000000000000000",
+        "Flags": 0,
+        "LedgerEntryType": "Offer",
+        "OwnerNode": "0000000000000000",
+        "PreviousTxnID": "905F4C4AF78DCAF2B59DD08FDB7A10F0C19571C9AEC8197F0EAEBAF43A513DA0",
+        "PreviousTxnLgrSeq": 7910891,
+        "Sequence": 38308,
+        "TakerGets": "93428600",
+        "TakerPays": {
+          "currency": "USD",
+          "issuer": "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",
+          "value": "0.589323"
+        },
+        "index": "53DA5ADC9D6E053A71F0E32CAB14DAF322B708EEA4BBDC2F0834340039FF3F18",
+        "quality": "0.000000006307736603138653"
+      },
+      {
+        "Account": "rM3X3QSr8icjTGpaF52dozhbT2BZSXJQYM",
+        "BookDirectory": "DFA3B6DDAB58C7E8E5D944E736DA4B7046C30E4F460FD9DE4C167DAC1F952853",
+        "BookNode": "0000000000000000",
+        "Flags": 0,
+        "LedgerEntryType": "Offer",
+        "OwnerNode": "00000000000014FC",
+        "PreviousTxnID": "F7C7CCC2DB041C81F870874D88AA35A72E0D146EF3095A2BAE8C9E8B07D38B51",
+        "PreviousTxnLgrSeq": 7911623,
+        "Sequence": 463941,
+        "TakerGets": "3159244380",
+        "TakerPays": {
+          "currency": "USD",
+          "issuer": "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",
+          "value": "20"
+        },
+        "index": "7431FD9EE2FA2BC5F9A6A93E7DC640EE29C7A0736CBCAAB65F04A06194A98036",
+        "quality": "0.000000006330627705350227"
+      },
+      {
+        "Account": "rJPXEE1CLxZYNuCnYGdGM5FNRcdmYdQf24",
+        "BookDirectory": "DFA3B6DDAB58C7E8E5D944E736DA4B7046C30E4F460FD9DE4C1681B61E6BA131",
+        "BookNode": "0000000000000000",
+        "Flags": 0,
+        "LedgerEntryType": "Offer",
+        "OwnerNode": "0000000000000000",
+        "PreviousTxnID": "B9E321F00FAA72FC7C8954BAEFBB3372C780F2B4D303996B09A77C8E6A30D626",
+        "PreviousTxnLgrSeq": 7910442,
+        "Sequence": 2002,
+        "TakerGets": "17207844111",
+        "TakerPays": {
+          "currency": "USD",
+          "issuer": "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",
+          "value": "109.0128743129452"
+        },
+        "index": "D5C17AA44B5204C084C7B3DADFBF9FCF3B014FF9F5AF651380D0C1438556E3FB",
+        "quality": "0.000000006335068682035505"
+      }
+    ],
+    "validated": false
+  },
+  "status": "success",
+  "type": "response"
+}
