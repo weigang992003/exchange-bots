@@ -15,7 +15,7 @@ namespace KrakenBot
     {
         private const string BASE_URL = "https://api.kraken.com";
         private const byte RETRY_COUNT = 10;
-        private const int RETRY_DELAY = 2000;
+        private const int RETRY_DELAY = 1500;
 
         private readonly Logger _logger;
         private readonly long _nonceOffset;
@@ -165,8 +165,10 @@ namespace KrakenBot
                 client.Proxy = _webProxy;
 
             WebException exc = null;
+            var delay = 0;
             for (int i = 1; i <= RETRY_COUNT; i++)
             {
+                delay += RETRY_DELAY;
                 try
                 {
                     return client.DownloadString(url);
@@ -176,7 +178,7 @@ namespace KrakenBot
                     var text = String.Format("(ATTEMPT {0}/{1}) Web request failed with exception={2}; status={3}", i, RETRY_COUNT, we.Message, we.Status);
                     _logger.AppendMessage(text, true, ConsoleColor.Yellow);
                     exc = we;
-                    Thread.Sleep(RETRY_DELAY);
+                    Thread.Sleep(delay);
                 }
             }
 
@@ -220,10 +222,12 @@ namespace KrakenBot
             }
             
             WebException exc = null;
+            var delay = 0;
             for (int i = 1; i <= RETRY_COUNT; i++)
             {
                 try
                 {
+                    delay += RETRY_DELAY;
                     using (WebResponse webResponse = webRequest.GetResponse())
                     {
                         using (Stream stream = webResponse.GetResponseStream())
@@ -249,8 +253,7 @@ namespace KrakenBot
                         _logger.AppendMessage("DEBUG: " + resp, true, ConsoleColor.Magenta);
                     }
 
-
-                    Thread.Sleep(RETRY_DELAY);
+                    Thread.Sleep(delay);
                 }
             }
 

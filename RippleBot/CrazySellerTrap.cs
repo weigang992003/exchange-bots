@@ -101,19 +101,30 @@ namespace RippleBot
             foreach (var ask in market.Asks)
                 log("SELL " + ask.Amount + " for " + ask.Price + " USD");*/
 
-/*            var coef = TradeHelper.GetMadness(candles.results);
+            var coef = TradeHelper.GetMadness(candles.results);
             _volumeWall = Helpers.SuggestWallVolume(coef, _minWallVolume, _maxWallVolume);
             _intervalMs = Helpers.SuggestInterval(coef, 8000, 20000);
             log("Madness={0}; Volume={1} BTC; Interval={2} ms;", coef, _volumeWall, _intervalMs);
 
-*/
-            var buyId = _requestor.PlaceBuyOrder(0.003313, 13);
+/*            var buyId = _requestor.PlaceBuyOrder(0.004321, 14);
             log("Success created BUY order with ID " + buyId);
             log("==================");
             var debug = _requestor.GetOrderInfo(buyId);
             log(debug.Type + " " + debug.AmountXrp + " for " + debug.Price + " USD (absolute " + debug.AmountUsd + " USD)");
 
-            _requestor.CancelOrder(buyId);
+            _requestor.CancelOrder(buyId);*/
+
+            var balanceXrp = _requestor.GetXrpBalance();
+            log("I have {0:0.000} XRP", balanceXrp);
+
+            var amount = 4.0;
+            var sellId = _requestor.PlaceSellOrder(0.00654, ref amount);
+            log("Success created SELL order with ID " + sellId);
+            log("==================");
+            var debug = _requestor.GetOrderInfo(sellId);
+            log(debug.Type + " " + debug.AmountXrp + " for " + debug.Price + " USD (absolute " + debug.AmountUsd + " USD)");
+
+            _requestor.CancelOrder(sellId);
 
             log(new string('=', 80));
         }

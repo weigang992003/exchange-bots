@@ -1,0 +1,20 @@
+﻿{
+  "id": 3,
+  "status": "success",
+  "type": "response",
+  "result": {
+    "account_data": {
+      "Account": "rpMyRippleAddress",
+      "Balance": "105212524",
+      "Flags": 0,
+      "LedgerEntryType": "AccountRoot",
+      "OwnerCount": 4,
+      "PreviousTxnID": "F5E60916E509430E531CC457BDF5279D7BA163B4983C13372E92C6A2E2E84066",
+      "PreviousTxnLgrSeq": 7932980,
+      "Sequence": 217,
+      "index": "739545CF7F19403939AB475023A4B38D6A0E8628ADC66BCEFB11C001E92EA2B2"
+    },
+    "ledger_current_index": 7933151,
+    "validated": false
+  }
+}

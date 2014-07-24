@@ -58,6 +58,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Business\AccountInfo.cs" />
     <Compile Include="Business\Balances.cs" />
     <Compile Include="Business\CancelOrder.cs" />
     <Compile Include="Business\CancelOrderRequest.cs" />
@@ -74,6 +75,7 @@
     <Compile Include="Business\Payment.cs" />
     <Compile Include="CrazySellerTrap.cs" />
     <Compile Include="TradeHelper.cs" />
+    <None Include="DataSamples\WebSocket API\account_info.json" />
     <None Include="DataSamples\WebSocket API\book_offers.asks.json" />
     <None Include="DataSamples\WebSocket API\book_offers.bids.json" />
     <None Include="DataSamples\WebSocket API\createOffer.buy.json" />
@@ -82,7 +84,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RippleRestApi.cs" />
     <Compile Include="RippleWebSocketApi.cs" />
+    <None Include="DataSamples\WebSocket API\ErrorServerBusy.json" />
     <None Include="DataSamples\WebSocket API\offerCancel.json" />
+    <None Include="DataSamples\WebSocket API\offerCreate.sell.json" />
   </ItemGroup>
   <ItemGroup>
     <None Include="DataSamples\WebSocket API\account_offers.json" />

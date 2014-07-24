@@ -56,6 +56,15 @@ namespace RippleBot
                 Thread.Sleep(50);
         }
 
+        internal double GetXrpBalance()
+        {
+            var command = new AccountInfoRequest { account = _walletAddress };
+
+            var data = sendToRippleNet(Helpers.SerializeJson(command));
+            var account = Helpers.DeserializeJSON<AccountInfoResponse>(data);
+            return account.result.account_data.BalanceXrp;
+        }
+
         internal Offer GetOrderInfo(int orderId)
         {
             var command = new OrderInfoRequest { id = 1, account = _walletAddress };
@@ -119,10 +128,10 @@ namespace RippleBot
 
             var command = new CreateOrderRequest
             {
-                command = "submit",     //TODO: constant
+//                command = "submit",     //TODO: constant
                 tx_json = new CrOR_TxJson
                 {
-                    TransactionType = "OfferCreate",
+//                    TransactionType = "OfferCreate",
                     Account = _walletAddress,
                     TakerGets = new Take
                     {
@@ -136,7 +145,37 @@ namespace RippleBot
             };
 
             var data = sendToRippleNet(Helpers.SerializeJson(command));
-            var response = Helpers.DeserializeJSON<NewBuyOrderResponse>(data);
+            var response = Helpers.DeserializeJSON<NewOrderResponse>(data);
+
+            return response.result.tx_json.Sequence;
+        }
+
+        internal int PlaceSellOrder(double price, ref double amount)
+        {
+            long amountXrpDrops = (long)Math.Round(amount * 1000000);
+            double amountUsd = price * amount;
+
+            var command = new CreateSellOrderRequest
+            {
+                tx_json = new CSOR_TxJson
+                {
+                    Account = _walletAddress,
+                    TakerPays = new Take
+                    {
+                        currency = "USD",
+                        value = amountUsd.ToString("0.00000"),
+                        issuer = USD_ISSUER_ADDRESS
+                    },
+                    TakerGets = amountXrpDrops.ToString(),
+
+
+//                    Sequence = 333
+                },
+                secret = Configuration.SecretKey
+            };
+
+            var data = sendToRippleNet(Helpers.SerializeJson(command));
+            var response = Helpers.DeserializeJSON<NewOrderResponse>(data);
 
             return response.result.tx_json.Sequence;
         }
@@ -183,7 +222,7 @@ namespace RippleBot
             var input = new CandlesRequest
             {
                 @base = new Base {currency = "XRP"},
-                counter = new Counter { currency = "USD", issuer = "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"/*BitStamp ripple address*/ },
+                counter = new Counter { currency = "USD", issuer = USD_ISSUER_ADDRESS },
                 startTime = DateTime.UtcNow.Subtract(age).ToString("s"),    //"2014-07-22T10:00:00"
                 endTime = DateTime.UtcNow.ToString("s"),
                 timeIncrement = "minute",

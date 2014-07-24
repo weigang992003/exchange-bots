@@ -31,7 +31,7 @@ namespace RippleBot.Business
 
         internal OrderType Type
         {
-            get { return flags == 0 ? OrderType.Buy : OrderType.Sell; }
+            get { return taker_gets.currency == "XRP" ? OrderType.Sell : OrderType.Buy; }
         }
 
         private double _amountXrp;//TODO = -1.0;
@@ -44,8 +44,8 @@ namespace RippleBot.Business
                     var value = OrderType.Buy == Type
                         ? taker_pays.value
                         : taker_gets.value;
-                    var valNumber = ulong.Parse(value);
-                    _amountXrp = (double)valNumber / 1000000.0;
+                    var valNumber = double.Parse(value);
+                    _amountXrp = valNumber / 1000000.0;
                 }
 
                 return _amountXrp;

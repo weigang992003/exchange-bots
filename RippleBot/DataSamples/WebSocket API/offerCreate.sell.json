@@ -1,0 +1,26 @@
+﻿{
+  "result": {
+    "engine_result": "tesSUCCESS",
+    "engine_result_code": 0,
+    "engine_result_message": "The transaction was applied.",
+    "tx_blob": "hex junk here...",
+    "tx_json": {
+      "Account": "rpMyRippleAddress",
+      "Fee": "10",
+      "Flags": 131072,
+      "Sequence": 208,
+      "SigningPubKey": "hexa junk here...",
+      "TakerGets": "2000000",
+      "TakerPays": {
+        "currency": "USD",
+        "issuer": "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",
+        "value": "0.0132"
+      },
+      "TransactionType": "OfferCreate",
+      "TxnSignature": "30440A2206F45F3A8D74A6EAEAE72BCA0F5E022035BCA7DDF87C925110D40E80022FCAE7834BbA6DbEb8620bB5C309951D5F99E",
+      "hash": "35B8212CE59A1AD16D0EA41B4A195D7BCC27BF5D3EE6ABE8889C52D65BF55990"
+    }
+  },
+  "status": "success",
+  "type": "response"
+}
