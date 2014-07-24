@@ -101,17 +101,19 @@ namespace RippleBot
             foreach (var ask in market.Asks)
                 log("SELL " + ask.Amount + " for " + ask.Price + " USD");*/
 
-            var coef = TradeHelper.GetMadness(candles.results);
+/*            var coef = TradeHelper.GetMadness(candles.results);
             _volumeWall = Helpers.SuggestWallVolume(coef, _minWallVolume, _maxWallVolume);
             _intervalMs = Helpers.SuggestInterval(coef, 8000, 20000);
             log("Madness={0}; Volume={1} BTC; Interval={2} ms;", coef, _volumeWall, _intervalMs);
 
-
-            var buyId = _requestor.PlaceBuyOrder(0.00456, 22);
+*/
+            var buyId = _requestor.PlaceBuyOrder(0.003313, 13);
             log("Success created BUY order with ID " + buyId);
             log("==================");
             var debug = _requestor.GetOrderInfo(buyId);
-            log(debug.Type + " " + debug.AmountXrp + " for " + debug.AmountUsd + " USD");
+            log(debug.Type + " " + debug.AmountXrp + " for " + debug.Price + " USD (absolute " + debug.AmountUsd + " USD)");
+
+            _requestor.CancelOrder(buyId);
 
             log(new string('=', 80));
         }

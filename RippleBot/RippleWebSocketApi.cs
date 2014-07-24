@@ -120,7 +120,7 @@ namespace RippleBot
             var command = new CreateOrderRequest
             {
                 command = "submit",     //TODO: constant
-                tx_json = new COR_TxJson
+                tx_json = new CrOR_TxJson
                 {
                     TransactionType = "OfferCreate",
                     Account = _walletAddress,
@@ -139,6 +139,28 @@ namespace RippleBot
             var response = Helpers.DeserializeJSON<NewBuyOrderResponse>(data);
 
             return response.result.tx_json.Sequence;
+        }
+
+        internal void CancelOrder(int orderId)
+        {
+            var command = new CancelOrderRequest
+            {                
+                tx_json = new CaOR_TxJson
+                {
+                    Account = _walletAddress,
+                    OfferSequence = orderId.ToString()
+                },
+                secret = Configuration.SecretKey
+            };
+
+            var data = sendToRippleNet(Helpers.SerializeJson(command));
+
+            var cancel = Helpers.DeserializeJSON<CancelOrderResponse>(data);
+            if ("tesSUCCESS" != cancel.result.engine_result)
+            {
+                throw new Exception(String.Format("Unexpected response when canceling order {0}. _result={1}; _result_message={2}",
+                                                  orderId, cancel.result.engine_result, cancel.result.engine_result_message));
+            }
         }
 
         internal void Close()

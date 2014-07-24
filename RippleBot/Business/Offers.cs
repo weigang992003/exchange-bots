@@ -68,6 +68,12 @@ namespace RippleBot.Business
                 return _amountUsd;
             }
         }
+
+        /// <summary>Price of one XRP in USD</summary>
+        internal double Price
+        {
+            get { return AmountUsd / AmountXrp; }
+        }
     }
 
     [DataContract]

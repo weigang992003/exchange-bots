@@ -11,7 +11,11 @@
           "issuer": "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",
           "value": "33.08"
         },
-        "taker_pays": "10000000000"
+        "taker_pays": {
+          "currency": "XRP",
+          "issuer": "ripple labs",
+          "value": "10000000000"
+        }
       },
       {
         "flags": 0,
@@ -21,26 +25,38 @@
           "issuer": "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",
           "value": "130.05"
         },
-        "taker_pays": "30000000000"
+        "taker_pays": {
+          "currency": "XRP",
+          "issuer": "ripple labs",
+          "value": "30000000000"
+        }
       },
       {
-        "flags": 131072,
-        "seq": 157,
-        "taker_gets": "555000000",
-        "taker_pays": {
+        "flags": 0,
+        "seq": 164,
+        "taker_gets": {
           "currency": "USD",
           "issuer": "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",
-          "value": "3.14685"
+          "value": "9.063"
+        },
+        "taker_pays": {
+          "currency": "XRP",
+          "issuer": "THIS ONE IS PARTIALLY FILLED",
+          "value": "1590000000"
         }
       },
       {
         "flags": 131072,
-        "seq": 160,
-        "taker_gets": "700000000",
+        "seq": 186,
+        "taker_gets": {
+          "currency": "XRP",
+          "issuer": "ripple labs",
+          "value": "10000000000"
+        },
         "taker_pays": {
           "currency": "USD",
           "issuer": "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",
-          "value": "3.8178"
+          "value": "59.3"
         }
       }
     ]

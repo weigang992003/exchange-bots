@@ -59,6 +59,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Business\Balances.cs" />
+    <Compile Include="Business\CancelOrder.cs" />
+    <Compile Include="Business\CancelOrderRequest.cs" />
     <Compile Include="Business\CreateOrderRequest.cs" />
     <Compile Include="Business\DataApi\Candles.cs" />
     <Compile Include="Business\Market.cs" />
@@ -80,6 +82,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RippleRestApi.cs" />
     <Compile Include="RippleWebSocketApi.cs" />
+    <None Include="DataSamples\WebSocket API\offerCancel.json" />
   </ItemGroup>
   <ItemGroup>
     <None Include="DataSamples\WebSocket API\account_offers.json" />

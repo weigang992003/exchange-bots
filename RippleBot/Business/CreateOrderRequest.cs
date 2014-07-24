@@ -7,12 +7,12 @@ namespace RippleBot.Business
     internal class CreateOrderRequest
     {
         [DataMember] internal string command { get; set; }
-        [DataMember] internal COR_TxJson tx_json { get; set; }
+        [DataMember] internal CrOR_TxJson tx_json { get; set; }
         [DataMember] internal string secret { get; set; }
     }
 
     [DataContract]
-    internal class COR_TxJson
+    internal class CrOR_TxJson
     {
         [DataMember] internal string TransactionType { get; set; }
         [DataMember] internal string Account { get; set; }

@@ -15,7 +15,7 @@ namespace KrakenBot
     {
         private const string BASE_URL = "https://api.kraken.com";
         private const byte RETRY_COUNT = 10;
-        private const int RETRY_DELAY = 1500;
+        private const int RETRY_DELAY = 2000;
 
         private readonly Logger _logger;
         private readonly long _nonceOffset;
@@ -240,6 +240,15 @@ namespace KrakenBot
                     var text = String.Format("(ATTEMPT {0}/{1}) Web request failed with exception={2}; status={3}", i, RETRY_COUNT, we.Message, we.Status);
                     _logger.AppendMessage(text, true, ConsoleColor.Yellow);
                     exc = we;
+
+                    //DEBUG, TODO: delete
+                    if (null != we.Response)
+                    {
+                        var resp = new StreamReader(we.Response.GetResponseStream()).ReadToEnd();
+                        _logger.AppendMessage("DEBUG: " + resp, true, ConsoleColor.Magenta);
+                    }
+
+
                     Thread.Sleep(RETRY_DELAY);
                 }
             }

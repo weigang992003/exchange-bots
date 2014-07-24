@@ -1,0 +1,21 @@
+﻿{
+  "result": {
+    "engine_result": "tesSUCCESS",
+    "engine_result_code": 0,
+    "engine_result_message": "The transaction was applied.",
+    "tx_blob": "lot of hex digits...",
+    "tx_json": {
+      "Account": "rpMV1zYgR5P6YWA2JSXDPcbsbqivkooKVY",
+      "Fee": "10",
+      "Flags": 2147483648,
+      "OfferSequence": 190,
+      "Sequence": 191,
+      "SigningPubKey": "02A7FCB06C40F273F2110C5D2F7C5FE51D2208DF0EA610757898938D6996484611",
+      "TransactionType": "OfferCancel",
+      "TxnSignature": "0123456789E50DCAD7079AD917F2B1B597135C01FD9D661998787872B643DD72726694569502236820169777813669014494200ED58469C31A2CA7A116C747BAFD0446F36C19BC",
+      "hash": "01010101010101010101010101010101abcedf0987654321acdfacdfacdfacdf"
+    }
+  },
+  "status": "success",
+  "type": "response"
+}
