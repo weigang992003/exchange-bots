@@ -193,6 +193,7 @@ namespace KrakenBot
             string path = "/0/private/" + method;
             string address = BASE_URL + path;
             var webRequest = (HttpWebRequest)WebRequest.Create(address);
+            webRequest.KeepAlive = false;
             webRequest.ContentType = "application/x-www-form-urlencoded";
             webRequest.Method = "POST";
             webRequest.Headers.Add("API-Key", Configuration.AccessKey);
