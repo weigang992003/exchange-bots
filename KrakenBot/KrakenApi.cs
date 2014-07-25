@@ -15,7 +15,7 @@ namespace KrakenBot
     {
         private const string BASE_URL = "https://api.kraken.com";
         private const byte RETRY_COUNT = 10;
-        private const int RETRY_DELAY = 2000;
+        private const int RETRY_DELAY = 1000;
 
         private readonly Logger _logger;
         private readonly long _nonceOffset;
@@ -165,10 +165,9 @@ namespace KrakenBot
                 client.Proxy = _webProxy;
 
             WebException exc = null;
-            var delay = 0;
+            var delay = RETRY_DELAY;
             for (int i = 1; i <= RETRY_COUNT; i++)
             {
-                delay += RETRY_DELAY;
                 try
                 {
                     return client.DownloadString(url);
@@ -180,6 +179,7 @@ namespace KrakenBot
                     exc = we;
                     Thread.Sleep(delay);
                 }
+                delay *= 2;
             }
 
             throw new Exception(String.Format("Web request failed {0} times in a row with error '{1}'. Giving up.", RETRY_COUNT, exc.Message));
@@ -222,12 +222,11 @@ namespace KrakenBot
             }
             
             WebException exc = null;
-            var delay = 0;
+            var delay = RETRY_DELAY;
             for (int i = 1; i <= RETRY_COUNT; i++)
             {
                 try
                 {
-                    delay += RETRY_DELAY;
                     using (WebResponse webResponse = webRequest.GetResponse())
                     {
                         using (Stream stream = webResponse.GetResponseStream())
@@ -239,6 +238,7 @@ namespace KrakenBot
                             }
                         }
                     }
+                    delay *= 2;
                 }
                 catch (WebException we)
                 {
