@@ -237,8 +237,7 @@ namespace KrakenBot
                                 return text;
                             }
                         }
-                    }
-                    delay *= 2;
+                    }                    
                 }
                 catch (WebException we)
                 {
@@ -255,6 +254,7 @@ namespace KrakenBot
 
                     Thread.Sleep(delay);
                 }
+                delay *= 2;
             }
 
             throw new Exception(String.Format("Web request failed {0} times in a row with error '{1}'. Giving up.", RETRY_COUNT, exc.Message));
