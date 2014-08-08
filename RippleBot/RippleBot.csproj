@@ -82,15 +82,13 @@
     <None Include="DataSamples\WebSocket API\Error.json" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RippleRestApi.cs" />
-    <Compile Include="RippleWebSocketApi.cs" />
+    <Compile Include="RippleApi.cs" />
     <None Include="DataSamples\WebSocket API\ErrorServerBusy.json" />
     <None Include="DataSamples\WebSocket API\offerCancel.json" />
     <None Include="DataSamples\WebSocket API\offerCreate.sell.json" />
   </ItemGroup>
   <ItemGroup>
     <None Include="DataSamples\WebSocket API\account_offers.json" />
-    <None Include="DataSamples\balances.json" />
     <None Include="DataSamples\Data API\offers_executed.json" />
   </ItemGroup>
   <ItemGroup>

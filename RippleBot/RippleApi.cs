@@ -13,8 +13,7 @@ using System.Text.RegularExpressions;
 
 namespace RippleBot
 {
-    //TODO: not the best name, we're calling data (charts) API too, and it's simple REST
-    internal class RippleWebSocketApi : IDisposable
+    internal class RippleApi : IDisposable
     {
         private const string TRADE_BASE_URL = "wss://s-west.ripple.com:443";
         private const string CHARTS_BASE_URL = "http://api.ripplecharts.com/api/";
@@ -34,7 +33,7 @@ namespace RippleBot
         private readonly Regex _offerPattern = new Regex("\"taker_(?<verb>get|pay)s\":\"(?<value>\\d{1,20})\"");
 
 
-        internal RippleWebSocketApi(Logger logger)
+        internal RippleApi(Logger logger)
         {
             _logger = logger;
 
@@ -55,7 +54,7 @@ namespace RippleBot
             _webSocket.Open();
 
             while (!_open)
-                Thread.Sleep(50);
+                Thread.Sleep(250);
         }
 
         internal double GetXrpBalance()
@@ -90,10 +89,9 @@ namespace RippleBot
 
             var bidData = sendToRippleNet(Helpers.SerializeJson(command));
 
-            /*TODO: should not be needed here
             var error = Helpers.DeserializeJSON<ErrorResponse>(bidData);
             if (!String.IsNullOrEmpty(error.error))
-                return error.error + " " + error.error_message;*/
+                throw new Exception(error.error + " " + error.error_message);
 
             var bids = Helpers.DeserializeJSON<MarketDepthBidsResponse>(bidData);
 
@@ -107,10 +105,9 @@ namespace RippleBot
 
             var askData = sendToRippleNet(Helpers.SerializeJson(command));
 
-            /*TODO: neither here
             error = Helpers.DeserializeJSON<ErrorResponse>(askData);
             if (!String.IsNullOrEmpty(error.error))
-                return error.error + " " + error.error_message;*/
+                throw new Exception(error.error + " " + error.error_message);
 
             var asks = Helpers.DeserializeJSON<MarketDepthAsksResponse>(askData);
 
@@ -284,8 +281,10 @@ namespace RippleBot
 
         private void websocket_Closed(object sender, EventArgs e)
         {
-            _logger.AppendMessage("WebSocket connection was closed", true, ConsoleColor.Yellow);
             _open = false;
+            _logger.AppendMessage("WebSocket connection was closed. Trying to reopen...", true, ConsoleColor.Yellow);
+
+            Init();
         }
 
         private string sendPostRequest(string method, string postData)
