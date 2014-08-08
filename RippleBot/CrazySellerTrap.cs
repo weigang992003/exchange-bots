@@ -22,12 +22,12 @@ namespace RippleBot
         private readonly double _operativeAmount;
         private readonly double _minWallVolume;
         private readonly double _maxWallVolume;
-        //Volumen of BTC necessary to accept our offer
+        //Volumen of XRP necessary to accept our offer
         private double _volumeWall;
         //Minimum difference between BUY price and subsequent SELL price (so we have at least some profit)
-        private const double MIN_DIFFERENCE = 0.8;
-        //Tolerance of BUY price (factor). Usefull if possible price change is minor, to avoid frequent order updates.
-        private const double PRICE_DELTA = 0.05;    //5%
+        private const double MIN_DIFFERENCE = 0.00002;
+        //Tolerance of BUY price. Usefull if possible price change is minor, to avoid frequent order updates.
+        private const double PRICE_DELTA = 0.000005;    //0.000015 USD
 
         //Active BUY order ID
         private int _buyOrderId = -1;
@@ -58,19 +58,19 @@ namespace RippleBot
 
         public void StartTrading()
         {
-/*            do
+            do
             {
                 try
-                {*/
+                {
                     check();
-/*                    Thread.Sleep(_intervalMs);
+                    Thread.Sleep(_intervalMs);
                 }
                 catch (Exception ex)
                 {
                     log("ERROR: " + ex.Message + Environment.NewLine + ex.StackTrace);
                     throw;
                 }
-            } while (!_killSignal);*/
+            } while (!_killSignal);
         }
 
         public void Kill()
@@ -91,8 +91,8 @@ namespace RippleBot
 
             var candles = _requestor.GetTradeStatistics(new TimeSpan(2, 0, 0));
 
-/*            var market = _requestor.GetMarketDepth();
-            log("BIDs:");
+            var market = _requestor.GetMarketDepth();
+/*            log("BIDs:");
             foreach (var bid in market.Bids)
                 log("BUY " + bid.Amount + " for " + bid.Price + " USD");
 
@@ -104,7 +104,7 @@ namespace RippleBot
             var coef = TradeHelper.GetMadness(candles.results);
             _volumeWall = Helpers.SuggestWallVolume(coef, _minWallVolume, _maxWallVolume);
             _intervalMs = Helpers.SuggestInterval(coef, 8000, 20000);
-            log("Madness={0}; Volume={1} BTC; Interval={2} ms;", coef, _volumeWall, _intervalMs);
+            log("Madness={0}; Volume={1} XRP; Interval={2} ms;", coef, _volumeWall, _intervalMs);
 
 /*            var buyId = _requestor.PlaceBuyOrder(0.004321, 14);
             log("Success created BUY order with ID " + buyId);
@@ -117,19 +117,194 @@ namespace RippleBot
             var balanceXrp = _requestor.GetXrpBalance();
             log("I have {0:0.000} XRP", balanceXrp);
 
-            var amount = 4.0;
+/*            var amount = 4.0;
             var sellId = _requestor.PlaceSellOrder(0.00654, ref amount);
             log("Success created SELL order with ID " + sellId);
             log("==================");
             var debug = _requestor.GetOrderInfo(sellId);
             log(debug.Type + " " + debug.AmountXrp + " for " + debug.Price + " USD (absolute " + debug.AmountUsd + " USD)");
 
-            _requestor.CancelOrder(sellId);
+            _requestor.CancelOrder(sellId);*/
+
+
+
+            //We have active BUY order
+            if (-1 != _buyOrderId)
+            {
+                var buyOrder = _requestor.GetOrderInfo(_buyOrderId);
+
+                //The order is still open
+                if (null != buyOrder)
+                {
+                    //Untouched
+                    if (buyOrder.AmountXrp.eq(_buyOrderAmount))
+                    {
+                        log("BUY order ID={0} untouched (amount={1} XRP, price={2} USD)", _buyOrderId, _buyOrderAmount, _buyOrderPrice);
+
+                        double price = suggestBuyPrice(market);
+                        var newAmount = _operativeAmount - _sellOrderAmount;
+
+                        //Evaluate and update if needed
+                        if (newAmount > _buyOrderAmount || !_buyOrderPrice.eq(price))
+                        {
+                            _buyOrderAmount = newAmount;
+                            _buyOrderId = _requestor.UpdateBuyOrder(_buyOrderId, price, newAmount);
+                            _buyOrderPrice = price;
+                            log("Updated BUY order ID={0}; amount={1} XRP; price={2} USD", _buyOrderId, _buyOrderAmount, price);
+                        }
+                    }
+                    else    //Partially filled
+                    {
+                        _executedBuyPrice = buyOrder.Price;
+                        _buyOrderAmount = buyOrder.AmountXrp;
+                        log("BUY order ID={0} partially filled at price={1} USD. Remaining amount={2} XRP;", ConsoleColor.Green, _buyOrderId, _executedBuyPrice, buyOrder.AmountXrp);
+                        var price = suggestBuyPrice(market);
+                        //The same price is totally unlikely, so we don't check it here
+                        _buyOrderId = _requestor.UpdateBuyOrder(_buyOrderId, price, buyOrder.AmountXrp);
+                        _buyOrderPrice = price;
+                        log("Updated BUY order ID={0}; amount={1} XRP; price={2} USD", _buyOrderId, _buyOrderAmount, _buyOrderPrice);
+                    }
+                }
+                else    //NULL means it was closed
+                {
+                    _executedBuyPrice = _buyOrderPrice;                    
+                    log("BUY order ID={0} (amount={1} XRP) was closed at price={2} USD", ConsoleColor.Green, _buyOrderId, _buyOrderAmount, _executedBuyPrice);
+                    _buyOrderId = -1;
+                    _buyOrderAmount = 0;
+                }
+            }
+            else if (_operativeAmount - _sellOrderAmount > 0.00001)    //No BUY order (and there are some money available). So create one
+            {
+                _buyOrderPrice = suggestBuyPrice(market);
+                _buyOrderAmount = _operativeAmount - _sellOrderAmount;
+                _buyOrderId = _requestor.PlaceBuyOrder(_buyOrderPrice, _buyOrderAmount);
+                log("Successfully created BUY order with ID={0}; amount={1} XRP; price={2} USD", ConsoleColor.Cyan, _buyOrderId, _buyOrderAmount, _buyOrderPrice);
+            }
+
+            //Handle SELL order
+            if (_operativeAmount - _buyOrderAmount > 0.00001)
+            {
+                //SELL order already existed
+                if (-1 != _sellOrderId)
+                {
+                    var sellOrder = _requestor.GetOrderInfo(_sellOrderId);
+
+                    //The order is still open
+                    if (null != sellOrder)
+                    {
+                        log("SELL order ID={0} open (amount={1} XRP, price={2} USD)", _sellOrderId, sellOrder.AmountXrp, _sellOrderPrice);
+
+                        double price = suggestSellPrice(market);
+
+                        //Partially filled
+                        if (!sellOrder.AmountXrp.eq(_sellOrderAmount))
+                        {
+                            log("SELL order ID={0} partially filled at price={1} USD. Remaining amount={2} XRP;", ConsoleColor.Green, _sellOrderId, sellOrder.Price, sellOrder.AmountXrp);
+                            var amount = sellOrder.AmountXrp;
+                            _sellOrderId = _requestor.UpdateSellOrder(_sellOrderId, price, ref amount);
+                            _sellOrderAmount = amount;
+                            _sellOrderPrice = price;
+                            log("Updated SELL order ID={0}; amount={1} XRP; price={2} USD", _sellOrderId, _sellOrderAmount, price);
+                        }
+                        //If there were some money released by filling a BUY order, increase this SELL order
+                        else if (_operativeAmount - _buyOrderAmount > _sellOrderAmount)
+                        {
+                            var newAmount = _operativeAmount - _buyOrderAmount;
+                            _sellOrderId = _requestor.UpdateSellOrder(_sellOrderId, price, ref newAmount);
+                            _sellOrderAmount = newAmount;
+                            _sellOrderPrice = price;
+                            log("Updated SELL order ID={0}; amount={1} XRP; price={2} USD", _sellOrderId, _sellOrderAmount, price);
+                        }
+                        //Or if we simply need to change price.
+                        else if (!_sellOrderPrice.eq(price))
+                        {
+                            _sellOrderId = _requestor.UpdateSellOrder(_sellOrderId, price, ref _sellOrderAmount);
+                            _sellOrderPrice = price;
+                            log("Updated SELL order ID={0}; amount={1} XRP; price={2} USD", _sellOrderId, _sellOrderAmount, price);
+                        }
+                    }
+                    else        //Closed
+                    {
+                        log("SELL order ID={0} (amount={1} XRP) was closed at price={2} USD", ConsoleColor.Green, _sellOrderId, _sellOrderAmount, _sellOrderPrice);
+                        _sellOrderAmount = 0;
+                        _sellOrderId = -1;
+                    }
+                }
+                else    //No SELL order, create one
+                {
+                    _sellOrderPrice = suggestSellPrice(market);
+                    var amount = _operativeAmount - _buyOrderAmount;
+                    _sellOrderId = _requestor.PlaceSellOrder(_sellOrderPrice, ref amount);
+                    _sellOrderAmount = amount;
+                    log("Successfully created SELL order with ID={0}; amount={1} XRP; price={2} USD", ConsoleColor.Cyan, _sellOrderId, _sellOrderAmount, _sellOrderPrice);
+                }
+            }
 
             log(new string('=', 80));
         }
 
+        private double suggestBuyPrice(Market market)
+        {
+            double sum = 0;
+            var minDiff = PRICE_DELTA;
+            var lowestAsk = market.Asks.First().Price;
 
+            foreach (var bid in market.Bids)
+            {
+                if (sum + _operativeAmount > _volumeWall && bid.Price + 2.0 * MIN_DIFFERENCE < lowestAsk)
+                {
+                    double buyPrice = Math.Round(bid.Price + 0.000001, 6);
+
+                    //The difference is too small and we'd be not first in BUY orders. Leave previous price to avoid server call
+                    if (-1 != _buyOrderId && buyPrice < market.Bids[0].Price && Math.Abs(buyPrice - _buyOrderPrice) < minDiff)
+                    {
+                        log("DEBUG: BUY price {0} too similar, using previous", buyPrice);
+                        return _buyOrderPrice;
+                    }
+
+                    return buyPrice;
+                }
+                sum += bid.Amount;
+
+                //Don't consider volume of own order
+                if (bid.Price.eq(_buyOrderPrice))
+                    sum -= _buyOrderAmount;
+            }
+
+            //Market too dry, use BUY order before last, so we see it in chart
+            var price = market.Bids.Last().Price + 0.000001;
+            if (-1 != _buyOrderId && Math.Abs(price - _buyOrderPrice) < minDiff)
+                return _buyOrderPrice;
+            return Math.Round(price, 6);
+        }
+
+        private double suggestSellPrice(Market market)
+        {
+            //Ignore offers with tiny XRP volume (<100 XRP)
+            const double MIN_WALL_VOLUME = 100.0;
+
+            double sumVolume = 0.0;
+            foreach (var ask in market.Asks)
+            {
+                //Don't count self
+                if (ask.Price.eq(_sellOrderPrice) && ask.Amount.eq(_sellOrderAmount))
+                    continue;
+                //Skip SELL orders with tiny amount
+                sumVolume += ask.Amount;
+                if (sumVolume < MIN_WALL_VOLUME)
+                    continue;
+
+                if (ask.Price > _executedBuyPrice + MIN_DIFFERENCE)
+                {
+                    return ask.Price.eq(_sellOrderPrice)
+                        ? _sellOrderPrice
+                        : Math.Round(ask.Price - 0.000001, 6);
+                }
+            }
+
+            //All SELL orders are too low (probably some terrible fall). Suggest SELL order with minimum profit and hope :-( TODO: maybe some stop-loss strategy
+            return _executedBuyPrice + MIN_DIFFERENCE;
+        }
 
         private void log(string message, ConsoleColor color, params object[] args)
         {

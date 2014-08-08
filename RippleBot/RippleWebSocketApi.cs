@@ -22,7 +22,7 @@ namespace RippleBot
         private const int RETRY_DELAY = 1000;
         private const string USD_ISSUER_ADDRESS = "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B";      //BitStamp
 
-        private readonly string _walletAddress = "rpMV1zYgR5P6YWA2JSXDPcbsbqivkooKVY";      //TODO: Config.AccessKey
+        private readonly string _walletAddress;
 
         private readonly Logger _logger;
         private bool _open;
@@ -46,6 +46,8 @@ namespace RippleBot
             _webSocket.Error += websocket_Error;
             _webSocket.Closed += websocket_Closed;
             _webSocket.MessageReceived += websocket_MessageReceived;
+
+            _walletAddress = Configuration.AccessKey;
         }
 
         internal void Init()
@@ -128,10 +130,8 @@ namespace RippleBot
 
             var command = new CreateOrderRequest
             {
-//                command = "submit",     //TODO: constant
                 tx_json = new CrOR_TxJson
                 {
-//                    TransactionType = "OfferCreate",
                     Account = _walletAddress,
                     TakerGets = new Take
                     {
@@ -150,6 +150,14 @@ namespace RippleBot
             return response.result.tx_json.Sequence;
         }
 
+        /// <summary>Update BUY order by re-creating it. Returns new order ID.</summary>
+        internal int UpdateBuyOrder(int orderId, double price, double amount)
+        {
+            //Cancel the old order, recreate
+            CancelOrder(orderId);
+            return PlaceBuyOrder(price, amount);
+        }
+
         internal int PlaceSellOrder(double price, ref double amount)
         {
             long amountXrpDrops = (long)Math.Round(amount * 1000000);
@@ -166,10 +174,7 @@ namespace RippleBot
                         value = amountUsd.ToString("0.00000"),
                         issuer = USD_ISSUER_ADDRESS
                     },
-                    TakerGets = amountXrpDrops.ToString(),
-
-
-//                    Sequence = 333
+                    TakerGets = amountXrpDrops.ToString()
                 },
                 secret = Configuration.SecretKey
             };
@@ -178,6 +183,15 @@ namespace RippleBot
             var response = Helpers.DeserializeJSON<NewOrderResponse>(data);
 
             return response.result.tx_json.Sequence;
+        }
+
+        /// <summary>Update SELL order by re-creating it. Returns new order ID.</summary>
+        internal int UpdateSellOrder(int orderId, double price, ref double amount)
+        {
+            //First try to cancel the old order. Recreate it then.
+            CancelOrder(orderId);
+
+            return PlaceSellOrder(price, ref amount);
         }
 
         internal void CancelOrder(int orderId)
