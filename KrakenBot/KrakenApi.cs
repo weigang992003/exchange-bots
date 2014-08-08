@@ -187,6 +187,7 @@ namespace KrakenBot
 
         private string sendPostRequest(string method, string postData = null)
         {
+/*
             // generate a 64 bit nonce using a timestamp at tick resolution
             Int64 nonce = DateTime.Now.Ticks;
             nonce += _nonceOffset;
@@ -219,7 +220,7 @@ namespace KrakenBot
             using (var writer = new StreamWriter(webRequest.GetRequestStream()))
             {
                 writer.Write(postData);
-            }
+            }*/
             
             WebException exc = null;
             var delay = RETRY_DELAY;
@@ -227,6 +228,40 @@ namespace KrakenBot
             {
                 try
                 {
+                    // generate a 64 bit nonce using a timestamp at tick resolution
+                    Int64 nonce = DateTime.Now.Ticks;
+                    nonce += _nonceOffset;
+                    postData = "nonce=" + nonce + postData;
+
+                    string path = "/0/private/" + method;
+                    string address = BASE_URL + path;
+                    var webRequest = (HttpWebRequest)WebRequest.Create(address);
+                    webRequest.KeepAlive = false;
+                    webRequest.ContentType = "application/x-www-form-urlencoded";
+                    webRequest.Method = "POST";
+                    webRequest.Headers.Add("API-Key", Configuration.AccessKey);
+
+                    if (null != _webProxy)
+                        webRequest.Proxy = _webProxy;
+
+                    byte[] base64DecodedSecred = Convert.FromBase64String(Configuration.SecretKey);
+
+                    var np = nonce + Convert.ToChar(0) + postData;
+
+                    var pathBytes = Encoding.UTF8.GetBytes(path);
+                    var hash256Bytes = sha256_hash(np);
+                    var z = new byte[pathBytes.Count() + hash256Bytes.Count()];
+                    pathBytes.CopyTo(z, 0);
+                    hash256Bytes.CopyTo(z, pathBytes.Count());
+
+                    var signature = getHash(base64DecodedSecred, z);
+                    webRequest.Headers.Add("API-Sign", Convert.ToBase64String(signature));
+
+                    using (var writer = new StreamWriter(webRequest.GetRequestStream()))
+                    {
+                        writer.Write(postData);
+                    }
+
                     using (WebResponse webResponse = webRequest.GetResponse())
                     {
                         using (Stream stream = webResponse.GetResponseStream())
@@ -241,7 +276,7 @@ namespace KrakenBot
                 }
                 catch (WebException we)
                 {
-                    var text = String.Format("(ATTEMPT {0}/{1}) Web request failed with exception={2}; status={3}. Retry in {4}", i, RETRY_COUNT, we.Message, we.Status, delay);
+                    var text = String.Format("(ATTEMPT {0}/{1}) Web request failed with exception={2}; status={3}. Retry in {4}ms", i, RETRY_COUNT, we.Message, we.Status, delay);
                     _logger.AppendMessage(text, true, ConsoleColor.Yellow);
                     exc = we;
 
