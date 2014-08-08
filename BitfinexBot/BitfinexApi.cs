@@ -183,7 +183,8 @@ namespace BitfinexBot
             }
 
             var response = Helpers.DeserializeJSON<OrderInforResponse>(data);
-            return response.is_cancelled;
+//BUG: something happened and is_cancelled is always FALSE            return response.is_cancelled;
+            return true;
         }
 
         #region private helpers
