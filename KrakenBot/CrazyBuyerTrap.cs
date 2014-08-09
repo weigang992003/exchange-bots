@@ -179,7 +179,18 @@ namespace KrakenBot
                 //BUY order already existed
                 if (null != _buyOrderId)
                 {
-                    var buyOrder = _requestor.GetOrderInfo(_buyOrderId).result.orderData;
+                    var data = _requestor.GetOrderInfo(_buyOrderId);
+                    if (null == data)
+                    {
+                        log("GetOrderInfo returned NULL", ConsoleColor.Magenta);
+                        return;
+                    }
+                    if (null == data.result)
+                    {
+                        log("data.result == NULL", ConsoleColor.Magenta);
+                        return;
+                    }
+                    var buyOrder = data.result.orderData;
 
                     switch (buyOrder.Status)
                     {
