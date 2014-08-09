@@ -25,7 +25,7 @@ namespace RippleBot
         //Volumen of XRP necessary to accept our offer
         private double _volumeWall;
         //Minimum difference between BUY price and subsequent SELL price (so we have at least some profit)
-        private const double MIN_DIFFERENCE = 0.00002;
+        private const double MIN_DIFFERENCE = 0.0;//todo!!! 0.000001;
         //Tolerance of BUY price. Usefull if possible price change is minor, to avoid frequent order updates.
         private const double PRICE_DELTA = 0.000005;    //0.000015 USD
 
