@@ -10,7 +10,7 @@ namespace Common
         /// <summary>Compare this <see cref="Double"/> to another, with tolerance of 0.00001</summary>
         public static bool eq(this double value, double other)
         {
-            return Math.Abs(value - other) < 0.00001;
+            return Math.Abs(value - other) < 0.0000001;
         }
 
         /// <summary>Retuns given number of elements at the end of sequence</summary>

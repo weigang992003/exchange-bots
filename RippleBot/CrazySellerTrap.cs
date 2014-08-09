@@ -25,7 +25,7 @@ namespace RippleBot
         //Volumen of XRP necessary to accept our offer
         private double _volumeWall;
         //Minimum difference between BUY price and subsequent SELL price (so we have at least some profit)
-        private const double MIN_DIFFERENCE = 0.0;//todo!!! 0.000001;
+        private const double MIN_DIFFERENCE = 0.000015;
         //Tolerance of BUY price. Usefull if possible price change is minor, to avoid frequent order updates.
         private const double PRICE_DELTA = 0.000005;    //0.000015 USD
 
@@ -216,7 +216,7 @@ namespace RippleBot
             {
                 if (sum + _operativeAmount > _volumeWall && bid.Price + 2.0 * MIN_DIFFERENCE < lowestAsk)
                 {
-                    double buyPrice = Math.Round(bid.Price + 0.000001, 6);
+                    double buyPrice = Math.Round(bid.Price + 0.000001, 7);
 
                     //The difference is too small and we'd be not first in BUY orders. Leave previous price to avoid server call
                     if (-1 != _buyOrderId && buyPrice < market.Bids[0].Price && Math.Abs(buyPrice - _buyOrderPrice) < minDiff)
@@ -238,7 +238,7 @@ namespace RippleBot
             var price = market.Bids.Last().Price + 0.000001;
             if (-1 != _buyOrderId && Math.Abs(price - _buyOrderPrice) < minDiff)
                 return _buyOrderPrice;
-            return Math.Round(price, 6);
+            return Math.Round(price, 7);
         }
 
         private double suggestSellPrice(Market market)
@@ -261,7 +261,7 @@ namespace RippleBot
                 {
                     return ask.Price.eq(_sellOrderPrice)
                         ? _sellOrderPrice
-                        : Math.Round(ask.Price - 0.000001, 6);
+                        : Math.Round(ask.Price - 0.000001, 7);
                 }
             }
 
