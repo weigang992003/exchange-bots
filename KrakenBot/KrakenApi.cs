@@ -146,9 +146,18 @@ namespace KrakenBot
                     _logger.AppendMessage("Order ID=" + orderId + " reported unknown during cancelling. Probably closed/cancelled", true, ConsoleColor.Yellow);
                     return false;
                 }
+                _logger.AppendMessage("Error cancelling order ID=" + orderId + ". Message=" + String.Join(";", error.error));
+                return false;
             }
 
             var cancel = Helpers.DeserializeJSON<CancelOrderResponse>(data).result;
+
+            if (null == cancel)
+            {
+                _logger.AppendMessage("Couldn't deserialize CancelOrder response. data=" + data);
+                return false;
+            }
+
             if (cancel.count != 1)
                 _logger.AppendMessage(String.Format("Unexpected response for CancelOrder. Count={0}", cancel.count));
             return true;
