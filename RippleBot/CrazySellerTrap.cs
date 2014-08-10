@@ -27,7 +27,7 @@ namespace RippleBot
         //Minimum difference between BUY price and subsequent SELL price (so we have at least some profit)
         private const double MIN_DIFFERENCE = 0.000015;
         //Tolerance of BUY price. Usefull if possible price change is minor, to avoid frequent order updates.
-        private const double PRICE_DELTA = 0.000001;    //0.000001 XRP
+        private const double PRICE_DELTA = 0.0000015;    //0.0000015 XRP
 
         //Active BUY order ID
         private int _buyOrderId = -1;
