@@ -74,6 +74,19 @@ namespace RippleBot.Business
         {
             get { return AmountUsd / AmountXrp; }
         }
+
+        /// <summary>True if this order was fully filled</summary>
+        internal bool Closed { get; private set; }
+
+        internal Offer()
+        {
+            //Serialization purposes
+        }
+
+        internal Offer(bool closed)
+        {
+            Closed = closed;
+        }
     }
 
     [DataContract]

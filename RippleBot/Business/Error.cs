@@ -13,5 +13,17 @@ namespace RippleBot.Business
         [DataMember] internal object request { get; set; }
         [DataMember] internal string status { get; set; }
         [DataMember] internal string type { get; set; }
+
+
+        internal bool IsCritical
+        {
+            get
+            {
+                if (8 == error_code)    //"tooBusy"
+                    return false;
+
+                return true;
+            }
+        }
     }
 }

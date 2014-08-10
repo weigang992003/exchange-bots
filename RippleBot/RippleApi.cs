@@ -25,6 +25,7 @@ namespace RippleBot
 
         private readonly Logger _logger;
         private bool _open;
+        private bool _closedByUser;
 
         private readonly WebSocket _webSocket;
         private readonly WebProxy _webProxy;
@@ -71,10 +72,28 @@ namespace RippleBot
             var command = new OrderInfoRequest { id = 1, account = _walletAddress };
 
             var data = sendToRippleNet(Helpers.SerializeJson(command));
+
+            var error = Helpers.DeserializeJSON<ErrorResponse>(data);
+            if (!String.IsNullOrEmpty(error.error))
+            {
+                if (!error.IsCritical)
+                {
+                    _logger.AppendMessage("GetOrderInfo: non-critical error " + error.error_message);
+                    return null;
+                }
+                else
+                    throw new Exception(error.error + " " + error.error_message);
+            }
+
             var dataFix = _offerPattern.Replace(data, "'taker_${verb}s': {'currency': 'XRP', 'issuer':'ripple labs', 'value': '${value}'}".Replace("'", "\""));
 
             var offerList = Helpers.DeserializeJSON<OffersResponse>(dataFix);
-            return offerList.result.offers.FirstOrDefault(o => o.seq == orderId);
+            var order = offerList.result.offers.FirstOrDefault(o => o.seq == orderId);
+
+            //NULL means it was already filled
+            if (null == order)
+                return new Offer(true);
+            return order;
         }
 
         internal Market GetMarketDepth()
@@ -91,7 +110,15 @@ namespace RippleBot
 
             var error = Helpers.DeserializeJSON<ErrorResponse>(bidData);
             if (!String.IsNullOrEmpty(error.error))
-                throw new Exception(error.error + " " + error.error_message);
+            {
+                if (!error.IsCritical)
+                {
+                    _logger.AppendMessage("GetMarketDepth: non-critical error " + error.error_message);
+                    return null;
+                }
+                else
+                    throw new Exception(error.error + " " + error.error_message);
+            }
 
             var bids = Helpers.DeserializeJSON<MarketDepthBidsResponse>(bidData);
 
@@ -107,7 +134,15 @@ namespace RippleBot
 
             error = Helpers.DeserializeJSON<ErrorResponse>(askData);
             if (!String.IsNullOrEmpty(error.error))
+            {
+                if (!error.IsCritical)
+                {
+                    _logger.AppendMessage("GetMarketDepth: non-critical error " + error.error_message);
+                    return null;
+                }
+                else
                 throw new Exception(error.error + " " + error.error_message);
+            }
 
             var asks = Helpers.DeserializeJSON<MarketDepthAsksResponse>(askData);
 
@@ -151,8 +186,10 @@ namespace RippleBot
         internal int UpdateBuyOrder(int orderId, double price, double amount)
         {
             //Cancel the old order, recreate
-            CancelOrder(orderId);
-            return PlaceBuyOrder(price, amount);
+            if (CancelOrder(orderId))
+                return PlaceBuyOrder(price, amount);
+
+            return orderId;
         }
 
         internal int PlaceSellOrder(double price, ref double amount)
@@ -186,12 +223,13 @@ namespace RippleBot
         internal int UpdateSellOrder(int orderId, double price, ref double amount)
         {
             //First try to cancel the old order. Recreate it then.
-            CancelOrder(orderId);
+            if (CancelOrder(orderId))
+                return PlaceSellOrder(price, ref amount);
 
-            return PlaceSellOrder(price, ref amount);
+            return orderId;
         }
 
-        internal void CancelOrder(int orderId)
+        internal bool CancelOrder(int orderId)
         {
             var command = new CancelOrderRequest
             {                
@@ -205,19 +243,44 @@ namespace RippleBot
 
             var data = sendToRippleNet(Helpers.SerializeJson(command));
 
+            //Check for error
+            var error = Helpers.DeserializeJSON<ErrorResponse>(data);
+            if (!String.IsNullOrEmpty(error.error))
+            {
+                _logger.AppendMessage(String.Format("Error cancelling order ID={0}. Reason={1} : {2}", orderId, error.error, error.error_message),
+                                      true, ConsoleColor.Magenta);
+                return false;
+            }
+
             var cancel = Helpers.DeserializeJSON<CancelOrderResponse>(data);
+
+            //Some asserts for meaningfull reply
+            if (null == cancel)
+            {
+                _logger.AppendMessage("cancel == NULL", true, ConsoleColor.Magenta);
+                return false;
+            }
+            if (null == cancel.result)
+            {
+                _logger.AppendMessage("cancel.result == NULL", true, ConsoleColor.Magenta);
+                return false;
+            }
+
             if ("tesSUCCESS" != cancel.result.engine_result)
             {
                 throw new Exception(String.Format("Unexpected response when canceling order {0}. _result={1}; _result_message={2}",
                                                   orderId, cancel.result.engine_result, cancel.result.engine_result_message));
             }
+
+            return true;
         }
 
         internal void Close()
         {
+            _closedByUser = true;
             if (_open)
                 _webSocket.Close();
-            _open = false;
+            _open = false;            
         }
 
         public void Dispose()
@@ -282,9 +345,13 @@ namespace RippleBot
         private void websocket_Closed(object sender, EventArgs e)
         {
             _open = false;
-            _logger.AppendMessage("WebSocket connection was closed. Trying to reopen...", true, ConsoleColor.Yellow);
+            _logger.AppendMessage("WebSocket connection was closed.", true, ConsoleColor.Yellow);
 
-            Init();
+            if (!_closedByUser)
+            {
+                _logger.AppendMessage("Trying to reopen...", true, ConsoleColor.Yellow);
+                Init();
+            }
         }
 
         private string sendPostRequest(string method, string postData)

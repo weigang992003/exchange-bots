@@ -27,7 +27,7 @@ namespace RippleBot
         //Minimum difference between BUY price and subsequent SELL price (so we have at least some profit)
         private const double MIN_DIFFERENCE = 0.000015;
         //Tolerance of BUY price. Usefull if possible price change is minor, to avoid frequent order updates.
-        private const double PRICE_DELTA = 0.000005;    //0.000015 USD
+        private const double PRICE_DELTA = 0.000001;    //0.000001 XRP
 
         //Active BUY order ID
         private int _buyOrderId = -1;
@@ -86,6 +86,9 @@ namespace RippleBot
             var candles = _requestor.GetTradeStatistics(new TimeSpan(2, 0, 0));
             var market = _requestor.GetMarketDepth();
 
+            if (null == market)
+                return;
+
             var coef = TradeHelper.GetMadness(candles.results);
             _volumeWall = Helpers.SuggestWallVolume(coef, _minWallVolume, _maxWallVolume);
             _intervalMs = Helpers.SuggestInterval(coef, 8000, 20000);
@@ -96,8 +99,11 @@ namespace RippleBot
             {
                 var buyOrder = _requestor.GetOrderInfo(_buyOrderId);
 
+                if (null == buyOrder)
+                    return;
+
                 //The order is still open
-                if (null != buyOrder)
+                if (!buyOrder.Closed)
                 {
                     //Untouched
                     if (buyOrder.AmountXrp.eq(_buyOrderAmount))
@@ -128,7 +134,7 @@ namespace RippleBot
                         log("Updated BUY order ID={0}; amount={1} XRP; price={2} USD", _buyOrderId, _buyOrderAmount, _buyOrderPrice);
                     }
                 }
-                else    //NULL means it was closed
+                else
                 {
                     _executedBuyPrice = _buyOrderPrice;                    
                     log("BUY order ID={0} (amount={1} XRP) was closed at price={2} USD", ConsoleColor.Green, _buyOrderId, _buyOrderAmount, _executedBuyPrice);
@@ -152,8 +158,11 @@ namespace RippleBot
                 {
                     var sellOrder = _requestor.GetOrderInfo(_sellOrderId);
 
+                    if (null == sellOrder)
+                        return;
+
                     //The order is still open
-                    if (null != sellOrder)
+                    if (!sellOrder.Closed)
                     {
                         log("SELL order ID={0} open (amount={1} XRP, price={2} USD)", _sellOrderId, sellOrder.AmountXrp, _sellOrderPrice);
 
