@@ -378,6 +378,7 @@ namespace RippleBot
             }
 
             WebException exc = null;
+            var delay = RETRY_DELAY;
             for (int i = 1; i <= RETRY_COUNT; i++)
             {
                 try
@@ -396,11 +397,13 @@ namespace RippleBot
                 }
                 catch (WebException we)
                 {
-                    var text = String.Format("(ATTEMPT {0}/{1}) Web request failed with exception={2}; status={3}", i, RETRY_COUNT, we.Message, we.Status);
+                    var text = String.Format("(ATTEMPT {0}/{1}) Web request failed with exception={2}; status={3}. Retry in {4} ms",
+                                             i, RETRY_COUNT, we.Message, we.Status, delay);
                     _logger.AppendMessage(text, true, ConsoleColor.Yellow);
                     exc = we;
-                    Thread.Sleep(RETRY_DELAY);
+                    Thread.Sleep(delay);
                 }
+                delay *= 2;
             }
 
             throw new Exception(String.Format("Web request failed {0} times in a row with error '{1}'. Giving up.", RETRY_COUNT, exc.Message));

@@ -285,7 +285,8 @@ namespace KrakenBot
                 }
                 catch (WebException we)
                 {
-                    var text = String.Format("(ATTEMPT {0}/{1}) Web request failed with exception={2}; status={3}. Retry in {4}ms", i, RETRY_COUNT, we.Message, we.Status, delay);
+                    var text = String.Format("(ATTEMPT {0}/{1}) Web request failed with exception={2}; status={3}. Retry in {4}ms",
+                                             i, RETRY_COUNT, we.Message, we.Status, delay);
                     _logger.AppendMessage(text, true, ConsoleColor.Yellow);
                     exc = we;
 
