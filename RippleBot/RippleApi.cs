@@ -1,6 +1,5 @@
 ﻿using System.IO;
 using System.Net;
-using System.Text;
 using Common;
 using RippleBot.Business;
 using System;
@@ -38,8 +37,13 @@ namespace RippleBot
         {
             _logger = logger;
 
-//            _webProxy = new WebProxy("wsproxybra.ext.crifnet.com", 8080);      //TODO
-//            _webProxy.Credentials = CredentialCache.DefaultCredentials;
+            var proxyHost = Configuration.GetValue("proxyHost");
+            var proxyPort = Configuration.GetValue("proxyPort");
+            if (null != proxyHost && null != proxyPort)
+            {
+                _webProxy = new WebProxy(proxyHost, int.Parse(proxyPort));
+                _webProxy.Credentials = CredentialCache.DefaultCredentials;
+            }
 
             _webSocket = new WebSocket(TRADE_BASE_URL);
             _webSocket.Opened += websocket_Opened;
@@ -81,8 +85,7 @@ namespace RippleBot
                     _logger.AppendMessage("GetOrderInfo: non-critical error " + error.error_message, true, ConsoleColor.Yellow);
                     return null;
                 }
-                else
-                    throw new Exception(error.error + " " + error.error_message);
+                throw new Exception(error.error + " " + error.error_message);
             }
 
             var dataFix = _offerPattern.Replace(data, "'taker_${verb}s': {'currency': 'XRP', 'issuer':'ripple labs', 'value': '${value}'}".Replace("'", "\""));
@@ -116,8 +119,7 @@ namespace RippleBot
                     _logger.AppendMessage("GetMarketDepth: non-critical error " + error.error_message, true, ConsoleColor.Yellow);
                     return null;
                 }
-                else
-                    throw new Exception(error.error + " " + error.error_message);
+                throw new Exception(error.error + " " + error.error_message);
             }
 
             var bids = Helpers.DeserializeJSON<MarketDepthBidsResponse>(bidData);
@@ -140,7 +142,6 @@ namespace RippleBot
                     _logger.AppendMessage("GetMarketDepth: non-critical error " + error.error_message, true, ConsoleColor.Yellow);
                     return null;
                 }
-                else
                 throw new Exception(error.error + " " + error.error_message);
             }
 
@@ -177,6 +178,14 @@ namespace RippleBot
             };
 
             var data = sendToRippleNet(Helpers.SerializeJson(command));
+
+            var error = Helpers.DeserializeJSON<ErrorResponse>(data);
+            if (!String.IsNullOrEmpty(error.error))
+            {
+                _logger.AppendMessage("Error creating BUY order. Mesage=" + error.error_message, true, ConsoleColor.Magenta);
+                throw new Exception(error.error + " " + error.error_message);
+            }
+
             var response = Helpers.DeserializeJSON<NewOrderResponse>(data);
 
             return response.result.tx_json.Sequence;
