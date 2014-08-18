@@ -147,7 +147,9 @@ namespace RippleBot
                 _buyOrderPrice = suggestBuyPrice(market);
                 _buyOrderAmount = _operativeAmount - _sellOrderAmount;
                 _buyOrderId = _requestor.PlaceBuyOrder(_buyOrderPrice, _buyOrderAmount);
-                log("Successfully created BUY order with ID={0}; amount={1} XRP; price={2} USD", ConsoleColor.Cyan, _buyOrderId, _buyOrderAmount, _buyOrderPrice);
+
+                if (-1 != _buyOrderId)
+                    log("Successfully created BUY order with ID={0}; amount={1} XRP; price={2} USD", ConsoleColor.Cyan, _buyOrderId, _buyOrderAmount, _buyOrderPrice);
             }
 
             //Handle SELL order
@@ -208,7 +210,9 @@ namespace RippleBot
                     var amount = _operativeAmount - _buyOrderAmount;
                     _sellOrderId = _requestor.PlaceSellOrder(_sellOrderPrice, ref amount);
                     _sellOrderAmount = amount;
-                    log("Successfully created SELL order with ID={0}; amount={1} XRP; price={2} USD", ConsoleColor.Cyan, _sellOrderId, _sellOrderAmount, _sellOrderPrice);
+
+                    if (-1 != _sellOrderId)
+                        log("Successfully created SELL order with ID={0}; amount={1} XRP; price={2} USD", ConsoleColor.Cyan, _sellOrderId, _sellOrderAmount, _sellOrderPrice);
                 }
             }
 

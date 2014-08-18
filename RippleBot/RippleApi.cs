@@ -14,12 +14,14 @@ namespace RippleBot
 {
     internal class RippleApi : IDisposable
     {
-        private const string TRADE_BASE_URL = "wss://s-west.ripple.com:443";
+        private readonly string[] _rippleServers = { "wss://s-west.ripple.com:443", "wss://s-east.ripple.com:443" };
+        private const int SOCKET_TIMEOUT = 12000;
         private const string CHARTS_BASE_URL = "http://api.ripplecharts.com/api/";
-        private const byte RETRY_COUNT = 6;
+        private const byte RETRY_COUNT = 10;
         private const int RETRY_DELAY = 1000;
         private const string USD_ISSUER_ADDRESS = "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B";      //BitStamp
 
+        private readonly string _rippleSocketUri;
         private readonly string _walletAddress;
 
         private readonly Logger _logger;
@@ -45,14 +47,19 @@ namespace RippleBot
                 _webProxy.Credentials = CredentialCache.DefaultCredentials;
             }
 
-            _webSocket = new WebSocket(TRADE_BASE_URL);
+            _webSocket = new WebSocket(_rippleSocketUri = SocketUrl);
             _webSocket.Opened += websocket_Opened;
             _webSocket.Error += websocket_Error;
             _webSocket.Closed += websocket_Closed;
             _webSocket.MessageReceived += websocket_MessageReceived;
-
             _walletAddress = Configuration.AccessKey;
         }
+
+        private string SocketUrl
+        {
+            get { return _rippleServers[DateTime.Now.Millisecond%2]; }
+        }
+
 
         internal void Init()
         {
@@ -76,6 +83,8 @@ namespace RippleBot
             var command = new OrderInfoRequest { id = 1, account = _walletAddress };
 
             var data = sendToRippleNet(Helpers.SerializeJson(command));
+            if (null == data)
+                return null;
 
             var error = Helpers.DeserializeJSON<ErrorResponse>(data);
             if (!String.IsNullOrEmpty(error.error))
@@ -110,6 +119,8 @@ namespace RippleBot
             };
 
             var bidData = sendToRippleNet(Helpers.SerializeJson(command));
+            if (null == bidData)
+                return null;
 
             var error = Helpers.DeserializeJSON<ErrorResponse>(bidData);
             if (!String.IsNullOrEmpty(error.error))
@@ -133,6 +144,8 @@ namespace RippleBot
             };
 
             var askData = sendToRippleNet(Helpers.SerializeJson(command));
+            if (null == askData)
+                return null;
 
             error = Helpers.DeserializeJSON<ErrorResponse>(askData);
             if (!String.IsNullOrEmpty(error.error))
@@ -179,6 +192,9 @@ namespace RippleBot
 
             var data = sendToRippleNet(Helpers.SerializeJson(command));
 
+            if (null == data)
+                return -1;
+
             var error = Helpers.DeserializeJSON<ErrorResponse>(data);
             if (!String.IsNullOrEmpty(error.error))
             {
@@ -196,7 +212,12 @@ namespace RippleBot
         {
             //Cancel the old order, recreate
             if (CancelOrder(orderId))
-                return PlaceBuyOrder(price, amount);
+            {
+                var id = PlaceBuyOrder(price, amount);
+                if (-1 == id)
+                    return orderId;
+                return id;
+            }
 
             return orderId;
         }
@@ -224,6 +245,9 @@ namespace RippleBot
 
             var data = sendToRippleNet(Helpers.SerializeJson(command));
 
+            if (null == data)
+                return -1;
+
             var error = Helpers.DeserializeJSON<ErrorResponse>(data);
             if (!String.IsNullOrEmpty(error.error))
             {
@@ -241,7 +265,12 @@ namespace RippleBot
         {
             //First try to cancel the old order. Recreate it then.
             if (CancelOrder(orderId))
-                return PlaceSellOrder(price, ref amount);
+            {
+                var id = PlaceSellOrder(price, ref amount);
+                if (-1 == id) //Socket problem
+                    return orderId;
+                return id;
+            }
 
             return orderId;
         }
@@ -259,6 +288,8 @@ namespace RippleBot
             };
 
             var data = sendToRippleNet(Helpers.SerializeJson(command));
+            if (null == data) //Socket problem
+                return false;
 
             //Check for error
             var error = Helpers.DeserializeJSON<ErrorResponse>(data);
@@ -335,8 +366,18 @@ namespace RippleBot
             if (!_open)
                 throw new InvalidOperationException("WebSocket not open");
 
+            var duration = 0;
             while (null == _lastResponse)
-                Thread.Sleep(50);
+            {
+                var wait = 50;
+                Thread.Sleep(wait);
+                duration += wait;
+                if (duration > SOCKET_TIMEOUT)
+                {
+                    _logger.AppendMessage("Didn't recieve response from socket in " + duration + " ms. Returning NULL.");
+                    return _lastResponse = null;
+                }
+            }
 
             var ret = _lastResponse;
             _lastResponse = null;
@@ -350,7 +391,7 @@ namespace RippleBot
 
         private void websocket_Opened(object sender, EventArgs e)
         {
-            _logger.AppendMessage("WebSocket connection established", true, ConsoleColor.Yellow);
+            _logger.AppendMessage("Established WebSocket connection to " + _rippleSocketUri, true, ConsoleColor.Yellow);
             _open = true;
         }
 
@@ -409,6 +450,10 @@ namespace RippleBot
                     var text = String.Format("(ATTEMPT {0}/{1}) Web request failed with exception={2}; status={3}. Retry in {4} ms",
                                              i, RETRY_COUNT, we.Message, we.Status, delay);
                     _logger.AppendMessage(text, true, ConsoleColor.Yellow);
+
+                    if (null != we.Response)
+                        _logger.AppendMessage("DEBUG: Response.Headers=" + String.Join("; ", we.Response.Headers));
+
                     exc = we;
                     Thread.Sleep(delay);
                 }
