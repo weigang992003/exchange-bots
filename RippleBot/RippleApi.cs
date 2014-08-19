@@ -190,21 +190,35 @@ namespace RippleBot
                 secret = Configuration.SecretKey
             };
 
-            var data = sendToRippleNet(Helpers.SerializeJson(command));
-
-            if (null == data)
-                return -1;
-
-            var error = Helpers.DeserializeJSON<ErrorResponse>(data);
-            if (!String.IsNullOrEmpty(error.error))
+            ErrorResponse error = null;
+            var delay = RETRY_DELAY;
+            for (int i = 1; i <= RETRY_COUNT; i++)
             {
-                _logger.AppendMessage("Error creating BUY order. Mesage=" + error.error_message, true, ConsoleColor.Magenta);
-                throw new Exception(error.error + " " + error.error_message);
+                var data = sendToRippleNet(Helpers.SerializeJson(command));
+
+                if (null == data)
+                    return -1;
+
+                error = Helpers.DeserializeJSON<ErrorResponse>(data);
+                if (!String.IsNullOrEmpty(error.error))
+                {
+                    _logger.AppendMessage("Error creating BUY order. Mesage=" + error.error_message, true, ConsoleColor.Magenta);
+                    if (!error.IsCritical)
+                    {
+                        _logger.AppendMessage("Retry in " + delay + " ms...", true, ConsoleColor.Yellow);
+                        delay *= 2;
+                        Thread.Sleep(delay);
+                        continue;
+                    }
+                    throw new Exception(error.error + " " + error.error_message);
+                }
+
+                var response = Helpers.DeserializeJSON<NewOrderResponse>(data);
+
+                return response.result.tx_json.Sequence;
             }
 
-            var response = Helpers.DeserializeJSON<NewOrderResponse>(data);
-
-            return response.result.tx_json.Sequence;
+            throw new Exception(String.Format("Socket request failed {0} times in a row with error '{1}'. Giving up.", RETRY_COUNT, error.error_message));
         }
 
         /// <summary>Update BUY order by re-creating it. Returns new order ID.</summary>
@@ -243,21 +257,35 @@ namespace RippleBot
                 secret = Configuration.SecretKey
             };
 
-            var data = sendToRippleNet(Helpers.SerializeJson(command));
-
-            if (null == data)
-                return -1;
-
-            var error = Helpers.DeserializeJSON<ErrorResponse>(data);
-            if (!String.IsNullOrEmpty(error.error))
+            ErrorResponse error = null;
+            var delay = RETRY_DELAY;
+            for (int i = 1; i <= RETRY_COUNT; i++)
             {
-                _logger.AppendMessage("Error creating SELL order. Mesage=" + error.error_message, true, ConsoleColor.Magenta);
-                throw new Exception(error.error + " " + error.error_message);
+                var data = sendToRippleNet(Helpers.SerializeJson(command));
+
+                if (null == data)
+                    return -1;
+
+                error = Helpers.DeserializeJSON<ErrorResponse>(data);
+                if (!String.IsNullOrEmpty(error.error))
+                {
+                    _logger.AppendMessage("Error creating SELL order. Mesage=" + error.error_message, true, ConsoleColor.Magenta);
+                    if (!error.IsCritical)
+                    {
+                        _logger.AppendMessage("Retry in " + delay + " ms...", true, ConsoleColor.Yellow);
+                        delay *= 2;
+                        Thread.Sleep(delay);
+                        continue;
+                    }
+                    throw new Exception(error.error + " " + error.error_message);
+                }
+
+                var response = Helpers.DeserializeJSON<NewOrderResponse>(data);
+
+                return response.result.tx_json.Sequence;
             }
 
-            var response = Helpers.DeserializeJSON<NewOrderResponse>(data);
-
-            return response.result.tx_json.Sequence;
+            throw new Exception(String.Format("Socket request failed {0} times in a row with error '{1}'. Giving up.", RETRY_COUNT, error.error_message));
         }
 
         /// <summary>Update SELL order by re-creating it. Returns new order ID.</summary>
@@ -415,22 +443,23 @@ namespace RippleBot
         private string sendPostRequest(string method, string postData)
         {
             string address = CHARTS_BASE_URL + method;
-            var webRequest = (HttpWebRequest)WebRequest.Create(address);
-            webRequest.ContentType = "application/json";
-            webRequest.Method = "POST";
-
-            if (null != _webProxy)
-                webRequest.Proxy = _webProxy;
-
-            using (var writer = new StreamWriter(webRequest.GetRequestStream()))
-            {
-                writer.Write(postData);
-            }
 
             WebException exc = null;
             var delay = RETRY_DELAY;
             for (int i = 1; i <= RETRY_COUNT; i++)
             {
+                var webRequest = (HttpWebRequest)WebRequest.Create(address);
+                webRequest.ContentType = "application/json";
+                webRequest.Method = "POST";
+
+                if (null != _webProxy)
+                    webRequest.Proxy = _webProxy;
+
+                using (var writer = new StreamWriter(webRequest.GetRequestStream()))
+                {
+                    writer.Write(postData);
+                }
+
                 try
                 {
                     using (WebResponse webResponse = webRequest.GetResponse())
