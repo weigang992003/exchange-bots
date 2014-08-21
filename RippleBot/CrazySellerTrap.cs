@@ -45,6 +45,9 @@ namespace RippleBot
         //The price at which we bought from crazy buyer
         private double _executedBuyPrice = -1.0;
 
+        private double _xrpBalance;
+
+
         public CrazySellerTrap(Logger logger)
         {
             _logger = logger;
@@ -92,7 +95,8 @@ namespace RippleBot
             var coef = TradeHelper.GetMadness(candles.results);
             _volumeWall = Helpers.SuggestWallVolume(coef, _minWallVolume, _maxWallVolume);
             _intervalMs = Helpers.SuggestInterval(coef, 8000, 20000);
-            log("Madness={0}; Volume={1} XRP; Interval={2} ms;", coef, _volumeWall, _intervalMs);
+            _xrpBalance = _requestor.GetXrpBalance();
+            log("Madness={0}; Volume={1} XRP; Interval={2} ms; Balance={3} XRP", coef, _volumeWall, _intervalMs, _xrpBalance);
 
             //We have active BUY order
             if (-1 != _buyOrderId)
@@ -136,10 +140,25 @@ namespace RippleBot
                 }
                 else
                 {
-                    _executedBuyPrice = _buyOrderPrice;                    
-                    log("BUY order ID={0} (amount={1} XRP) was closed at price={2} USD", ConsoleColor.Green, _buyOrderId, _buyOrderAmount, _executedBuyPrice);
-                    _buyOrderId = -1;
-                    _buyOrderAmount = 0;
+                    //Check if cancelled by Ripple due to "lack of funds"
+                    var balance = _requestor.GetXrpBalance();
+                    if (balance.eq(_xrpBalance))
+                    {
+                        log("BUY order ID={0} closed but asset validation failed (balance={1} XRP). Asuming was cancelled, trying to recreate",
+                            ConsoleColor.Yellow, _buyOrderId, balance);
+                        _buyOrderPrice = suggestBuyPrice(market);
+                        _buyOrderId = _requestor.PlaceBuyOrder(_buyOrderPrice, _buyOrderAmount);
+
+                        if (-1 != _buyOrderId)
+                            log("Successfully created BUY order with ID={0}; amount={1} XRP; price={2} USD", ConsoleColor.Cyan, _buyOrderId, _buyOrderAmount, _buyOrderPrice);
+                    }
+                    else
+                    {
+                        _executedBuyPrice = _buyOrderPrice;
+                        log("BUY order ID={0} (amount={1} XRP) was closed at price={2} USD", ConsoleColor.Green, _buyOrderId, _buyOrderAmount, _executedBuyPrice);
+                        _buyOrderId = -1;
+                        _buyOrderAmount = 0;
+                    }
                 }
             }
             else if (_operativeAmount - _sellOrderAmount > 0.00001)    //No BUY order (and there are some money available). So create one
@@ -197,11 +216,26 @@ namespace RippleBot
                             log("Updated SELL order ID={0}; amount={1} XRP; price={2} USD", _sellOrderId, _sellOrderAmount, price);
                         }
                     }
-                    else        //Closed
+                    else        //Closed or cancelled
                     {
-                        log("SELL order ID={0} (amount={1} XRP) was closed at price={2} USD", ConsoleColor.Green, _sellOrderId, _sellOrderAmount, _sellOrderPrice);
-                        _sellOrderAmount = 0;
-                        _sellOrderId = -1;
+                        //Check if cancelled by the network
+                        var balance = _requestor.GetXrpBalance();
+                        if (balance.eq(_xrpBalance))
+                        {
+                            log("SELL order ID={0} closed but asset validation failed (balance={1} XRP). Asuming was cancelled, trying to recreate",
+                                ConsoleColor.Yellow, _sellOrderId, balance);
+                            _sellOrderPrice = suggestSellPrice(market);
+                            _sellOrderId = _requestor.PlaceSellOrder(_sellOrderPrice, ref _sellOrderAmount);
+
+                            if (-1 != _sellOrderId)
+                                log("Successfully created SELL order with ID={0}; amount={1} XRP; price={2} USD", ConsoleColor.Cyan, _sellOrderId, _sellOrderAmount, _sellOrderPrice);
+                        }
+                        else
+                        {
+                            log("SELL order ID={0} (amount={1} XRP) was closed at price={2} USD", ConsoleColor.Green, _sellOrderId, _sellOrderAmount, _sellOrderPrice);
+                            _sellOrderAmount = 0;
+                            _sellOrderId = -1;
+                        }
                     }
                 }
                 else    //No SELL order, create one

@@ -75,7 +75,7 @@ namespace RippleBot.Business
             get { return AmountUsd / AmountXrp; }
         }
 
-        /// <summary>True if this order was fully filled</summary>
+        /// <summary>True if this order was fully filled or cancelled</summary>
         internal bool Closed { get; private set; }
 
         internal Offer()

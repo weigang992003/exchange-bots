@@ -74,6 +74,10 @@ namespace RippleBot
             var command = new AccountInfoRequest { account = _walletAddress };
 
             var data = sendToRippleNet(Helpers.SerializeJson(command));
+
+            if (null == data)
+                return -1.0;
+
             var account = Helpers.DeserializeJSON<AccountInfoResponse>(data);
             return account.result.account_data.BalanceXrp;
         }
@@ -102,7 +106,7 @@ namespace RippleBot
             var offerList = Helpers.DeserializeJSON<OffersResponse>(dataFix);
             var order = offerList.result.offers.FirstOrDefault(o => o.seq == orderId);
 
-            //NULL means it was already filled
+            //NULL means it was already filled BUG: OR CANCELLED!!! TODO: some better way of getting order status
             if (null == order)
                 return new Offer(true);
             return order;
