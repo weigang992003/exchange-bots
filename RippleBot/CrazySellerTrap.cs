@@ -95,8 +95,7 @@ namespace RippleBot
             var coef = TradeHelper.GetMadness(candles.results);
             _volumeWall = Helpers.SuggestWallVolume(coef, _minWallVolume, _maxWallVolume);
             _intervalMs = Helpers.SuggestInterval(coef, 8000, 20000);
-            _xrpBalance = _requestor.GetXrpBalance();
-            log("Madness={0}; Volume={1} XRP; Interval={2} ms; Balance={3} XRP", coef, _volumeWall, _intervalMs, _xrpBalance);
+            log("Madness={0}; Volume={1} XRP; Interval={2} ms", coef, _volumeWall, _intervalMs);
 
             //We have active BUY order
             if (-1 != _buyOrderId)
@@ -250,6 +249,8 @@ namespace RippleBot
                 }
             }
 
+            _xrpBalance = _requestor.GetXrpBalance();
+            log("### Balance= {0} XRP", _xrpBalance);
             log(new string('=', 80));
         }
 
