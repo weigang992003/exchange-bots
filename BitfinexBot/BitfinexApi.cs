@@ -140,7 +140,7 @@ namespace BitfinexBot
                     //LTC balance changed meanwhile, probably SELL order was (partially) filled
                     _logger.AppendMessage("WARN: Insufficient balance reported when creating SELL order with amount=" + amount, true, ConsoleColor.Yellow);
                     var accountInfo = GetAccountBalance();
-                    amount = accountInfo.AvailableLtc;
+                    amount = Math.Floor(accountInfo.AvailableLtc * 100.0) * 100.0;  //The math is protection against bad precision
                     _logger.AppendMessage("Available account balance is " + amount + " LTC. Using this as amount for SELL order", true, ConsoleColor.Yellow);
                     return PlaceSellOrder(price, ref amount);
                 }

@@ -22,7 +22,7 @@ namespace KrakenBot
         //Volumen of BTC necessary to accept our offer
         private double _volumeWall;
         //Minimum difference between SELL price and subsequent BUY price (so we have at least some profit)
-        private const double MIN_DIFFERENCE = 1.7;      //TODO: dynamic by current price, volume and fee
+        private const double MIN_DIFFERENCE = 2.0;      //TODO: dynamic by current price, volume and fee
         //Tolerance of SELL price (factor). Usefull if possible price change is minor, to avoid frequent order updates.
         private const double PRICE_DELTA = 0.05;    //5%
 
