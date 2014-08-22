@@ -1,4 +1,5 @@
-﻿using System.Runtime.Serialization;
+﻿using System.Collections.Generic;
+using System.Runtime.Serialization;
 
 
 namespace RippleBot.Business
@@ -6,11 +7,23 @@ namespace RippleBot.Business
     [DataContract]
     internal class CancelResult
     {
+        private static readonly HashSet<string> _okResultTokens = new HashSet<string>
+        {
+            "tesSUCCESS",
+            "telINSUF_FEE_P"        //Message "Fee insufficient", no matter how it's possible while cancelling
+        };
+
         [DataMember] internal string engine_result { get; set; }
         [DataMember] internal int engine_result_code { get; set; }
         [DataMember] internal string engine_result_message { get; set; }
         [DataMember] internal string tx_blob { get; set; }
         [DataMember] internal object tx_json { get; set; }
+
+        /// <summary>Response indicated success</summary>
+        internal bool ResultOK
+        {
+            get { return _okResultTokens.Contains(engine_result); }
+        }
     }
 
     [DataContract]
