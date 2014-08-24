@@ -1,13 +1,13 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using System.Linq;
 using System.Net;
+using System.Text.RegularExpressions;
+using System.Threading;
 using Common;
 using RippleBot.Business;
-using System;
-using System.Linq;
-using System.Threading;
 using RippleBot.Business.DataApi;
 using WebSocket4Net;
-using System.Text.RegularExpressions;
 
 
 namespace RippleBot
@@ -78,6 +78,9 @@ namespace RippleBot
             if (null == data)
                 return -1.0;
 
+            if (!checkError("GetXrpBalance", data))
+                return -1.0;
+
             var account = Helpers.DeserializeJSON<AccountInfoResponse>(data);
             return account.result.account_data.BalanceXrp;
         }
@@ -90,16 +93,8 @@ namespace RippleBot
             if (null == data)
                 return null;
 
-            var error = Helpers.DeserializeJSON<ErrorResponse>(data);
-            if (!String.IsNullOrEmpty(error.error))
-            {
-                if (!error.IsCritical)
-                {
-                    _logger.AppendMessage("GetOrderInfo: non-critical error " + error.error_message, true, ConsoleColor.Yellow);
-                    return null;
-                }
-                throw new Exception(error.error + " " + error.error_message);
-            }
+            if (!checkError("GetOrderInfo", data))
+                return null;
 
             var dataFix = _offerPattern.Replace(data, "'taker_${verb}s': {'currency': 'XRP', 'issuer':'ripple labs', 'value': '${value}'}".Replace("'", "\""));
 
@@ -126,16 +121,8 @@ namespace RippleBot
             if (null == bidData)
                 return null;
 
-            var error = Helpers.DeserializeJSON<ErrorResponse>(bidData);
-            if (!String.IsNullOrEmpty(error.error))
-            {
-                if (!error.IsCritical)
-                {
-                    _logger.AppendMessage("GetMarketDepth: non-critical error " + error.error_message, true, ConsoleColor.Yellow);
-                    return null;
-                }
-                throw new Exception(error.error + " " + error.error_message);
-            }
+            if (!checkError("GetMarketDepth", bidData))
+                return null;
 
             var bids = Helpers.DeserializeJSON<MarketDepthBidsResponse>(bidData);
 
@@ -151,16 +138,8 @@ namespace RippleBot
             if (null == askData)
                 return null;
 
-            error = Helpers.DeserializeJSON<ErrorResponse>(askData);
-            if (!String.IsNullOrEmpty(error.error))
-            {
-                if (!error.IsCritical)
-                {
-                    _logger.AppendMessage("GetMarketDepth: non-critical error " + error.error_message, true, ConsoleColor.Yellow);
-                    return null;
-                }
-                throw new Exception(error.error + " " + error.error_message);
-            }
+            if (!checkError("GetMarketDepth", askData))
+                return null;
 
             var asks = Helpers.DeserializeJSON<MarketDepthAsksResponse>(askData);
 
@@ -401,7 +380,7 @@ namespace RippleBot
             var duration = 0;
             while (null == _lastResponse)
             {
-                var wait = 50;
+                const int wait = 50;
                 Thread.Sleep(wait);
                 duration += wait;
                 if (duration > SOCKET_TIMEOUT)
@@ -414,6 +393,22 @@ namespace RippleBot
             var ret = _lastResponse;
             _lastResponse = null;
             return ret;
+        }
+
+        private bool checkError(string action, string data)
+        {
+            var error = Helpers.DeserializeJSON<ErrorResponse>(data);
+            if (!String.IsNullOrEmpty(error.error))
+            {
+                if (!error.IsCritical)
+                {
+                    _logger.AppendMessage(action + ": non-critical error " + error.error_message, true, ConsoleColor.Yellow);
+                    return false;
+                }
+                throw new Exception(error.error + " " + error.error_message);
+            }
+
+            return true;
         }
 
         private void websocket_MessageReceived(object sender, MessageReceivedEventArgs mrea)

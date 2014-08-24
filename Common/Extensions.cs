@@ -7,10 +7,10 @@ namespace Common
 {
     public static class Extensions
     {
-        /// <summary>Compare this <see cref="Double"/> to another, with tolerance of 0.00001</summary>
-        public static bool eq(this double value, double other)
+        /// <summary>Compare this <see cref="Double"/> to another, with tolerance of <paramref name="delta"/></summary>
+        public static bool eq(this double value, double other, double delta = 0.0000001)
         {
-            return Math.Abs(value - other) < 0.0000001;
+            return Math.Abs(value - other) < delta;
         }
 
         /// <summary>Retuns given number of elements at the end of sequence</summary>
