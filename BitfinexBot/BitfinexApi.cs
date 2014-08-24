@@ -219,50 +219,51 @@ namespace BitfinexBot
 
         private string sendPostRequest(string method, List<Tuple<string, string>> paramz = null)
         {
-            long nonce = DateTime.Now.Ticks;
-            nonce += _nonceOffset;
-
             string path = BASE_URL + method;
-            string paramDict = "{" + String.Format("\"request\":\"/v1/{0}\",\"nonce\":\"{1}\"", method, nonce);
-            if (null != paramz && paramz.Any())
-            {
-                foreach (var param in paramz)
-                    paramDict += "," + param.Item1 + ":" + param.Item2;
-            }
-            paramDict += "}";
-            string payload = Convert.ToBase64String(Encoding.UTF8.GetBytes(paramDict));
-
-            var hmac = new HMACSHA384(Encoding.UTF8.GetBytes(Configuration.SecretKey));
-            byte[] hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));
-            string hexHash = BitConverter.ToString(hash).Replace("-", "").ToLower();
-
-            var headers = new NameValueCollection
-            {
-                {"X-BFX-APIKEY", Configuration.AccessKey},
-                {"X-BFX-PAYLOAD", payload},
-                {"X-BFX-SIGNATURE", hexHash}
-            };
-
-            var request = (HttpWebRequest)WebRequest.Create(path);
-            request.KeepAlive = true;
-            request.Method = "POST";
-
-            if (null != _webProxy)
-                request.Proxy = _webProxy;
-
-            request.Headers.Add(headers);
-
-            byte[] byteArray = Encoding.UTF8.GetBytes(paramDict);
-            request.ContentLength = byteArray.Length;
-
-            using (var writer = request.GetRequestStream())
-            {
-                writer.Write(byteArray, 0, byteArray.Length);
-            }
 
             WebException exc = null;
             for (int i = 1; i <= RETRY_COUNT; i++)
             {
+                long nonce = DateTime.Now.Ticks;
+                nonce += _nonceOffset;
+
+                string paramDict = "{" + String.Format("\"request\":\"/v1/{0}\",\"nonce\":\"{1}\"", method, nonce);
+                if (null != paramz && paramz.Any())
+                {
+                    foreach (var param in paramz)
+                        paramDict += "," + param.Item1 + ":" + param.Item2;
+                }
+                paramDict += "}";
+                string payload = Convert.ToBase64String(Encoding.UTF8.GetBytes(paramDict));
+
+                var hmac = new HMACSHA384(Encoding.UTF8.GetBytes(Configuration.SecretKey));
+                byte[] hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));
+                string hexHash = BitConverter.ToString(hash).Replace("-", "").ToLower();
+
+                var headers = new NameValueCollection
+                {
+                    {"X-BFX-APIKEY", Configuration.AccessKey},
+                    {"X-BFX-PAYLOAD", payload},
+                    {"X-BFX-SIGNATURE", hexHash}
+                };
+
+                var request = (HttpWebRequest)WebRequest.Create(path);
+                request.KeepAlive = true;
+                request.Method = "POST";
+
+                if (null != _webProxy)
+                    request.Proxy = _webProxy;
+
+                request.Headers.Add(headers);
+
+                byte[] byteArray = Encoding.UTF8.GetBytes(paramDict);
+                request.ContentLength = byteArray.Length;
+
+                using (var writer = request.GetRequestStream())
+                {
+                    writer.Write(byteArray, 0, byteArray.Length);
+                }
+
                 try
                 {
                     using (WebResponse response = request.GetResponse())
