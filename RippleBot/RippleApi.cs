@@ -484,9 +484,6 @@ namespace RippleBot
                                              i, RETRY_COUNT, we.Message, we.Status, delay);
                     _logger.AppendMessage(text, true, ConsoleColor.Yellow);
 
-                    if (null != we.Response)
-                        _logger.AppendMessage("DEBUG: Response.Headers=" + String.Join("; ", we.Response.Headers));
-
                     exc = we;
                     Thread.Sleep(delay);
                 }

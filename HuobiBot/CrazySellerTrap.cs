@@ -26,9 +26,9 @@ namespace HuobiBot
         //Volumen of BTC necessary to accept our offer
         private double _volumeWall;
         //Minimum difference between BUY price and subsequent SELL price (so we have at least some profit)
-        private const double MIN_DIFFERENCE = 0.8;
+        private const double MIN_DIFFERENCE = 1.0;
         //Tolerance of BUY price (factor). Usefull if possible price change is minor, to avoid frequent order updates.
-        private const double PRICE_DELTA = 0.05;    //5%
+        private const double MIN_PRICE_DELTA = 0.8;    //0.8 CNY
 
         //Active BUY order ID
         private int _buyOrderId = -1;
@@ -229,7 +229,6 @@ namespace HuobiBot
         private double suggestBuyPrice(MarketDepthResponse market)
         {
             double sum = 0;
-            var minDiff = _volumeWall * PRICE_DELTA;
             var lowestAsk = market.Asks.First().Price;
 
             foreach (var bid in market.Bids)
@@ -239,7 +238,7 @@ namespace HuobiBot
                     double buyPrice = bid.Price + 0.01;
 
                     //The difference is too small and we'd be not first in BUY orders. Leave previous price to avoid server call
-                    if (-1 != _buyOrderId && buyPrice < market.Bids[0].Price && Math.Abs(buyPrice - _buyOrderPrice) < minDiff)
+                    if (-1 != _buyOrderId && buyPrice < market.Bids[0].Price && Math.Abs(buyPrice - _buyOrderPrice) < MIN_PRICE_DELTA)
                     {
                         log("DEBUG: BUY price {0} too similar, using previous", buyPrice);
                         return _buyOrderPrice;
@@ -256,7 +255,7 @@ namespace HuobiBot
 
             //Market too dry, use BUY order before last, so we see it in chart
             var price = market.Bids.Last().Price + 0.01;
-            if (-1 != _buyOrderId && Math.Abs(price - _buyOrderPrice) < minDiff)
+            if (-1 != _buyOrderId && Math.Abs(price - _buyOrderPrice) < MIN_PRICE_DELTA)
                 return _buyOrderPrice;
             return price;
         }

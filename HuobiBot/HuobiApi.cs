@@ -18,11 +18,11 @@ namespace HuobiBot
         private const string MARKET_URL = "http://market.huobi.com/staticmarket/depth_btc_json.js";
         private const string TRADE_STATS_URL = "http://market.huobi.com/staticmarket/detail_btc_json.js";
         private const string TRADING_API_URL = "https://api.huobi.com/api.php";
-        private const byte RETRY_COUNT = 6;
+        private const byte RETRY_COUNT = 10;
         private const int RETRY_DELAY = 1000;
 
         private readonly Logger _logger;
-        private readonly int _timeOffset;
+        private readonly long _timeOffset;
         private readonly WebProxy _webProxy;
 
 
@@ -37,9 +37,9 @@ namespace HuobiBot
                 _webProxy.Credentials = CredentialCache.DefaultCredentials;
             }
 
-            var timeOffset = Configuration.GetValue("time_offset");
-            if (!String.IsNullOrEmpty(timeOffset))
-                _timeOffset = int.Parse(timeOffset);
+            var nonceOffset = Configuration.GetValue("nonce_offset");
+            if (!String.IsNullOrEmpty(nonceOffset))
+                _timeOffset = long.Parse(nonceOffset) / 10000000;
         }
 
 
@@ -236,34 +236,35 @@ namespace HuobiBot
         private string doRequest(string methodName, List<Tuple<string, string>> paramz = null)
         {
             ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
-            var serverTimeDiff = new TimeSpan(-2, 0, 0);
-            var totalSeconds = (int) Math.Round((DateTime.Now - new DateTime(1970, 1, 1) + serverTimeDiff).TotalSeconds);
-            totalSeconds += _timeOffset;
-
-            var parameters = new List<Tuple<string, string>>
-            {
-                //Must be sorted by key
-                new Tuple<string, string>("access_key", Configuration.AccessKey),
-                new Tuple<string, string>("created", totalSeconds.ToString()),
-                new Tuple<string, string>("method", methodName),
-                new Tuple<string, string>("secret_key", Configuration.SecretKey)            //TODO: this is questionable!
-            };
-            if (null != paramz && paramz.Any())
-            {
-                parameters.AddRange(paramz);
-                parameters = parameters.OrderBy(tuple => tuple.Item1).ToList();
-            }
-
-            //Finally add MD5 hash sign. It's out of sorting.
-            var sign = getMD5Hash(buildQueryString(parameters));
-            parameters.Add(new Tuple<string, string>("sign", sign));
-
-            var postData = buildQueryString(parameters);
 
             WebException exc = null;
             var delay = 0;
             for (int i = 1; i <= RETRY_COUNT; i++)
             {
+                var serverTimeDiff = new TimeSpan(-2, 0, 0);
+                var totalSeconds = (long)Math.Round((DateTime.Now - new DateTime(1970, 1, 1) + serverTimeDiff).TotalSeconds);   //TODO: using DateTime.Now is not ideal, should use server time
+                totalSeconds += _timeOffset;
+
+                var parameters = new List<Tuple<string, string>>
+                {
+                    //Must be sorted by key
+                    new Tuple<string, string>("access_key", Configuration.AccessKey),
+                    new Tuple<string, string>("created", totalSeconds.ToString()),
+                    new Tuple<string, string>("method", methodName),
+                    new Tuple<string, string>("secret_key", Configuration.SecretKey)
+                };
+                if (null != paramz && paramz.Any())
+                {
+                    parameters.AddRange(paramz);
+                    parameters = parameters.OrderBy(tuple => tuple.Item1).ToList();
+                }
+
+                //Finally add MD5 hash sign. It's out of sorting.
+                var sign = getMD5Hash(buildQueryString(parameters));
+                parameters.Add(new Tuple<string, string>("sign", sign));
+
+                var postData = buildQueryString(parameters);
+
                 delay += RETRY_DELAY;
                 try
                 {
