@@ -20,7 +20,7 @@ namespace HuobiBot
         private const string TRADING_API_URL = "https://api.huobi.com/api.php";
         private const byte RETRY_COUNT = 10;
         private const int RETRY_DELAY = 1000;
-        private const int DATA_TIMEOUT = 8*60*1000;
+        private const int DATA_TIMEOUT = 10*60*1000;
 
         private readonly Logger _logger;
         private readonly long _timeOffset;
@@ -46,54 +46,52 @@ namespace HuobiBot
 
         internal DateTime GetServerTime()
         {
-            var client = new WebClient2(DATA_TIMEOUT);
+            var client = new WebClient2(_logger, DATA_TIMEOUT);
 
             if (null != _webProxy)
                 client.Proxy = _webProxy;
 
-            var data = client.DownloadString(TICKER_URL);
-            var ticker = Helpers.DeserializeJSON<TickerResponse>(data);
-            return ticker.ServerTime;
+            var ticker = client.DownloadObject<TickerResponse>(TICKER_URL);
+            return null==ticker ? DateTime.MinValue : ticker.ServerTime;
         }
 
         internal MarketDepthResponse GetMarketDepth()
         {
-            var client = new WebClient2(DATA_TIMEOUT);
+            var client = new WebClient2(_logger, DATA_TIMEOUT);
 
             if (null != _webProxy)
                 client.Proxy = _webProxy;
 
-            var data = client.DownloadString(MARKET_URL);
-            return Helpers.DeserializeJSON<MarketDepthResponse>(data);
+            var depth = client.DownloadObject<MarketDepthResponse>(MARKET_URL);
+            return depth;
         }
 
         internal TradeStatisticsResponse GetTradeStatistics()
         {
-            var client = new WebClient2(DATA_TIMEOUT);
+            var client = new WebClient2(_logger, DATA_TIMEOUT);
 
             if (null != _webProxy)
                 client.Proxy = _webProxy;
 
-            var data = client.DownloadString(TRADE_STATS_URL);
-            var trades = Helpers.DeserializeJSON<TradeStatisticsResponse>(data);
-
+            var trades = client.DownloadObject<TradeStatisticsResponse>(TRADE_STATS_URL);
             return trades;
         }
 
         internal List<Candle> GetCandles()
         {
-            var client = new WebClient2(DATA_TIMEOUT);
+            var client = new WebClient2(_logger, DATA_TIMEOUT);
 
             if (null != _webProxy)
                 client.Proxy = _webProxy;
 
-            var data = client.DownloadString("http://market.huobi.com/staticmarket/btc_kline_001_json.js");
+            var data = client.DownloadStringSafe("http://market.huobi.com/staticmarket/btc_kline_001_json.js");
+            if (null == data)
+                return null;
 
             //NOTE: add auxiliary root variable to avoid tricky JSON parsing
             data = "{\"candleData\":" + data + "}";
-
             var candles = Helpers.DeserializeJSON<CandlesResponse>(data);
-            return candles.MergeAsCandles(3);
+            return candles.MergeAsCandles(5);
         }
 
         internal AccountInfoResponse GetAccountInfo()

@@ -23,7 +23,7 @@ namespace HuobiBot
         //Minimum difference between SELL price and subsequent BUY price (so we have at least some profit)
         private const double MIN_DIFFERENCE = 0.5;
         //Tolerance of BUY price (factor). Usefull if possible price change is minor, to avoid frequent order updates.
-        private const double PRICE_DELTA = 0.065;   //6.5%
+        private const double PRICE_DELTA = 0.05;   //5%
 
         //Active BUY order ID
         private int _buyOrderId = -1;
@@ -39,7 +39,7 @@ namespace HuobiBot
         public NaiveBear(Logger logger)
         {
             _logger = logger;
-            _logger.AppendMessage("Naive Bear trader initialized with operative share " + OPERATIVE_AMOUNT + " BTC");
+            _logger.AppendMessage("Naive Bear trader initialized with operative amount " + OPERATIVE_AMOUNT + " BTC");
             _requestor = new HuobiApi(logger);
             _trend = new MarketTrend();
         }
@@ -71,6 +71,12 @@ namespace HuobiBot
         private void check()
         {
             var candles = _requestor.GetCandles();
+            if (null == candles)
+            {
+                log("candles==NULL, jump", ConsoleColor.Yellow);
+                return;
+            }
+
 /*DEBUG            foreach (var candle in candles)
             {
                 var color = candle.ClosingPrice > candle.OpeningPrice
@@ -83,8 +89,23 @@ namespace HuobiBot
 
 
             var market = _requestor.GetMarketDepth();
+            if (null == market)
+            {
+                log("market==NULL, jump", ConsoleColor.Yellow);
+                return;
+            }
             var tradeStats = _requestor.GetTradeStatistics();
+            if (null == tradeStats)
+            {
+                log("tradeStats==NULL, jump", ConsoleColor.Yellow);
+                return;
+            }
             var serverTime = _requestor.GetServerTime();
+            if (DateTime.MinValue == serverTime)
+            {
+                log("serverTime==NULL, jump", ConsoleColor.Yellow);
+                return;
+            }
 
             var coef = TradeHelper.GetMadness(tradeStats, serverTime);
             _intervalMs = Helpers.SuggestInterval(coef);
@@ -99,7 +120,7 @@ namespace HuobiBot
                 if (null != reason)
                 {
                     var amount = OPERATIVE_AMOUNT - _buyOrderAmount;
-                    log("SELLing {0} BTC at market price. Reason={1}", ConsoleColor.Cyan, amount, reason);
+                    log(DateTime.Now.ToShortTimeString() + "SELLing {0} BTC at market price. Reason={1}", ConsoleColor.Cyan, amount, reason);
                     //TODO
                                         //int orderId = _requestor.PlaceSellOrder(null, ref amount);
                                         //var orderInfo = _requestor.GetOrderInfo(orderId);
@@ -113,7 +134,7 @@ namespace HuobiBot
                 var buyBackReason = _trend.ReasonToBuyBack(candles, tradeStats);
                 if (null != buyBackReason)
                 {
-                    log("DEBUG: Reason to BUY back=" + buyBackReason, ConsoleColor.Cyan);
+                    log(DateTime.Now.ToShortTimeString() + "DEBUG: Reason to BUY back=" + buyBackReason, ConsoleColor.Cyan);
                 }
                 else log("No reason to BUY...");
             }
