@@ -20,6 +20,7 @@ namespace HuobiBot
         private const string TRADING_API_URL = "https://api.huobi.com/api.php";
         private const byte RETRY_COUNT = 10;
         private const int RETRY_DELAY = 1000;
+        private const int DATA_TIMEOUT = 3*60*1000;
 
         private readonly Logger _logger;
         private readonly long _timeOffset;
@@ -45,7 +46,7 @@ namespace HuobiBot
 
         internal DateTime GetServerTime()
         {
-            var client = new WebClient();
+            var client = new WebClient2(DATA_TIMEOUT);
 
             if (null != _webProxy)
                 client.Proxy = _webProxy;
@@ -57,7 +58,7 @@ namespace HuobiBot
 
         internal MarketDepthResponse GetMarketDepth()
         {
-            var client = new WebClient();
+            var client = new WebClient2(DATA_TIMEOUT);
 
             if (null != _webProxy)
                 client.Proxy = _webProxy;
@@ -68,7 +69,7 @@ namespace HuobiBot
 
         internal TradeStatisticsResponse GetTradeStatistics()
         {
-            var client = new WebClient();
+            var client = new WebClient2(DATA_TIMEOUT);
 
             if (null != _webProxy)
                 client.Proxy = _webProxy;
@@ -81,7 +82,7 @@ namespace HuobiBot
 
         internal List<Candle> GetCandles()
         {
-            var client = new WebClient();
+            var client = new WebClient2(DATA_TIMEOUT);
 
             if (null != _webProxy)
                 client.Proxy = _webProxy;
