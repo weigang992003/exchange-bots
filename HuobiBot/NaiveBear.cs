@@ -110,7 +110,7 @@ namespace HuobiBot
                 if (null != reason)
                 {
                     var amount = OPERATIVE_AMOUNT - _buyOrderAmount;
-                    log(DateTime.Now.ToShortTimeString() + "SELLing {0} BTC at market price. Reason={1}", ConsoleColor.Cyan, amount, reason);
+                    log(DateTime.Now.ToShortTimeString() + " SELLing {0} BTC at market price. Reason={1}", ConsoleColor.Cyan, amount, reason);
                     //TODO
                                         //int orderId = _requestor.PlaceSellOrder(null, ref amount);
                                         //var orderInfo = _requestor.GetOrderInfo(orderId);
@@ -124,7 +124,7 @@ namespace HuobiBot
                 var buyBackReason = _trend.ReasonToBuyBack(candles, tradeStats);
                 if (null != buyBackReason)
                 {
-                    log(DateTime.Now.ToShortTimeString() + "DEBUG: Reason to BUY back=" + buyBackReason, ConsoleColor.Cyan);
+                    log(DateTime.Now.ToShortTimeString() + " DEBUG: Reason to BUY back=" + buyBackReason, ConsoleColor.Cyan);
                 }
                 else log("No reason to BUY...");
             }

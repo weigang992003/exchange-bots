@@ -50,6 +50,7 @@
     <Compile Include="CrazySellerTrap.cs" />
     <Compile Include="MarketTrend.cs" />
     <Compile Include="NaiveBear.cs" />
+    <Compile Include="NaiveBull.cs" />
     <Compile Include="TradeHelper.cs" />
     <Compile Include="HuobiApi.cs" />
     <Compile Include="Program.cs" />

@@ -36,7 +36,8 @@ namespace HuobiBot
                     trader = new NaiveBear(logger);
                 break;
                 case "bull":
-                throw new NotImplementedException("Soon...");
+                    trader = new NaiveBull(logger);
+                break;
                 default:
                 throw new ArgumentException("Unknown strategy " + strategy);
             }

@@ -31,6 +31,11 @@ namespace HuobiBot.Business
         [DataMember] internal string price { get; set; }
         [DataMember] internal int level { get; set; }
         [DataMember] internal double amount { get; set; }
+
+        internal double Price
+        {
+            get { return double.Parse(price); }
+        }
     }
 
     [DataContract]
@@ -39,6 +44,11 @@ namespace HuobiBot.Business
         [DataMember] internal string price { get; set; }
         [DataMember] internal int level { get; set; }
         [DataMember] internal double amount { get; set; }
+
+        internal double Price
+        {
+            get { return double.Parse(price); }
+        }
     }
 
     [DataContract]
