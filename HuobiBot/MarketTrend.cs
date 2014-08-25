@@ -13,7 +13,7 @@ namespace HuobiBot
     internal class MarketTrend
     {
         //When price moved <= 1.5 CNY in one candle, it's not rise/fall
-        private const double PRICE_SIGNIFICANCE_LIMIT = 1.5;
+        private const double PRICE_SIGNIFICANCE_LIMIT = 0.9;
         //Average volume limit, to avoid price swings by single whale trade
         private const double AVG_VOLUME_LIMIT = 0.15;
         //Interval length in minutes

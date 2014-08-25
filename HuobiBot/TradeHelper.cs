@@ -14,9 +14,9 @@ namespace HuobiBot
         /// <returns>Coeficient in [0.0, 1.0] where 0.0 means totally peacefull market, 1.0 is wild.</returns>
         internal static float GetMadness(TradeStatisticsResponse tradeStats, DateTime now)
         {
-            //For case we have broken trading statistics
-            if (null == tradeStats.trades || !tradeStats.trades.Any())
-                return 0.5f;
+            //For case we have broken data returned from server
+            if (null == tradeStats || null == tradeStats.trades || !tradeStats.trades.Any() || DateTime.MinValue == now)
+                return 0.75f;
 
             //There's always exactly 60 past trades
             var trades = tradeStats.trades.Where(trade => trade.TimeTyped >= now.AddSeconds(-120)).ToList();

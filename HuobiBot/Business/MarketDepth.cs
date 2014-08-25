@@ -27,7 +27,7 @@ namespace HuobiBot.Business
                     _asks = new List<Order>();
 
                     foreach (var ask in asks.TakeLast(ORDER_LIST_LENGTH).Reverse())
-                        _asks.Add(new Order{Price = Convert.ToDouble(ask[0]), Amount = Convert.ToDouble(ask[1])});
+                        _asks.Add(new Order {Price = Convert.ToDouble(ask[0]), Amount = Convert.ToDouble(ask[1])});
                 }
 
                 return _asks;
@@ -47,10 +47,21 @@ namespace HuobiBot.Business
                     _bids = new List<Order>();
 
                     foreach (var bid in bids.Take(ORDER_LIST_LENGTH))
-                        _bids.Add(new Order { Price = Convert.ToDouble(bid[0]), Amount = Convert.ToDouble(bid[1]) });
+                        _bids.Add(new Order {Price = Convert.ToDouble(bid[0]), Amount = Convert.ToDouble(bid[1])});
                 }
 
                 return _bids;
+            }
+        }
+
+        /// <summary>
+        /// True if this market object contains enough of data to base market analysis and decisions on
+        /// </summary>
+        internal bool IsValid
+        {
+            get
+            {
+                return null != asks && null != bids && asks.Count >= ORDER_LIST_LENGTH && bids.Count >= ORDER_LIST_LENGTH;
             }
         }
     }

@@ -85,23 +85,13 @@ namespace HuobiBot
         private void check()
         {
             var market = _requestor.GetMarketDepth();
-            if (null == market)
+            if (null == market || !market.IsValid)
             {
-                log("market==NULL, jump", ConsoleColor.Yellow);
+                log("market==NULL or doesn't bear enough data; jump", ConsoleColor.Yellow);
                 return;
             }
             var tradeStats = _requestor.GetTradeStatistics();
-            if (null == tradeStats)
-            {
-                log("tradeStats==NULL, jump", ConsoleColor.Yellow);
-                return;
-            }
             var serverTime = _requestor.GetServerTime();
-            if (DateTime.MinValue == serverTime)
-            {
-                log("serverTime==NULL, jump", ConsoleColor.Yellow);
-                return;
-            }
 
             var coef = TradeHelper.GetMadness(tradeStats, serverTime);
             _volumeWall = Helpers.SuggestWallVolume(coef, _minWallVolume, _maxWallVolume);
