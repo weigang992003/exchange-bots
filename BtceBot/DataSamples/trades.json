@@ -1,0 +1,65 @@
+﻿[
+  {
+    "date": 1409191007,
+    "price": 5.275,
+    "amount": 2.17551,
+    "tid": 42459932,
+    "price_currency": "USD",
+    "item": "LTC",
+    "trade_type": "bid"
+  },
+  {
+    "date": 1409191002,
+    "price": 5.275,
+    "amount": 1.57162,
+    "tid": 42459930,
+    "price_currency": "USD",
+    "item": "LTC",
+    "trade_type": "bid"
+  },
+  {
+    "date": 1409190977,
+    "price": 5.275,
+    "amount": 0.154641,
+    "tid": 42459927,
+    "price_currency": "USD",
+    "item": "LTC",
+    "trade_type": "bid"
+  },
+  {
+    "date": 1409190832,
+    "price": 5.21,
+    "amount": 26,
+    "tid": 42459609,
+    "price_currency": "USD",
+    "item": "LTC",
+    "trade_type": "ask"
+  },
+  {
+    "date": 1409190832,
+    "price": 5.21,
+    "amount": 0.32,
+    "tid": 42459608,
+    "price_currency": "USD",
+    "item": "LTC",
+    "trade_type": "ask"
+  },
+  {
+    "date": 1409190832,
+    "price": 5.21,
+    "amount": 84.3874,
+    "tid": 42459607,
+    "price_currency": "USD",
+    "item": "LTC",
+    "trade_type": "ask"
+  },
+  {
+    "date": 1409190832,
+    "price": 5.21,
+    "amount": 19.5214,
+    "tid": 42459606,
+    "price_currency": "USD",
+    "item": "LTC",
+    "trade_type": "ask"
+  }
+]

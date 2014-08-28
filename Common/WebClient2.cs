@@ -9,6 +9,10 @@ namespace Common
         private readonly int _timeout;
         private readonly Logger _logger;
 
+
+        /// <summary>Create new WebClient2 instance</summary>
+        /// <param name="logger">Logger for (mostly debugging) messages</param>
+        /// <param name="timeout">Timeout in miliseconds</param>
         public WebClient2(Logger logger, int timeout)
         {
             _logger = logger;

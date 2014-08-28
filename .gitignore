@@ -3,6 +3,7 @@ Exchange bots.v12.suo
 Exchange bots.sln.DotSettings.user
 BitfinexBot/BitfinexBot.csproj.user
 BtcChinaBot/BtcChinaBot.csproj.user
+BtceBot/BtceBot.csproj.user
 HuobiBot/HuobiBot.csproj.user
 KrakenBot/KrakenBot.csproj.user
 RippleBot/RippleBot.csproj.user
@@ -12,6 +13,8 @@ BitfinexBot/bin/*
 BitfinexBot/obj/*
 BtcChinaBot/bin/*
 BtcChinaBot/obj/*
+BtceBot/bin/*
+BtceBot/obj/*
 Common/bin/*
 Common/obj/*
 HuobiBot/bin/*

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.Serialization;
+using Common;
 
 
 namespace BitfinexBot.Business
@@ -72,11 +73,5 @@ namespace BitfinexBot.Business
             this.amount = amount.ToString();
             this.type = type.ToString().ToLower();
         }
-    }
-
-    internal enum TradeType
-    {
-        BUY,
-        SELL
     }
 }
