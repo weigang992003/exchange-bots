@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data;
 using System.Net;
 using System.Threading;
 using BtceBot.Business;
@@ -45,11 +43,11 @@ namespace BtceBot
 
 
 
-        internal TradeHistory GetTradeHistory(/*TODO: do I need this?   DateTime? since = null*/)
+        internal TradeHistoryResponse GetTradeHistory(/*TODO: do I need this?   DateTime? since = null*/)
         {
             var data = sendGetRequest(DATA_BASE_URL + "trades");
             data = "{ \"trades\" : " + data + " }";
-            var trades = Helpers.DeserializeJSON<TradeHistory>(data);   //todo: will not be so easy...
+            var trades = Helpers.DeserializeJSON<TradeHistoryResponse>(data);
             return trades;
         }
 

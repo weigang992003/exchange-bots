@@ -7,7 +7,7 @@ using Common;
 namespace BtceBot.Business
 {
     [DataContract]
-    internal class TradeHistory
+    internal class TradeHistoryResponse
     {
         [DataMember] internal List<Trade> trades;
     }

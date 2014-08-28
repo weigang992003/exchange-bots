@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Runtime.Serialization;
+using Common;
 
 
 namespace HuobiBot.Business
@@ -106,12 +107,5 @@ namespace HuobiBot.Business
         [DataMember] internal int level { get; set; }
         [DataMember] internal double amount { get; set; }
         [DataMember] internal double accu { get; set; }
-    }
-
-
-    internal enum TradeType
-    {
-        BUY,
-        SELL
     }
 }
