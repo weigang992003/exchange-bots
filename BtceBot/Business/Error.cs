@@ -4,7 +4,7 @@
 namespace BtceBot.Business
 {
     [DataContract]
-    internal class RootObject
+    internal class ErrorResponse
     {
         [DataMember] internal int success { get; set; }
         [DataMember] internal string error { get; set; }

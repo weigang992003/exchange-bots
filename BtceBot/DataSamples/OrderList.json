@@ -1,0 +1,21 @@
+﻿{
+  "success": 1,
+  "return": {
+    "350901350": {
+      "pair": "ltc_usd",
+      "type": "buy",
+      "amount": 0.5,
+      "rate": 4.40404,
+      "timestamp_created": 1409284527,
+      "status": 0
+    },
+    "350901515": {
+      "pair": "ltc_usd",
+      "type": "buy",
+      "amount": 0.1,
+      "rate": 1.12345,
+      "timestamp_created": 1409284547,
+      "status": 0
+    }
+  }
+}

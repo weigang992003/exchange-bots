@@ -1,5 +1,4 @@
-﻿using System.Threading;
-using Common;
+﻿using Common;
 
 
 namespace BtceBot
@@ -53,10 +52,26 @@ namespace BtceBot
             _intervalMs = 5555;
 
             log("ServerTime = " + serverTime);
-            
+
+            var balance = _requestor.GetAccountBalance();
+            log("Account balance = " + balance + " USD");
+
+            var canceledId = 222535645;
+            var filledId = 222178267;
+
+            var debug = _requestor.GetOrderInfo(canceledId);
+
             log("Trade history: ");
             foreach (var trade in tradeHistory.trades)
                 log((trade.Type == TradeType.BUY ? "Bought " : "Sold ") + trade.amount + " LTC for " + trade.price + " USD\t\t at " + trade.Time);
+
+            var market = _requestor.GetMarketDepth();
+            log("BIDs:");
+            foreach (var bid in market.Bids)
+                log("Buy " + bid.Amount + " LTC for " + bid.Price + " USD");
+            log("#############################################\nASKs:");
+            foreach (var ask in market.Asks)
+                log("Sell " + ask.Amount + " LTC for " + ask.Price + " USD");
 
             log(new string('=', 84));
 

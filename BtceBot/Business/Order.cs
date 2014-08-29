@@ -1,0 +1,36 @@
+﻿using System.Collections.Generic;
+using System.Runtime.Serialization;
+
+
+namespace BtceBot.Business
+{
+    [DataContract]
+    internal class Order
+    {
+        [DataMember] internal int id { get; set; }
+        [DataMember] internal string pair { get; set; }
+        [DataMember] internal string type { get; set; }
+        [DataMember] internal double amount { get; set; }
+        [DataMember] internal double rate { get; set; }
+        [DataMember] internal int timestamp_created { get; set; }
+        [DataMember] internal int status { get; set; }
+
+
+        internal Order()
+        {
+            //for serialization
+        }
+
+        internal Order(bool closed)
+        {
+            //TODO: Status=Closed
+        }
+    }
+
+    [DataContract]
+    internal class OrderResponse
+    {
+        [DataMember] internal int success { get; set; }
+        [DataMember] internal List<Order> @return { get; set; }
+    }
+}
