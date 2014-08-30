@@ -29,9 +29,9 @@ namespace RippleBot.Business
         [DataMember] internal Take taker_gets { get; set; }
         [DataMember] internal Take taker_pays { get; set; }
 
-        internal OrderType Type
+        internal TradeType Type
         {
-            get { return taker_gets.currency == "XRP" ? OrderType.Sell : OrderType.Buy; }
+            get { return taker_gets.currency == "XRP" ? TradeType.SELL : TradeType.BUY; }
         }
 
         private double _amountXrp;//TODO = -1.0;
@@ -41,7 +41,7 @@ namespace RippleBot.Business
             {
                 if (_amountXrp.eq(0.0))
                 {
-                    var value = OrderType.Buy == Type
+                    var value = TradeType.BUY == Type
                         ? taker_pays.value
                         : taker_gets.value;
                     var valNumber = double.Parse(value);
@@ -59,7 +59,7 @@ namespace RippleBot.Business
             {
                 if (_amountUsd.eq(0.0))
                 {
-                    var value = OrderType.Buy == Type
+                    var value = TradeType.BUY == Type
                         ? taker_gets.value
                         : taker_pays.value;
                     _amountUsd = double.Parse(value);
@@ -103,12 +103,5 @@ namespace RippleBot.Business
             issuer = "";
             value = "";
         }
-    }
-
-
-    internal enum OrderType
-    {
-        Buy = 1,
-        Sell = 2
     }
 }

@@ -15,15 +15,20 @@ namespace BtceBot.Business
         [DataMember] internal int timestamp_created { get; set; }
         [DataMember] internal int status { get; set; }
 
+        //convenience
+        internal double Price { get { return rate; } }
+
+        /// <summary>True if this order was fully filled or cancelled</summary>
+        internal bool Closed { get; private set; }
 
         internal Order()
         {
-            //for serialization
+            //Serialization purposes
         }
 
         internal Order(bool closed)
         {
-            //TODO: Status=Closed
+            Closed = closed;
         }
     }
 

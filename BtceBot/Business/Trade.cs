@@ -40,5 +40,17 @@ namespace BtceBot.Business
                 throw new InvalidOperationException("Unknown trade type " + trade_type);
             }
         }
+
+        internal Trade()
+        {
+            //For serialization purposes
+        }
+
+        internal Trade(double price, double amount, TradeType type)
+        {
+            this.price = price;
+            this.amount = amount;
+            this.trade_type = type.ToString().ToLower();
+        }
     }
 }

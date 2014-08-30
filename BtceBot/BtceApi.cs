@@ -22,7 +22,6 @@ namespace BtceBot
         private const int TRADE_TIMEOUT = 60000;    //60s
 
         private readonly Logger _logger;
-//        private readonly long _nonceOffset;
         private readonly WebProxy _webProxy;
 
         private readonly HMACSHA512 _hashMaker;
@@ -40,10 +39,6 @@ namespace BtceBot
                 _webProxy = new WebProxy(proxyHost, int.Parse(proxyPort));
                 _webProxy.Credentials = CredentialCache.DefaultCredentials;
             }
-
-/*            var nonceOffset = Configuration.GetValue("nonce_offset");
-            if (!String.IsNullOrEmpty(nonceOffset))
-                _nonceOffset = long.Parse(nonceOffset);*/
 
             _hashMaker = new HMACSHA512(Encoding.ASCII.GetBytes(Configuration.SecretKey));
         }
@@ -63,7 +58,7 @@ namespace BtceBot
             return Helpers.DeserializeJSON<MarketDepthResponse>(data);
         }
 
-        internal TradeHistoryResponse GetTradeHistory(/*TODO: do I need this?   DateTime? since = null*/)
+        internal TradeHistoryResponse GetTradeHistory()
         {
             var data = sendGetRequest(DATA_BASE_URL + "trades");
             data = "{ \"trades\" : " + data + " }";
@@ -74,10 +69,8 @@ namespace BtceBot
         internal double GetAccountBalance()
         {
             var data = sendPostRequest("getInfo");
-            return Helpers.DeserializeJSON<AccountInfoResponse>(data).@return.funds.usd;        //TODO: .ltc of course
+            return Helpers.DeserializeJSON<AccountInfoResponse>(data).@return.funds.ltc;
         }
-
-
 
         internal Order GetOrderInfo(int orderId)
         {
@@ -85,6 +78,16 @@ namespace BtceBot
 
             //Small adjustement is needed to have smooth deserialization. See OrderList.json for original sample
             data = adjustOrderData(data);
+
+            var error = Helpers.DeserializeJSON<ErrorResponse>(data);
+            if (!String.IsNullOrEmpty(error.error))
+            {
+                if ("noorders" == error.error)
+                    return new Order(true);
+                var message = "Error getting data for order ID=" + orderId;
+                _logger.AppendMessage(message, true, ConsoleColor.Yellow);
+                throw new Exception(message);
+            }
 
             var orderList = Helpers.DeserializeJSON<OrderResponse>(data);
             var order = orderList.@return.FirstOrDefault(o => o.id == orderId);
@@ -96,6 +99,114 @@ namespace BtceBot
             return new Order(true);
         }
 
+        internal int PlaceBuyOrder(double price, double amount)
+        {
+            var paramz = new Dictionary<string, string>
+            {
+                { "pair", "ltc_usd" },
+                { "type", "buy" },
+                { "rate", price.ToString() },
+                { "amount", amount.ToString() }
+            };
+
+            var data = sendPostRequest("Trade", paramz);
+
+            var error = Helpers.DeserializeJSON<ErrorResponse>(data);
+            if (!String.IsNullOrEmpty(error.error))
+                throw new Exception(String.Format("Error creating BUY order (price={0}, amount={1}). Messages={2}", price, amount, error.error));
+
+            var orderData = Helpers.DeserializeJSON<NewOrderResponse>(data);
+            return orderData.@return.order_id;
+        }
+
+        internal int UpdateBuyOrder(int orderId, double price, double amount)
+        {
+            //Cancel the old order, recreate
+            if (CancelOrder(orderId))
+                return PlaceBuyOrder(price, amount);
+            //It's been closed meanwhile. Leave it be, very next iteration will find and handle properly
+            return orderId;
+        }
+
+        internal int PlaceSellOrder(double price, ref double amount)
+        {
+            var paramz = new Dictionary<string, string>
+            {
+                { "pair", "ltc_usd" },
+                { "type", "sell" },
+                { "rate", price.ToString() },
+                { "amount", amount.ToString() }
+            };
+
+            var data = sendPostRequest("Trade", paramz);
+
+            var error = Helpers.DeserializeJSON<ErrorResponse>(data);
+            if (!String.IsNullOrEmpty(error.error))
+            {
+                if ("It is not enough LTC in the account for sale." == error.error)
+                {
+                    //LTC balance changed meanwhile, probably SELL order was (partially) filled
+                    _logger.AppendMessage("WARN: Insufficient balance reported when creating SELL order with amount=" + amount, true, ConsoleColor.Yellow);
+                    var accountInfo = GetAccountBalance();
+                    var oldAmount = amount;
+                    amount = Math.Floor(accountInfo * 100.0) / 100.0;  //The math is protection against bad precision
+
+                    if (oldAmount < amount)
+                    {
+                        _logger.AppendMessage("Available balance is " + amount + " LTC. Trying to repeat with " + oldAmount, true, ConsoleColor.Yellow);
+                        amount = oldAmount;
+                    }
+                    else
+                        _logger.AppendMessage("Available account balance is " + amount + " LTC. Using this as amount for SELL order", true, ConsoleColor.Yellow);
+
+                    return PlaceSellOrder(price, ref amount);
+                }
+
+                throw new Exception(String.Format("Error creating SELL order (price={0}; amount={1}). Message={2}", price, amount, error.error));
+            }
+
+            var response = Helpers.DeserializeJSON<NewOrderResponse>(data);
+            return response.@return.order_id;
+        }
+
+        internal int UpdateSellOrder(int orderId, double price, ref double amount)
+        {
+            //Cancel the old order, recreate
+            if (CancelOrder(orderId))
+                return PlaceSellOrder(price, ref amount);
+            //It's been closed meanwhile. Leave it be, very next iteration will find and handle properly
+            return orderId;
+        }
+
+        internal bool CancelOrder(int orderId)
+        {
+            var paramz = new Dictionary<string, string>
+            {
+                { "order_id", orderId.ToString() }
+            };
+
+            var data = sendPostRequest("CancelOrder", paramz);
+
+            var error = Helpers.DeserializeJSON<ErrorResponse>(data);
+            if (!String.IsNullOrEmpty(error.error))
+            {
+                if ("bad status" == error.error)
+                {
+                    _logger.AppendMessage("Order ID=" + orderId + " couldn't be cancelled. Probably was closed.", true, ConsoleColor.Yellow);
+                    return false;
+                }
+                if (!error.IsCritical)
+                {
+                    _logger.AppendMessage("Non-critical error while cancelling order ID=" + orderId);
+                    return false;
+                }
+
+                throw new Exception(String.Format("Error cancelling order ID={0}. Message={1}", orderId, error.error));
+            }
+
+            var response = Helpers.DeserializeJSON<CancelResponse>(data);
+            return response.success == 1;
+        }
 
 
         private string sendGetRequest(string url)
@@ -200,10 +311,6 @@ namespace BtceBot
 
             throw new Exception(String.Format("Web request failed {0} times in a row with error '{1}'. Giving up.", RETRY_COUNT, exc.Message));
         }
-
-
-
-
 
         static string buildPostData(Dictionary<string, string> d)
         {
