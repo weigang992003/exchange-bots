@@ -10,6 +10,9 @@ namespace BtceBot
     {
         private readonly BtceApi _requestor;
 
+        //Mininum order amount on BTC-E, the server returns error when trying to create smaller one
+        private const double MIN_ORDER_AMOUNT = 0.1;
+
         //LTC amount to trade
         private readonly double _operativeAmount;
         private readonly double _minWallVolume;
@@ -17,7 +20,7 @@ namespace BtceBot
         //Volumen of LTC necessary to accept our offer
         private double _volumeWall;
         //Minimum difference between SELL price and subsequent BUY price (so we have at least some profit). Note: fee is 0.2%
-        private const double MIN_DIFFERENCE = 0.06;
+        private const double MIN_DIFFERENCE = 0.05;
         //Tolerance of SELL price (absolute value in USD). Usefull if possible price change is minor, to avoid frequent order updates.
         private const double MIN_PRICE_DELTA = 0.015;    //1.5 cents per LTC
 
@@ -71,16 +74,21 @@ namespace BtceBot
                     {
                         log("SELL order ID={0} untouched (amount={1} LTC, price={2} USD)", _sellOrderId, _sellOrderAmount, _sellOrderPrice);
 
-                        double price = suggestSellPrice(market);
                         var newAmount = _operativeAmount - _buyOrderAmount;
-
-                        //Evaluate and update if needed
-                        if (newAmount > _sellOrderAmount || !_sellOrderPrice.eq(price))
+                        if (newAmount < MIN_ORDER_AMOUNT)
+                            log("The order has amount under limit of {0} LTC, will not update", MIN_ORDER_AMOUNT);
+                        else
                         {
-                            _sellOrderId = _requestor.UpdateSellOrder(_sellOrderId, price, ref newAmount);
-                            _sellOrderAmount = newAmount;
-                            _sellOrderPrice = price;
-                            log("Updated SELL order ID={0}; amount={1} LTC; price={2} USD", _sellOrderId, _sellOrderAmount, price);
+                            double price = suggestSellPrice(market);
+
+                            //Evaluate and update if needed
+                            if (newAmount > _sellOrderAmount || !_sellOrderPrice.eq(price))
+                            {
+                                _sellOrderId = _requestor.UpdateSellOrder(_sellOrderId, price, ref newAmount);
+                                _sellOrderAmount = newAmount;
+                                _sellOrderPrice = price;
+                                log("Updated SELL order ID={0}; amount={1} LTC; price={2} USD", _sellOrderId, _sellOrderAmount, price);
+                            }                           
                         }
                     }
                     else    //Partially filled
@@ -91,10 +99,18 @@ namespace BtceBot
                         var price = suggestSellPrice(market);
                         //The same price is totally unlikely, so we don't check it here
                         var amount = sellOrder.amount;
-                        _sellOrderId = _requestor.UpdateSellOrder(_sellOrderId, price, ref amount);
-                        _sellOrderAmount = amount;
-                        _sellOrderPrice = price;
-                        log("Updated SELL order ID={0}; amount={1} LTC; price={2} USD", _sellOrderId, _sellOrderAmount, _sellOrderPrice);
+                        if (amount < MIN_ORDER_AMOUNT)
+                        {
+                            log("The order has amount under limit of {0} LTC, will not update", MIN_ORDER_AMOUNT);
+                            _sellOrderAmount = amount;  //Keep tract of amount
+                        }
+                        else
+                        {
+                            _sellOrderId = _requestor.UpdateSellOrder(_sellOrderId, price, ref amount);
+                            _sellOrderAmount = amount;
+                            _sellOrderPrice = price;
+                            log("Updated SELL order ID={0}; amount={1} LTC; price={2} USD", _sellOrderId, _sellOrderAmount, _sellOrderPrice);
+                        }
                     }
                 }
                 else
@@ -132,20 +148,38 @@ namespace BtceBot
                         if (!buyOrder.amount.eq(_buyOrderAmount))
                         {
                             log("BUY order ID={0} partially filled at price={1} USD. Remaining amount={2} LTC;", ConsoleColor.Green, _buyOrderId, buyOrder.Price, buyOrder.amount);
-                            _buyOrderId = _requestor.UpdateBuyOrder(_buyOrderId, price, buyOrder.amount);
-                            _buyOrderAmount = buyOrder.amount;
-                            _buyOrderPrice = price;
-                            log("Updated BUY order ID={0}; amount={1} LTC; price={2} USD", _buyOrderId, _buyOrderAmount, price);
+
+                            if (buyOrder.amount < MIN_ORDER_AMOUNT)
+                            {
+                                log("The order has amount under limit of {0} LTC, will not update", MIN_ORDER_AMOUNT);
+                                _buyOrderAmount = buyOrder.amount;
+                            }
+                            else
+                            {
+                                _buyOrderId = _requestor.UpdateBuyOrder(_buyOrderId, price, buyOrder.amount);
+                                _buyOrderAmount = buyOrder.amount;
+                                _buyOrderPrice = price;
+                                log("Updated BUY order ID={0}; amount={1} LTC; price={2} USD", _buyOrderId, _buyOrderAmount, price);  
+                            }
                         }
                         //If there were some money released by filling a BUY order, increase this SELL order
                         else if (_operativeAmount - _sellOrderAmount > _buyOrderAmount)
                         {
                             var newAmount = _operativeAmount - _sellOrderAmount;
-                            log("SELL dumped some LTC. Increasing BUY amount to {0} LTC", ConsoleColor.Cyan, newAmount);
-                            _buyOrderId = _requestor.UpdateBuyOrder(_buyOrderId, price, newAmount);
-                            _buyOrderAmount = newAmount;
-                            _buyOrderPrice = price;
-                            log("Updated BUY order ID={0}; amount={1} LTC; price={2} USD", _buyOrderId, _buyOrderAmount, price);
+
+                            if (newAmount < MIN_ORDER_AMOUNT)
+                            {
+                                log("SELL dumped some LTC (available={0}), but not enough to create new BUY order", ConsoleColor.Cyan, newAmount);
+                                _buyOrderAmount = newAmount;
+                            }
+                            else
+                            {
+                                 log("SELL dumped some LTC. Increasing BUY amount to {0} LTC", ConsoleColor.Cyan, newAmount);
+                                _buyOrderId = _requestor.UpdateBuyOrder(_buyOrderId, price, newAmount);
+                                _buyOrderAmount = newAmount;
+                                _buyOrderPrice = price;
+                                log("Updated BUY order ID={0}; amount={1} LTC; price={2} USD", _buyOrderId, _buyOrderAmount, price);
+                            }
                         }
                         //Or if we simply need to change price.
                         else if (!_buyOrderPrice.eq(price))
@@ -157,8 +191,9 @@ namespace BtceBot
                     }
                     else
                     {
-                        log("BUY order ID={0} (amount={1} LTC) was closed at price={2} USD", ConsoleColor.Green, _buyOrderId, _buyOrderAmount, buyOrder.Price);
+                        log("BUY order ID={0} (amount={1} LTC) was closed at price={2} USD", ConsoleColor.Green, _buyOrderId, _buyOrderAmount, _buyOrderPrice);
                         _buyOrderAmount = 0;
+                        _buyOrderPrice = -1;
                         _buyOrderId = -1;
                     }
                 }

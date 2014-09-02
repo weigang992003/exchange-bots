@@ -26,11 +26,12 @@ namespace RippleBot
             ITrader trader;
             switch (strategy.ToLower())
             {
-                case "cst":
-                    trader = new CrazySellerTrap(logger);
+                case "cst-bitstamp":
+                    trader = new CrazySellerTrap_BitStamp(logger);
                     break;
-                case "cbt":
-                    throw new NotImplementedException("Soon...");
+                case "cbt-ripplecn":
+                    trader = new CrazyBuyerTrap_RippleCN(logger);
+                    break;
                 default:
                     throw new ArgumentException("Unknown strategy " + strategy);
             }

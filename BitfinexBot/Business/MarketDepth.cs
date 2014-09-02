@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Runtime.Serialization;
+using Common.Business;
 
 
 namespace BitfinexBot.Business
@@ -12,36 +13,24 @@ namespace BitfinexBot.Business
     }
 
     [DataContract]
-    internal class Order
+    internal class Order : IMarketOrder
     {
         [DataMember] internal string price { get; set; }
         [DataMember] internal string amount { get; set; }
         [DataMember] internal string timestamp { get; set; }
 
-        internal double Price
+
+        #region IMarketOrder implementations
+
+        public double Price
         {
             get { return double.Parse(price); }
         }
 
-        internal double Amount
+        public double Amount
         {
             get { return double.Parse(amount); }
         }
+        #endregion
     }
-
-/*    [DataContract]
-    internal class Bid
-    {
-        [DataMember] internal string price { get; set; }
-        [DataMember] internal string amount { get; set; }
-        [DataMember] internal string timestamp { get; set; }
-    }
-
-    [DataContract]
-    internal class Ask
-    {
-        [DataMember] internal string price { get; set; }
-        [DataMember] internal string amount { get; set; }
-        [DataMember] internal string timestamp { get; set; }
-    }*/
 }

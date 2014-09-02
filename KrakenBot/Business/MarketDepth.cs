@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
+using Common.Business;
 
 
 namespace KrakenBot.Business
@@ -59,9 +60,9 @@ namespace KrakenBot.Business
         }
     }
 
-    internal struct Order
+    internal struct Order : IMarketOrder
     {
-        internal double Price;
-        internal double Amount;
+        public double Price { get; set; }
+        public double Amount { get; set; }
     }
 }

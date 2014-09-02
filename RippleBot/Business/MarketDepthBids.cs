@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Runtime.Serialization;
+using Common.Business;
 
 
 namespace RippleBot.Business
@@ -22,7 +23,7 @@ namespace RippleBot.Business
     }
 
     [DataContract]
-    internal class Bid
+    internal class Bid : IMarketOrder
     {
         [DataMember] internal string Account { get; set; }
         [DataMember] internal string BookDirectory { get; set; }
@@ -42,7 +43,7 @@ namespace RippleBot.Business
         [DataMember] internal string taker_pays_funded { get; set; }
 
         /// <summary>Amount of XRP to buy</summary>
-        internal double Amount
+        public double Amount
         {
             get
             {
@@ -51,7 +52,7 @@ namespace RippleBot.Business
         }
 
         /// <summary>Price of one XRP in USD</summary>
-        internal double Price
+        public double Price
         {
             get
             {

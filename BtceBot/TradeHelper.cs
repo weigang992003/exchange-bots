@@ -39,8 +39,8 @@ namespace BtceBot
 
             //        Console.WriteLine("DEBUG: {0} trades in past 90sec, {1} groupped by time", tradeHistory.Count, groupped.Count);
 
-            const int MIN_TRADES = 2;
-            const int MAX_TRADES = 10;
+            const int MIN_TRADES = 5;
+            const int MAX_TRADES = 15;
             float intenseCoef;
             if (groupped.Count < MIN_TRADES)        //Too few trades
                 intenseCoef = 0.0f;
@@ -49,8 +49,8 @@ namespace BtceBot
             else
                 intenseCoef = (float)(groupped.Count - MIN_TRADES) / (MAX_TRADES - MIN_TRADES);
 
-            const double MIN_AVG_VOLUME = 10;
-            const double MAX_AVG_VOLUME = 35;
+            const double MIN_AVG_VOLUME = 20;
+            const double MAX_AVG_VOLUME = 70;
             float volumeCoef;
             double avgVolume = groupped.Sum(trade => trade.Value.amount) / groupped.Count;
             //        Console.WriteLine("DEBUG: avgVolume={0}", avgVolume);

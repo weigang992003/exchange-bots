@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
+using Common.Business;
 
 
 namespace BtcChinaBot.Business
@@ -21,8 +22,8 @@ namespace BtcChinaBot.Business
     [DataContract]
     internal class MarketDepth
     {
-        [DataMember] internal List<Bid> bid { get; set; }
-        [DataMember] internal List<Ask> ask { get; set; }
+        [DataMember] internal List<MarketOrder> bid { get; set; }
+        [DataMember] internal List<MarketOrder> ask { get; set; }
         [DataMember] internal int date { get; set; }
 
         internal DateTime ServerTime
@@ -33,16 +34,14 @@ namespace BtcChinaBot.Business
     }
 
     [DataContract]
-    internal class Bid
+    internal class MarketOrder : IMarketOrder
     {
         [DataMember] internal double price { get; set; }
         [DataMember] internal double amount { get; set; }
-    }
 
-    [DataContract]
-    internal class Ask
-    {
-        [DataMember] internal double price { get; set; }
-        [DataMember] internal double amount { get; set; }
+        #region IMarketOrder implementations
+        public double Price { get { return price; } }
+        public double Amount { get { return amount; } }
+        #endregion
     }
 }

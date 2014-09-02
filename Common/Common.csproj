@@ -36,6 +36,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Business\IMarketOrder.cs" />
     <Compile Include="Configuration.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="Helpers.cs" />

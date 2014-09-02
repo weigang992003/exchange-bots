@@ -1,16 +1,13 @@
 ﻿using Common;
 using RippleBot.Business;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 
 namespace RippleBot
 {
-    internal class CrazySellerTrap : ITrader
+    internal class CrazySellerTrap_BitStamp : ITrader
     {
         private bool _killSignal;
         private bool _verbose = true;
@@ -27,7 +24,7 @@ namespace RippleBot
         //Minimum difference between BUY price and subsequent SELL price (so we have at least some profit)
         private const double MIN_DIFFERENCE = 0.000015;
         //Tolerance of BUY price. Usefull if possible price change is minor, to avoid frequent order updates.
-        private const double PRICE_DELTA = 0.0000015;    //0.0000015 XRP
+        private const double MIN_PRICE_DELTA = 0.0000015;    //0.0000015 XRP
 
         //Active BUY order ID
         private int _buyOrderId = -1;
@@ -48,14 +45,14 @@ namespace RippleBot
         private double _xrpBalance;
 
 
-        public CrazySellerTrap(Logger logger)
+        public CrazySellerTrap_BitStamp(Logger logger)
         {
             _logger = logger;
             _operativeAmount = double.Parse(Configuration.GetValue("operative_amount"));
             _minWallVolume = double.Parse(Configuration.GetValue("min_volume"));
             _maxWallVolume = double.Parse(Configuration.GetValue("max_volume"));
             _logger.AppendMessage(String.Format("Crazy seller trap trader initialized with operative={0}; MinWall={1}; MaxWall={2}", _operativeAmount, _minWallVolume, _maxWallVolume));
-            _requestor = new RippleApi(logger);
+            _requestor = new RippleApi(logger, "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"/*BitStamp*/);
             _requestor.Init();
         }
 
@@ -251,13 +248,12 @@ namespace RippleBot
 
             _xrpBalance = _requestor.GetXrpBalance();
             log("### Balance= {0} XRP", _xrpBalance);
-            log(new string('=', 80));
+            log(new string('=', 84));
         }
 
         private double suggestBuyPrice(Market market)
         {
             double sum = 0;
-            var minDiff = PRICE_DELTA;
             var lowestAsk = market.Asks.First().Price;
 
             foreach (var bid in market.Bids)
@@ -267,7 +263,7 @@ namespace RippleBot
                     double buyPrice = Math.Round(bid.Price + 0.000001, 7);
 
                     //The difference is too small and we'd be not first in BUY orders. Leave previous price to avoid server call
-                    if (-1 != _buyOrderId && buyPrice < market.Bids[0].Price && Math.Abs(buyPrice - _buyOrderPrice) < minDiff)
+                    if (-1 != _buyOrderId && buyPrice < market.Bids[0].Price && Math.Abs(buyPrice - _buyOrderPrice) < MIN_PRICE_DELTA)
                     {
                         log("DEBUG: BUY price {0} too similar, using previous", buyPrice);
                         return _buyOrderPrice;
@@ -284,7 +280,7 @@ namespace RippleBot
 
             //Market too dry, use BUY order before last, so we see it in chart
             var price = market.Bids.Last().Price + 0.000001;
-            if (-1 != _buyOrderId && Math.Abs(price - _buyOrderPrice) < minDiff)
+            if (-1 != _buyOrderId && Math.Abs(price - _buyOrderPrice) < MIN_PRICE_DELTA)
                 return _buyOrderPrice;
             return Math.Round(price, 7);
         }

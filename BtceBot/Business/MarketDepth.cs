@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
+using Common.Business;
 
 
 namespace BtceBot.Business
@@ -48,9 +49,9 @@ namespace BtceBot.Business
         }
     }
 
-    internal class MarketOrder
+    internal class MarketOrder : IMarketOrder
     {
-        internal double Amount;
-        internal double Price;
+        public double Amount { get; set; }
+        public double Price { get; set; }
     }
 }

@@ -60,7 +60,8 @@
     <Compile Include="Business\Offers.cs" />
     <Compile Include="Business\OrderInfoRequest.cs" />
     <Compile Include="Business\Payment.cs" />
-    <Compile Include="CrazySellerTrap.cs" />
+    <Compile Include="CrazyBuyerTrap_RippleCN.cs" />
+    <Compile Include="CrazySellerTrap_BitStamp.cs" />
     <Compile Include="TradeHelper.cs" />
     <None Include="DataSamples\WebSocket API\account_info.json" />
     <None Include="DataSamples\WebSocket API\book_offers.asks.json" />

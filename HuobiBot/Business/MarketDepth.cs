@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 using Common;
+using Common.Business;
 
 
 namespace HuobiBot.Business
@@ -67,9 +68,9 @@ namespace HuobiBot.Business
     }
 
 
-    internal class Order
+    internal class Order : IMarketOrder
     {
-        internal double Price { get; set; }
-        internal double Amount { get; set; }
+        public double Price { get; set; }
+        public double Amount { get; set; }
     }
 }

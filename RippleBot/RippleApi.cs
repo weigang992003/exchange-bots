@@ -19,7 +19,7 @@ namespace RippleBot
         private const string CHARTS_BASE_URL = "http://api.ripplecharts.com/api/";
         private const byte RETRY_COUNT = 10;
         private const int RETRY_DELAY = 1000;
-        private const string USD_ISSUER_ADDRESS = "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B";      //BitStamp
+        private readonly string _issuerAddress;      //BitStamp, SnapSwap, RippleCN or so
 
         private readonly string _rippleSocketUri;
         private readonly string _walletAddress;
@@ -35,9 +35,10 @@ namespace RippleBot
         private readonly Regex _offerPattern = new Regex("\"taker_(?<verb>get|pay)s\":\"(?<value>\\d{1,20})\"");
 
 
-        internal RippleApi(Logger logger)
+        internal RippleApi(Logger logger, string exchIssuerAddress)
         {
             _logger = logger;
+            _issuerAddress = exchIssuerAddress;
 
             var proxyHost = Configuration.GetValue("proxyHost");
             var proxyPort = Configuration.GetValue("proxyPort");
@@ -114,7 +115,7 @@ namespace RippleBot
             {
                 id = 2,
                 taker_pays = new Take { currency = "XRP" },
-                taker_gets = new Take { currency = "USD", issuer = USD_ISSUER_ADDRESS }
+                taker_gets = new Take { currency = "USD", issuer = _issuerAddress }
             };
 
             var bidData = sendToRippleNet(Helpers.SerializeJson(command));
@@ -130,7 +131,7 @@ namespace RippleBot
             command = new MarketDepthRequest
             {
                 id = 3,
-                taker_pays = new Take { currency = "USD", issuer = USD_ISSUER_ADDRESS },
+                taker_pays = new Take { currency = "USD", issuer = _issuerAddress },
                 taker_gets = new Take { currency = "XRP" }
             };
 
@@ -166,7 +167,7 @@ namespace RippleBot
                     {
                         currency = "USD",
                         value = amountUsd.ToString("0.00000"),
-                        issuer = USD_ISSUER_ADDRESS
+                        issuer = _issuerAddress
                     },
                     TakerPays = amountXrpDrops.ToString()
                 },
@@ -233,7 +234,7 @@ namespace RippleBot
                     {
                         currency = "USD",
                         value = amountUsd.ToString("0.00000"),
-                        issuer = USD_ISSUER_ADDRESS
+                        issuer = _issuerAddress
                     },
                     TakerGets = amountXrpDrops.ToString()
                 },
@@ -355,7 +356,7 @@ namespace RippleBot
             var input = new CandlesRequest
             {
                 @base = new Base {currency = "XRP"},
-                counter = new Counter { currency = "USD", issuer = USD_ISSUER_ADDRESS },
+                counter = new Counter { currency = "USD", issuer = _issuerAddress },
                 startTime = DateTime.UtcNow.Subtract(age).ToString("s"),    //"2014-07-22T10:00:00"
                 endTime = DateTime.UtcNow.ToString("s"),
                 timeIncrement = "minute",
