@@ -32,6 +32,9 @@ namespace RippleBot
                 case "cbt-ripplecn":
                     trader = new CrazyBuyerTrap_RippleCN(logger);
                     break;
+                case "wss-ripplecn":
+                    trader = new WideSpreadSeller(logger);
+                    break;
                 default:
                     throw new ArgumentException("Unknown strategy " + strategy);
             }

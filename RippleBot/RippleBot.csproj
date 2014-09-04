@@ -63,6 +63,7 @@
     <Compile Include="CrazyBuyerTrap_RippleCN.cs" />
     <Compile Include="CrazySellerTrap_BitStamp.cs" />
     <Compile Include="TradeHelper.cs" />
+    <Compile Include="WideSpreadSeller.cs" />
     <None Include="DataSamples\WebSocket API\account_info.json" />
     <None Include="DataSamples\WebSocket API\book_offers.asks.json" />
     <None Include="DataSamples\WebSocket API\book_offers.bids.json" />

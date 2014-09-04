@@ -206,6 +206,8 @@ namespace BtceBot
                 }
             }
 
+            var balance = _requestor.GetAccountBalance();
+            log("DEBUG: Balance = {0} LTC", balance);
             log(new string('=', 84));
         }
 

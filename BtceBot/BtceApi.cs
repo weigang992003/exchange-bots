@@ -17,7 +17,7 @@ namespace BtceBot
     {
         private const string DATA_BASE_URL = "https://btc-e.com/api/2/ltc_usd/";
         private const string TRADE_BASE_URL = "https://btc-e.com/tapi";
-        private const byte RETRY_COUNT = 6;
+        private const byte RETRY_COUNT = 10;
         private const int RETRY_DELAY = 1000;
         private const int TRADE_TIMEOUT = 60000;    //60s
 
@@ -212,7 +212,7 @@ namespace BtceBot
         private string sendGetRequest(string url)
         {
             WebException exc = null;
-            var delay = 0;
+            var delay = RETRY_DELAY;
             for (int i = 1; i <= RETRY_COUNT; i++)
             {
                 var client = new WebClient2(_logger, 20000);
@@ -220,17 +220,17 @@ namespace BtceBot
                 if (null != _webProxy)
                     client.Proxy = _webProxy;
 
-                delay += RETRY_DELAY;
                 try
                 {
                     return client.DownloadString(url);
                 }
                 catch (WebException we)
                 {
-                    var text = String.Format("(ATTEMPT {0}/{1}) Web request failed with exception={2}; status={3}", i, RETRY_COUNT, we.Message, we.Status);
+                    var text = String.Format("(ATTEMPT {0}/{1}) Web request failed with exception={2}; status={3}. Retry in {4} ms", i, RETRY_COUNT, we.Message, we.Status, delay);
                     _logger.AppendMessage(text, true, ConsoleColor.Yellow);
                     exc = we;
                     Thread.Sleep(delay);
+                    delay *= 2;
                 }
             }
 

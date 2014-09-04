@@ -52,7 +52,7 @@ namespace RippleBot
             _minWallVolume = double.Parse(Configuration.GetValue("min_volume"));
             _maxWallVolume = double.Parse(Configuration.GetValue("max_volume"));
             _logger.AppendMessage(String.Format("Crazy seller trap trader initialized with operative={0}; MinWall={1}; MaxWall={2}", _operativeAmount, _minWallVolume, _maxWallVolume));
-            _requestor = new RippleApi(logger, "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"/*BitStamp*/);
+            _requestor = new RippleApi(logger, "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"/*BitStamp*/, "USD");
             _requestor.Init();
         }
 
