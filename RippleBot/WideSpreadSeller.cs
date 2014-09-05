@@ -16,7 +16,7 @@ namespace RippleBot
 
         //BTC amount to trade
         private readonly double _operativeAmount;
-        private const double MIN_SPREAD = 0.00024;
+        private const double MIN_SPREAD = 0.0002;
         //Minimum difference between BUY price and subsequent SELL price (so we have at least some profit)
         private const double MIN_DIFFERENCE = 0.000015;
         //Tolerance of BUY price. Usefull if possible price change is minor, to avoid frequent order updates.
@@ -62,7 +62,7 @@ namespace RippleBot
             var spread = Math.Round(getLowestAsk(market) - market.Bids.First().Price, 5);
 
             var coef = TradeHelper.GetMadness(candles.results);
-            _intervalMs = Helpers.SuggestInterval(coef, 8000, /*TODO!!!!!!!!!!!!!!!!!!!!!!!!!!!                         20000*/10000);
+            _intervalMs = Helpers.SuggestInterval(coef, 8000, 20000);
             log("Madness={0}; spread={1} XRP; Interval={2} ms", coef, spread, _intervalMs);
 
             if (_selling)
@@ -130,7 +130,7 @@ namespace RippleBot
                             //Cancel the rest of order
                             if (_requestor.CancelOrder(_sellOrderId))
                             {
-                                log("Successfully cancelled SELL order ID={0}", _sellOrderId);
+                                log("Successfully cancelled SELL order ID={0}", ConsoleColor.Cyan, _sellOrderId);
                                 _sellOrderId = -1;
                                 _selling = false;
                             }
@@ -216,11 +216,13 @@ namespace RippleBot
                             if (-1 != _buyOrderId)
                                 log("Successfully created BUY order with ID={0}; amount={1} XRP; price={2} CNY", ConsoleColor.Cyan, _buyOrderId, _buyOrderAmount, _buyOrderPrice);
                         }
-
-                        log("BUY order ID={0} (amount={1} XRP) was closed at price={2} CNY", ConsoleColor.Green, _buyOrderId, _buyOrderAmount, _buyOrderPrice);
-                        _buyOrderAmount = 0;
-                        _buyOrderId = -1;
-                        _selling = true;
+                        else
+                        { 
+                            log("BUY order ID={0} (amount={1} XRP) was closed at price={2} CNY", ConsoleColor.Green, _buyOrderId, _buyOrderAmount, _buyOrderPrice);
+                            _buyOrderAmount = 0;
+                            _buyOrderId = -1;
+                            _selling = true;
+                        }
                     }
                 }
             }
@@ -269,10 +271,6 @@ namespace RippleBot
 
             var highestBid = market.Bids.First().Price;
 
-            //Somebody offers higher price than we can
-            if (highestBid > maxPrice)
-                return maxPrice;
-
             if (-1 != _buyOrderId)
             {
                 //Don't count own order
@@ -280,6 +278,10 @@ namespace RippleBot
                 if (bid.Amount.eq(_buyOrderAmount) && bid.Price.eq(_buyOrderPrice))
                     highestBid = market.Bids[1].Price;
             }
+
+            //Somebody offers higher price than we can
+            if (highestBid > maxPrice)
+                return maxPrice;
 
             //Sugest buy price as middle between our threshold and highest bid
             var buyPrice = maxPrice - ((maxPrice - highestBid)/2.0);
