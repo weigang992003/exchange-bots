@@ -266,9 +266,9 @@ namespace RippleBot
 
                 if (bid.Price < _executedSellPrice - MIN_DIFFERENCE)
                 {
-                    return bid.Price.eq(_buyOrderPrice)
+                    return bid.Price.eq(_buyOrderPrice, 0.000000000001)
                         ? _buyOrderPrice
-                        : Math.Round(bid.Price + 0.000001, 7);
+                        : Math.Round(bid.Price + 0.000001, 12);
                 }
             }
 

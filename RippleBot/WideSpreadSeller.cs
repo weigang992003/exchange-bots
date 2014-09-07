@@ -37,7 +37,7 @@ namespace RippleBot
         private double _buyOrderPrice;
         //The price at which we sold to a buyer
         private double _executedSellPrice = -1.0;
-        private double _executedSellAmount = -1.0;
+        private double _executedSellAmount;
 
         private double _xrpBalance;
 
@@ -265,7 +265,7 @@ namespace RippleBot
             return sellPrice;
         }
 
-        private double suggestBuyPrice(Market market)
+/*TODO: test, delete        private double suggestBuyPrice(Market market)
         {
             var maxPrice = _executedSellPrice - MIN_DIFFERENCE;
 
@@ -285,6 +285,33 @@ namespace RippleBot
 
             //Sugest buy price as middle between our threshold and highest bid
             var buyPrice = maxPrice - ((maxPrice - highestBid)/2.0);
+            return Math.Round(buyPrice, 7);
+        }
+*/
+
+        private double suggestBuyPrice(Market market)
+        {
+            const double MIN_WALL_VOLUME = 100.0;
+            var maxPrice = _executedSellPrice - MIN_DIFFERENCE;
+            var highestBid = market.Bids.First().Price;
+
+            double sumVolume = 0.0;
+            foreach (var bid in market.Bids)
+            {
+                //Don't count self
+                if (bid.Price.eq(_buyOrderPrice) && bid.Amount.eq(_buyOrderAmount))
+                    continue;
+                //Skip BUY orders with tiny amount
+                sumVolume += bid.Amount;
+                if (sumVolume < MIN_WALL_VOLUME)
+                    continue;
+
+                if (bid.Price < _executedSellPrice - MIN_DIFFERENCE)
+                    highestBid = bid.Price;
+            }
+
+            //Sugest buy price as middle between our threshold and highest bid
+            var buyPrice = maxPrice - ((maxPrice - highestBid) / 2.0);
             return Math.Round(buyPrice, 7);
         }
     }

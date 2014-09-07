@@ -25,6 +25,7 @@ namespace RippleBot
         private const double MIN_DIFFERENCE = 0.000015;
         //Tolerance of BUY price. Usefull if possible price change is minor, to avoid frequent order updates.
         private const double MIN_PRICE_DELTA = 0.0000015;    //0.0000015 XRP
+        private const double MIN_ORDER_AMOUNT = 0.5;
 
         //Active BUY order ID
         private int _buyOrderId = -1;
@@ -127,11 +128,24 @@ namespace RippleBot
                         _executedBuyPrice = buyOrder.Price;
                         _buyOrderAmount = buyOrder.AmountXrp;
                         log("BUY order ID={0} partially filled at price={1} USD. Remaining amount={2} XRP;", ConsoleColor.Green, _buyOrderId, _executedBuyPrice, buyOrder.AmountXrp);
-                        var price = suggestBuyPrice(market);
-                        //The same price is totally unlikely, so we don't check it here
-                        _buyOrderId = _requestor.UpdateBuyOrder(_buyOrderId, price, buyOrder.AmountXrp);
-                        _buyOrderPrice = price;
-                        log("Updated BUY order ID={0}; amount={1} XRP; price={2} USD", _buyOrderId, _buyOrderAmount, _buyOrderPrice);
+
+                        //Check remaining amount, drop the BUY if it's very tiny
+                        if (buyOrder.AmountXrp < MIN_ORDER_AMOUNT)
+                        {
+                            log("The remaining BUY amount is too small, canceling the order ID={0}", ConsoleColor.Cyan, _buyOrderId);
+                            _requestor.CancelOrder(_buyOrderId);    //Note: no problem if the cancel fails, the breadcrumbs can live own life
+                            _executedBuyPrice = _buyOrderPrice;
+                            _buyOrderId = -1;
+                            _buyOrderAmount = 0.0;
+                        }
+                        else
+                        {
+                            var price = suggestBuyPrice(market);
+                            //The same price is totally unlikely, so we don't check it here
+                            _buyOrderId = _requestor.UpdateBuyOrder(_buyOrderId, price, buyOrder.AmountXrp);
+                            _buyOrderPrice = price;
+                            log("Updated BUY order ID={0}; amount={1} XRP; price={2} USD", _buyOrderId, _buyOrderAmount, _buyOrderPrice); 
+                        }
                     }
                 }
                 else
@@ -189,11 +203,24 @@ namespace RippleBot
                         if (!sellOrder.AmountXrp.eq(_sellOrderAmount))
                         {
                             log("SELL order ID={0} partially filled at price={1} USD. Remaining amount={2} XRP;", ConsoleColor.Green, _sellOrderId, sellOrder.Price, sellOrder.AmountXrp);
-                            var amount = sellOrder.AmountXrp;
-                            _sellOrderId = _requestor.UpdateSellOrder(_sellOrderId, price, ref amount);
-                            _sellOrderAmount = amount;
-                            _sellOrderPrice = price;
-                            log("Updated SELL order ID={0}; amount={1} XRP; price={2} USD", _sellOrderId, _sellOrderAmount, price);
+
+
+                            //Check remaining amount, drop the SELL if it's very tiny
+                            if (sellOrder.AmountXrp < MIN_ORDER_AMOUNT)
+                            {
+                                log("The remaining SELL amount is too small, canceling the order ID={0}", ConsoleColor.Cyan, _sellOrderId);
+                                _requestor.CancelOrder(_sellOrderId);    //Note: no problem if the cancel fails, the breadcrumbs can live own life
+                                _sellOrderId = -1;
+                                _sellOrderAmount = 0.0;
+                            }
+                            else
+                            {
+                                var amount = sellOrder.AmountXrp;
+                                _sellOrderId = _requestor.UpdateSellOrder(_sellOrderId, price, ref amount);
+                                _sellOrderAmount = amount;
+                                _sellOrderPrice = price;
+                                log("Updated SELL order ID={0}; amount={1} XRP; price={2} USD", _sellOrderId, _sellOrderAmount, price);
+                            }
                         }
                         //If there were some money released by filling a BUY order, increase this SELL order
                         else if (_operativeAmount - _buyOrderAmount > _sellOrderAmount)
