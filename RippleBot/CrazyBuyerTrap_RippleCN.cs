@@ -194,10 +194,11 @@ namespace RippleBot
                             if (-1 != _buyOrderId)
                                 log("Successfully created BUY order with ID={0}; amount={1} XRP; price={2} CNY", ConsoleColor.Cyan, _buyOrderId, _buyOrderAmount, _buyOrderPrice);
                         }
-
-                        log("BUY order ID={0} (amount={1} XRP) was closed at price={2} CNY", ConsoleColor.Green, _buyOrderId, _buyOrderAmount, _buyOrderPrice);
-                        _buyOrderAmount = 0;
-                        _buyOrderId = -1;
+                        {
+                            log("BUY order ID={0} (amount={1} XRP) was closed at price={2} CNY", ConsoleColor.Green, _buyOrderId, _buyOrderAmount, _buyOrderPrice);
+                            _buyOrderAmount = 0;
+                            _buyOrderId = -1;
+                        }
                     }
                 }
                 else    //No BUY order, create one
