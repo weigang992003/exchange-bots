@@ -128,6 +128,11 @@ namespace RippleBot
                 return null;
 
             var bids = Helpers.DeserializeJSON<MarketDepthBidsResponse>(bidData);
+            if (null == bids.result)
+            {
+                _logger.AppendMessage("bidData JSON is " + Environment.NewLine + bidData, true, ConsoleColor.Magenta);
+                return null;
+            }
 
             //ASKs
             command = new MarketDepthRequest
@@ -145,6 +150,11 @@ namespace RippleBot
                 return null;
 
             var asks = Helpers.DeserializeJSON<MarketDepthAsksResponse>(askData);
+            if (null == asks.result)
+            {
+                _logger.AppendMessage("askData JSON is " + Environment.NewLine + askData, true, ConsoleColor.Magenta);
+                return null;
+            }
 
             var market = new Market
             {

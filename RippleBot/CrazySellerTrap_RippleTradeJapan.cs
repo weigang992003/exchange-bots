@@ -1,19 +1,14 @@
-﻿using Common;
-using RippleBot.Business;
-using System;
+﻿using System;
 using System.Linq;
-using System.Threading;
+using Common;
+using RippleBot.Business;
 
 
 namespace RippleBot
 {
-    internal class CrazySellerTrap_BitStamp : ITrader
+    internal class CrazySellerTrap_RippleTradeJapan : TraderBase
     {
-        private bool _killSignal;
-        private bool _verbose = true;
-        private readonly Logger _logger;
         private readonly RippleApi _requestor;
-        private int _intervalMs;
 
         //BTC amount to trade
         private readonly double _operativeAmount;
@@ -22,9 +17,9 @@ namespace RippleBot
         //Volumen of XRP necessary to accept our offer
         private double _volumeWall;
         //Minimum difference between BUY price and subsequent SELL price (so we have at least some profit)
-        private const double MIN_DIFFERENCE = 0.000015;
+        private const double MIN_DIFFERENCE = 0.002;
         //Tolerance of BUY price. Usefull if possible price change is minor, to avoid frequent order updates.
-        private const double MIN_PRICE_DELTA = 0.0000015;    //0.0000015 USD
+        private const double MIN_PRICE_DELTA = 0.001;    //0.001 JPY
         private const double MIN_ORDER_AMOUNT = 0.5;
 
         //Active BUY order ID
@@ -46,43 +41,18 @@ namespace RippleBot
         private double _xrpBalance;
 
 
-        public CrazySellerTrap_BitStamp(Logger logger)
+        public CrazySellerTrap_RippleTradeJapan(Logger logger) : base(logger)
         {
-            _logger = logger;
             _operativeAmount = double.Parse(Configuration.GetValue("operative_amount"));
             _minWallVolume = double.Parse(Configuration.GetValue("min_volume"));
             _maxWallVolume = double.Parse(Configuration.GetValue("max_volume"));
-            _logger.AppendMessage(String.Format("Crazy seller trap trader initialized with operative={0}; MinWall={1}; MaxWall={2}", _operativeAmount, _minWallVolume, _maxWallVolume));
-            _requestor = new RippleApi(logger, "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"/*BitStamp*/, "USD");
+            log("Crazy seller trap trader initialized with operative={0}; MinWall={1}; MaxWall={2}", _operativeAmount, _minWallVolume, _maxWallVolume);
+            _requestor = new RippleApi(logger, "rMAz5ZnK73nyNUL4foAvaxdreczCkG3vA6", "JPY");
             _requestor.Init();
         }
 
-        public void StartTrading()
-        {
-            do
-            {
-                try
-                {
-                    check();
-                    Thread.Sleep(_intervalMs);
-                }
-                catch (Exception ex)
-                {
-                    log("ERROR: " + ex.Message + Environment.NewLine + ex.StackTrace);
-                    throw;
-                }
-            } while (!_killSignal);
-        }
-
-        public void Kill()
-        {
-            _killSignal = true;
-            _requestor.Close();
-            log("Crazy Seller Trap trader received kill signal. Good bye.");
-        }
-
-
-        private void check()
+        //TODO: This is discusting! The code is identical with BitStamp's CST. Needs refactoring like hell.
+        protected override void Check()
         {
             var candles = _requestor.GetTradeStatistics(new TimeSpan(2, 0, 0));
             var market = _requestor.GetMarketDepth();
@@ -109,7 +79,7 @@ namespace RippleBot
                     //Untouched
                     if (buyOrder.AmountXrp.eq(_buyOrderAmount))
                     {
-                        log("BUY order ID={0} untouched (amount={1} XRP, price={2} USD)", _buyOrderId, _buyOrderAmount, _buyOrderPrice);
+                        log("BUY order ID={0} untouched (amount={1} XRP, price={2} JPY)", _buyOrderId, _buyOrderAmount, _buyOrderPrice);
 
                         double price = suggestBuyPrice(market);
                         var newAmount = _operativeAmount - _sellOrderAmount;
@@ -120,14 +90,14 @@ namespace RippleBot
                             _buyOrderAmount = newAmount;
                             _buyOrderId = _requestor.UpdateBuyOrder(_buyOrderId, price, newAmount);
                             _buyOrderPrice = price;
-                            log("Updated BUY order ID={0}; amount={1} XRP; price={2} USD", _buyOrderId, _buyOrderAmount, price);
+                            log("Updated BUY order ID={0}; amount={1} XRP; price={2} JPY", _buyOrderId, _buyOrderAmount, price);
                         }
                     }
                     else    //Partially filled
                     {
                         _executedBuyPrice = buyOrder.Price;
                         _buyOrderAmount = buyOrder.AmountXrp;
-                        log("BUY order ID={0} partially filled at price={1} USD. Remaining amount={2} XRP;", ConsoleColor.Green, _buyOrderId, _executedBuyPrice, buyOrder.AmountXrp);
+                        log("BUY order ID={0} partially filled at price={1} JPY. Remaining amount={2} XRP;", ConsoleColor.Green, _buyOrderId, _executedBuyPrice, buyOrder.AmountXrp);
 
                         //Check remaining amount, drop the BUY if it's very tiny
                         if (buyOrder.AmountXrp < MIN_ORDER_AMOUNT)
@@ -144,7 +114,7 @@ namespace RippleBot
                             //The same price is totally unlikely, so we don't check it here
                             _buyOrderId = _requestor.UpdateBuyOrder(_buyOrderId, price, buyOrder.AmountXrp);
                             _buyOrderPrice = price;
-                            log("Updated BUY order ID={0}; amount={1} XRP; price={2} USD", _buyOrderId, _buyOrderAmount, _buyOrderPrice); 
+                            log("Updated BUY order ID={0}; amount={1} XRP; price={2} JPY", _buyOrderId, _buyOrderAmount, _buyOrderPrice); 
                         }
                     }
                 }
@@ -160,12 +130,12 @@ namespace RippleBot
                         _buyOrderId = _requestor.PlaceBuyOrder(_buyOrderPrice, _buyOrderAmount);
 
                         if (-1 != _buyOrderId)
-                            log("Successfully created BUY order with ID={0}; amount={1} XRP; price={2} USD", ConsoleColor.Cyan, _buyOrderId, _buyOrderAmount, _buyOrderPrice);
+                            log("Successfully created BUY order with ID={0}; amount={1} XRP; price={2} JPY", ConsoleColor.Cyan, _buyOrderId, _buyOrderAmount, _buyOrderPrice);
                     }
                     else
                     {
                         _executedBuyPrice = _buyOrderPrice;
-                        log("BUY order ID={0} (amount={1} XRP) was closed at price={2} USD", ConsoleColor.Green, _buyOrderId, _buyOrderAmount, _executedBuyPrice);
+                        log("BUY order ID={0} (amount={1} XRP) was closed at price={2} JPY", ConsoleColor.Green, _buyOrderId, _buyOrderAmount, _executedBuyPrice);
                         _buyOrderId = -1;
                         _buyOrderAmount = 0;
                     }
@@ -178,7 +148,7 @@ namespace RippleBot
                 _buyOrderId = _requestor.PlaceBuyOrder(_buyOrderPrice, _buyOrderAmount);
 
                 if (-1 != _buyOrderId)
-                    log("Successfully created BUY order with ID={0}; amount={1} XRP; price={2} USD", ConsoleColor.Cyan, _buyOrderId, _buyOrderAmount, _buyOrderPrice);
+                    log("Successfully created BUY order with ID={0}; amount={1} XRP; price={2} JPY", ConsoleColor.Cyan, _buyOrderId, _buyOrderAmount, _buyOrderPrice);
             }
 
             //Handle SELL order
@@ -195,14 +165,14 @@ namespace RippleBot
                     //The order is still open
                     if (!sellOrder.Closed)
                     {
-                        log("SELL order ID={0} open (amount={1} XRP, price={2} USD)", _sellOrderId, sellOrder.AmountXrp, _sellOrderPrice);
+                        log("SELL order ID={0} open (amount={1} XRP, price={2} JPY)", _sellOrderId, sellOrder.AmountXrp, _sellOrderPrice);
 
                         double price = suggestSellPrice(market);
 
                         //Partially filled
                         if (!sellOrder.AmountXrp.eq(_sellOrderAmount))
                         {
-                            log("SELL order ID={0} partially filled at price={1} USD. Remaining amount={2} XRP;", ConsoleColor.Green, _sellOrderId, sellOrder.Price, sellOrder.AmountXrp);
+                            log("SELL order ID={0} partially filled at price={1} JPY. Remaining amount={2} XRP;", ConsoleColor.Green, _sellOrderId, sellOrder.Price, sellOrder.AmountXrp);
 
 
                             //Check remaining amount, drop the SELL if it's very tiny
@@ -219,7 +189,7 @@ namespace RippleBot
                                 _sellOrderId = _requestor.UpdateSellOrder(_sellOrderId, price, ref amount);
                                 _sellOrderAmount = amount;
                                 _sellOrderPrice = price;
-                                log("Updated SELL order ID={0}; amount={1} XRP; price={2} USD", _sellOrderId, _sellOrderAmount, price);
+                                log("Updated SELL order ID={0}; amount={1} XRP; price={2} JPY", _sellOrderId, _sellOrderAmount, price);
                             }
                         }
                         //If there were some money released by filling a BUY order, increase this SELL order
@@ -229,14 +199,14 @@ namespace RippleBot
                             _sellOrderId = _requestor.UpdateSellOrder(_sellOrderId, price, ref newAmount);
                             _sellOrderAmount = newAmount;
                             _sellOrderPrice = price;
-                            log("Updated SELL order ID={0}; amount={1} XRP; price={2} USD", _sellOrderId, _sellOrderAmount, price);
+                            log("Updated SELL order ID={0}; amount={1} XRP; price={2} JPY", _sellOrderId, _sellOrderAmount, price);
                         }
                         //Or if we simply need to change price.
                         else if (!_sellOrderPrice.eq(price))
                         {
                             _sellOrderId = _requestor.UpdateSellOrder(_sellOrderId, price, ref _sellOrderAmount);
                             _sellOrderPrice = price;
-                            log("Updated SELL order ID={0}; amount={1} XRP; price={2} USD", _sellOrderId, _sellOrderAmount, price);
+                            log("Updated SELL order ID={0}; amount={1} XRP; price={2} JPY", _sellOrderId, _sellOrderAmount, price);
                         }
                     }
                     else        //Closed or cancelled
@@ -251,11 +221,11 @@ namespace RippleBot
                             _sellOrderId = _requestor.PlaceSellOrder(_sellOrderPrice, ref _sellOrderAmount);
 
                             if (-1 != _sellOrderId)
-                                log("Successfully created SELL order with ID={0}; amount={1} XRP; price={2} USD", ConsoleColor.Cyan, _sellOrderId, _sellOrderAmount, _sellOrderPrice);
+                                log("Successfully created SELL order with ID={0}; amount={1} XRP; price={2} JPY", ConsoleColor.Cyan, _sellOrderId, _sellOrderAmount, _sellOrderPrice);
                         }
                         else
                         {
-                            log("SELL order ID={0} (amount={1} XRP) was closed at price={2} USD", ConsoleColor.Green, _sellOrderId, _sellOrderAmount, _sellOrderPrice);
+                            log("SELL order ID={0} (amount={1} XRP) was closed at price={2} JPY", ConsoleColor.Green, _sellOrderId, _sellOrderAmount, _sellOrderPrice);
                             _sellOrderAmount = 0;
                             _sellOrderId = -1;
                         }
@@ -269,7 +239,7 @@ namespace RippleBot
                     _sellOrderAmount = amount;
 
                     if (-1 != _sellOrderId)
-                        log("Successfully created SELL order with ID={0}; amount={1} XRP; price={2} USD", ConsoleColor.Cyan, _sellOrderId, _sellOrderAmount, _sellOrderPrice);
+                        log("Successfully created SELL order with ID={0}; amount={1} XRP; price={2} JPY", ConsoleColor.Cyan, _sellOrderId, _sellOrderAmount, _sellOrderPrice);
                 }
             }
 
@@ -277,6 +247,8 @@ namespace RippleBot
             log("### Balance= {0} XRP", _xrpBalance);
             log(new string('=', 84));
         }
+
+
 
         private double suggestBuyPrice(Market market)
         {
@@ -287,7 +259,7 @@ namespace RippleBot
             {
                 if (sum + _operativeAmount > _volumeWall && bid.Price + 2.0 * MIN_DIFFERENCE < lowestAsk)
                 {
-                    double buyPrice = Math.Round(bid.Price + 0.000001, 7);
+                    double buyPrice = Math.Round(bid.Price + 0.0001, 7);
 
                     //The difference is too small and we'd be not first in BUY orders. Leave previous price to avoid server call
                     if (-1 != _buyOrderId && buyPrice < market.Bids[0].Price && Math.Abs(buyPrice - _buyOrderPrice) < MIN_PRICE_DELTA)
@@ -306,10 +278,10 @@ namespace RippleBot
             }
 
             //Market too dry, use BUY order before last, so we see it in chart
-            var price = market.Bids.Last().Price + 0.000001;
+            var price = market.Bids.Last().Price + 0.0001;
             if (-1 != _buyOrderId && Math.Abs(price - _buyOrderPrice) < MIN_PRICE_DELTA)
                 return _buyOrderPrice;
-            return Math.Round(price, 7);
+            return Math.Round(price, 10);
         }
 
         private double suggestSellPrice(Market market)
@@ -332,24 +304,12 @@ namespace RippleBot
                 {
                     return ask.Price.eq(_sellOrderPrice)
                         ? _sellOrderPrice
-                        : Math.Round(ask.Price - 0.000001, 7);
+                        : Math.Round(ask.Price - 0.0001, 10);
                 }
             }
 
             //All SELL orders are too low (probably some terrible fall). Suggest SELL order with minimum profit and hope :-( TODO: maybe some stop-loss strategy
             return _executedBuyPrice + MIN_DIFFERENCE;
-        }
-
-        private void log(string message, ConsoleColor color, params object[] args)
-        {
-            if (_verbose) //TODO: select verbose and non-verbose messages
-                _logger.AppendMessage(String.Format(message, args), true, color);
-        }
-
-        private void log(string message, params object[] args)
-        {
-            if (_verbose) //TODO: select verbose and non-verbose messages
-                _logger.AppendMessage(String.Format(message, args));
         }
     }
 }

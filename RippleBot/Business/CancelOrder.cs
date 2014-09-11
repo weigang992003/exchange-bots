@@ -13,6 +13,7 @@ namespace RippleBot.Business
             "telINSUF_FEE_P",       //Message "Fee insufficient", no matter how it's possible while cancelling
             "tefPAST_SEQ",          //Message "This sequence number has already past", no idea what it means
             "terPRE_SEQ",           //Message "Missing/inapplicable prior transaction"
+            "temBAD_SEQUENCE",      //Message "Malformed: Sequence is not in the past."
         };
 
         [DataMember] internal string engine_result { get; set; }

@@ -20,7 +20,7 @@ namespace RippleBot
         //Minimum difference between BUY price and subsequent SELL price (so we have at least some profit)
         private const double MIN_DIFFERENCE = 0.000015;
         //Tolerance of BUY price. Usefull if possible price change is minor, to avoid frequent order updates.
-        private const double MIN_PRICE_DELTA = 0.0000012;    //0.0000012 XRP
+        private const double MIN_PRICE_DELTA = 0.0000012;    //0.0000012 CNY
 
         private bool _selling = true;
 
@@ -59,11 +59,11 @@ namespace RippleBot
             if (null == market)
                 return;
 
-            var spread = Math.Round(getLowestAsk(market) - market.Bids.First().Price, 5);
+            var spread = Math.Round(getLowestAsk(market) - getHighestBid(market), 5);
 
             var coef = TradeHelper.GetMadness(candles.results);
             _intervalMs = Helpers.SuggestInterval(coef, 8000, 20000);
-            log("Madness={0}; spread={1} XRP; Interval={2} ms", coef, spread, _intervalMs);
+            log("Madness={0}; spread={1:F5} XRP; Interval={2} ms", coef, spread, _intervalMs);
 
             if (_selling)
             {
@@ -246,6 +246,22 @@ namespace RippleBot
             return lowestAsk;
         }
 
+        /// <summary>Get highest relevant bid price. Ignores bids with very small volume.</summary>
+        private double getHighestBid(Market market)
+        {
+            const double MIN_WALL_VOLUME = 100.0;
+            var bidVolume = 0.0;
+
+            foreach (var bid in market.Bids)
+            {
+                bidVolume += bid.Amount;
+                if (bidVolume > MIN_WALL_VOLUME)
+                    return bid.Price;
+            }
+
+            return market.Bids.Last().Price;
+        }
+
         private double suggestSellPrice(Market market)
         {
             var lowestAsk = getLowestAsk(market);
@@ -265,29 +281,6 @@ namespace RippleBot
             return sellPrice;
         }
 
-/*TODO: test, delete        private double suggestBuyPrice(Market market)
-        {
-            var maxPrice = _executedSellPrice - MIN_DIFFERENCE;
-
-            var highestBid = market.Bids.First().Price;
-
-            if (-1 != _buyOrderId)
-            {
-                //Don't count own order
-                var bid = market.Bids.First();
-                if (bid.Amount.eq(_buyOrderAmount) && bid.Price.eq(_buyOrderPrice))
-                    highestBid = market.Bids[1].Price;
-            }
-
-            //Somebody offers higher price than we can
-            if (highestBid > maxPrice)
-                return maxPrice;
-
-            //Sugest buy price as middle between our threshold and highest bid
-            var buyPrice = maxPrice - ((maxPrice - highestBid)/2.0);
-            return Math.Round(buyPrice, 7);
-        }
-*/
 
         private double suggestBuyPrice(Market market)
         {
@@ -306,9 +299,13 @@ namespace RippleBot
                 if (sumVolume < MIN_WALL_VOLUME)
                     continue;
 
-                if (bid.Price < _executedSellPrice - MIN_DIFFERENCE)
-                    highestBid = bid.Price;
+                highestBid = bid.Price;
+                break;
             }
+
+            //Somebody offers higher price than we can
+            if (highestBid > maxPrice)
+                return maxPrice;
 
             //Sugest buy price as middle between our threshold and highest bid
             var buyPrice = maxPrice - ((maxPrice - highestBid) / 2.0);

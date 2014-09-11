@@ -29,6 +29,9 @@ namespace RippleBot
                 case "cst-bitstamp":
                     trader = new CrazySellerTrap_BitStamp(logger);
                     break;
+                case "cst-rippletradejapan":
+                    trader = new CrazySellerTrap_RippleTradeJapan(logger);
+                    break;
                 case "cbt-ripplecn":
                     trader = new CrazyBuyerTrap_RippleCN(logger);
                     break;
