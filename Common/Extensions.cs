@@ -16,10 +16,11 @@ namespace Common
         /// <summary>Retuns given number of elements at the end of sequence</summary>
         public static IEnumerable<T> TakeLast<T>(this IEnumerable<T> source, int count)
         {
-            if (source.Count() < count)
+            var realCount = source.Count();
+            if (realCount < count)
                 throw new ArgumentException("Not enough elements");
 
-            return source.Skip(source.Count() - count);
+            return source.Skip(realCount - count);
         }
     }
 }

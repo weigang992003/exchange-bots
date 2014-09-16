@@ -4,7 +4,7 @@
 namespace RippleBot.Business
 {
     [DataContract]
-    internal class CreateOrderRequest
+    internal class CreateBuyOrderRequest
     {
         [DataMember] internal readonly string command = "submit";
         [DataMember] internal CrOR_TxJson tx_json;
@@ -39,8 +39,6 @@ namespace RippleBot.Business
         [DataMember] internal Take TakerPays;
         [DataMember] internal string TakerGets;
 
-
-        [DataMember]
-        internal readonly uint Flags = 2147483648;
+        [DataMember] internal readonly uint Flags = 2147483648;
     }
 }

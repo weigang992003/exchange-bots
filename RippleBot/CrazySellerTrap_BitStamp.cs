@@ -15,7 +15,7 @@ namespace RippleBot
         private readonly RippleApi _requestor;
         private int _intervalMs;
 
-        //BTC amount to trade
+        //XRP amount to trade
         private readonly double _operativeAmount;
         private readonly double _minWallVolume;
         private readonly double _maxWallVolume;

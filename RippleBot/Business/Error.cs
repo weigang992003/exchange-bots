@@ -25,6 +25,8 @@ namespace RippleBot.Business
                     return false;
                 if ("highFee" == error)     //"Fee of 123 exceeds the requested tx limit 100". Unexplained error, need to do some research. So far try to resolve by ignoring.
                     return false;
+                if ("noCurrent" == error)   //"Current ledger is unavailable."
+                    return false;
 
                 return true;
             }

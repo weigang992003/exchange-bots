@@ -26,6 +26,10 @@ namespace RippleBot
             ITrader trader;
             switch (strategy.ToLower())
             {
+                case "cst":
+                    trader = new CrazySellerTrap(logger);
+                    break;
+                //TODO: get rid of rest CST junk
                 case "cst-bitstamp":
                     trader = new CrazySellerTrap_BitStamp(logger);
                     break;

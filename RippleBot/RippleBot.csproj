@@ -45,6 +45,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ApiHelpers\OrderZombie.cs" />
     <Compile Include="Business\AccountInfo.cs" />
     <Compile Include="Business\Balances.cs" />
     <Compile Include="Business\CancelOrder.cs" />
@@ -61,6 +62,7 @@
     <Compile Include="Business\OrderInfoRequest.cs" />
     <Compile Include="Business\Payment.cs" />
     <Compile Include="CrazyBuyerTrap_RippleCN.cs" />
+    <Compile Include="CrazySellerTrap.cs" />
     <Compile Include="CrazySellerTrap_BitStamp.cs" />
     <Compile Include="CrazySellerTrap_RippleTradeJapan.cs" />
     <Compile Include="TradeHelper.cs" />
@@ -68,6 +70,7 @@
     <None Include="DataSamples\WebSocket API\account_info.json" />
     <None Include="DataSamples\WebSocket API\book_offers.asks.json" />
     <None Include="DataSamples\WebSocket API\book_offers.bids.json" />
+    <None Include="DataSamples\WebSocket API\createOffer.buy.error.json" />
     <None Include="DataSamples\WebSocket API\createOffer.buy.json" />
     <None Include="DataSamples\WebSocket API\Error.json" />
     <Compile Include="Program.cs" />
@@ -97,6 +100,7 @@
     <Content Include="lib\WebSocket4Net.dll" />
     <Content Include="lib\WebSocket4Net.pdb" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

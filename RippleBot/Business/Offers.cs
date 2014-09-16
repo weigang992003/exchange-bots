@@ -25,6 +25,7 @@ namespace RippleBot.Business
     internal class Offer
     {
         [DataMember] internal int flags { get; set; }
+        /// <summary>The ID number of this order</summary>
         [DataMember] internal int seq { get; set; }
         [DataMember] internal Take taker_gets { get; set; }
         [DataMember] internal Take taker_pays { get; set; }
@@ -73,6 +74,17 @@ namespace RippleBot.Business
         internal double Price
         {
             get { return AmountUsd / AmountXrp; }
+        }
+
+        /// <summary>Currency code for the fiat side of an offer</summary>
+        internal string Currency
+        {
+            get
+            {
+                return taker_gets.currency == "XRP"
+                    ? taker_pays.currency
+                    : taker_gets.currency;
+            }
         }
 
         /// <summary>True if this order was fully filled or cancelled</summary>

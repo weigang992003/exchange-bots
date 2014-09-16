@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Common;
+using RippleBot.ApiHelpers;
 using RippleBot.Business;
 using RippleBot.Business.DataApi;
 using WebSocket4Net;
@@ -14,11 +16,10 @@ namespace RippleBot
 {
     internal class RippleApi : IDisposable
     {
-        private readonly string[] _rippleServers = { "wss://s-west.ripple.com:443", "wss://s-east.ripple.com:443" };
         private const int SOCKET_TIMEOUT = 12000;
         private const string CHARTS_BASE_URL = "http://api.ripplecharts.com/api/";
         private const byte RETRY_COUNT = 10;
-        private const int RETRY_DELAY = 1000;
+        private const int RETRY_DELAY = 2000;
         private readonly string _issuerAddress;      //BitStamp, SnapSwap, RippleCN or so
         private readonly string _fiatCurreny;
 
@@ -34,6 +35,7 @@ namespace RippleBot
 
         private string _lastResponse;
         private readonly Regex _offerPattern = new Regex("\"taker_(?<verb>get|pay)s\":\"(?<value>\\d{1,20})\"");
+        private readonly List<OrderZombie> _possibleZombies = new List<OrderZombie>(); 
 
 
         internal RippleApi(Logger logger, string exchIssuerAddress, string fiatCurrencyCode)
@@ -50,17 +52,12 @@ namespace RippleBot
                 _webProxy.Credentials = CredentialCache.DefaultCredentials;
             }
 
-            _webSocket = new WebSocket(_rippleSocketUri = SocketUrl);
+            _webSocket = new WebSocket(_rippleSocketUri = Configuration.GetValue("server"));
             _webSocket.Opened += websocket_Opened;
             _webSocket.Error += websocket_Error;
             _webSocket.Closed += websocket_Closed;
             _webSocket.MessageReceived += websocket_MessageReceived;
             _walletAddress = Configuration.AccessKey;
-        }
-
-        private string SocketUrl
-        {
-            get { return _rippleServers[DateTime.Now.Millisecond%2]; }
         }
 
 
@@ -103,6 +100,9 @@ namespace RippleBot
 
             var offerList = Helpers.DeserializeJSON<OffersResponse>(dataFix);
             var order = offerList.result.offers.FirstOrDefault(o => o.seq == orderId);
+
+            if (_possibleZombies.Any())
+                cleanupZombies(offerList, orderId);
 
             //NULL means it was already filled BUG: OR CANCELLED!!! TODO: some better way of getting order status
             if (null == order)
@@ -167,10 +167,10 @@ namespace RippleBot
 
         internal int PlaceBuyOrder(double price, double amount)
         {
-            long amountXrpDrops = (long)Math.Round(amount*1000000);
+            long amountXrpDrops = (long) Math.Round(amount*1000000);
             double amountUsd = price * amount;
 
-            var command = new CreateOrderRequest
+            var command = new CreateBuyOrderRequest
             {
                 tx_json = new CrOR_TxJson
                 {
@@ -201,6 +201,8 @@ namespace RippleBot
                     _logger.AppendMessage("Error creating BUY order. Mesage=" + error.error_message, true, ConsoleColor.Magenta);
                     if (!error.IsCritical)
                     {
+                        //The request might have been successfull even if server says there were problems. Add to list of cleanup candidates.
+                        _possibleZombies.Add(new OrderZombie(price, amount, _fiatCurreny));
                         _logger.AppendMessage("Retry in " + delay + " ms...", true, ConsoleColor.Yellow);
                         delay *= 2;
                         Thread.Sleep(delay);
@@ -210,6 +212,22 @@ namespace RippleBot
                 }
 
                 var response = Helpers.DeserializeJSON<NewOrderResponse>(data);
+
+                if (ResponseKind.FatalError == response.result.ResponseKind)
+                {
+                    var message = String.Format("Error creating BUY order. Response={0} {1}", response.result.engine_result, response.result.engine_result_message);
+                    _logger.AppendMessage(message, true, ConsoleColor.Yellow);
+                    throw new Exception(message);
+                }
+                if (ResponseKind.Error == response.result.ResponseKind)
+                {
+                    _logger.AppendMessage("Non-fatal error creating BUY order. Message=" + response.result.engine_result_message, true, ConsoleColor.Yellow);
+                    _possibleZombies.Add(new OrderZombie(price, amount, _fiatCurreny));
+                    _logger.AppendMessage("Retry in " + delay + " ms...", true, ConsoleColor.Yellow);
+                    delay *= 2;
+                    Thread.Sleep(delay);
+                    continue;
+                }
 
                 return response.result.tx_json.Sequence;
             }
@@ -234,7 +252,7 @@ namespace RippleBot
 
         internal int PlaceSellOrder(double price, ref double amount)
         {
-            long amountXrpDrops = (long)Math.Round(amount * 1000000);
+            long amountXrpDrops = (long) Math.Round(amount*1000000);
             double amountUsd = price * amount;
 
             var command = new CreateSellOrderRequest
@@ -268,6 +286,7 @@ namespace RippleBot
                     _logger.AppendMessage("Error creating SELL order. Mesage=" + error.error_message, true, ConsoleColor.Magenta);
                     if (!error.IsCritical)
                     {
+                        _possibleZombies.Add(new OrderZombie(price, amount, _fiatCurreny));
                         _logger.AppendMessage("Retry in " + delay + " ms...", true, ConsoleColor.Yellow);
                         delay *= 2;
                         Thread.Sleep(delay);
@@ -277,6 +296,22 @@ namespace RippleBot
                 }
 
                 var response = Helpers.DeserializeJSON<NewOrderResponse>(data);
+
+                if (ResponseKind.FatalError == response.result.ResponseKind)
+                {
+                    var message = String.Format("Error creating SELL order. Response={0} {1}", response.result.engine_result, response.result.engine_result_message);
+                    _logger.AppendMessage(message, true, ConsoleColor.Yellow);
+                    throw new Exception(message);
+                }
+                if (ResponseKind.Error == response.result.ResponseKind)
+                {
+                    _logger.AppendMessage("Non-fatal error creating SELL order. Message=" + response.result.engine_result_message, true, ConsoleColor.Yellow);
+                    _possibleZombies.Add(new OrderZombie(price, amount, _fiatCurreny));
+                    _logger.AppendMessage("Retry in " + delay + " ms...", true, ConsoleColor.Yellow);
+                    delay *= 2;
+                    Thread.Sleep(delay);
+                    continue;
+                }
 
                 return response.result.tx_json.Sequence;
             }
@@ -299,7 +334,11 @@ namespace RippleBot
             return orderId;
         }
 
-        internal bool CancelOrder(int orderId)
+        /// <summary>Cancel existing offer</summary>
+        /// <param name="orderId">Sequence number of order to cancel</param>
+        /// <param name="verify">If true, get order data after cancellation claimed OK, to verify it indeed was cancelled successfully</param>
+        /// <returns>True on success, false on fail</returns>
+        internal bool CancelOrder(int orderId, bool verify = true)
         {
             var command = new CancelOrderRequest
             {                
@@ -342,6 +381,20 @@ namespace RippleBot
             {
                 throw new Exception(String.Format("Unexpected response when canceling order {0}. _result={1}; _result_message={2}",
                                                   orderId, cancel.result.engine_result, cancel.result.engine_result_message));
+            }
+
+            //TODO: this might be DEBUG due to my bad coverage of OK/fail response types to CancelOffer call
+            if (verify)
+            {
+                //First give some time to Ripple network to chew
+                Thread.Sleep(2000);
+
+                var order = GetOrderInfo(orderId);
+                if (null != order && !order.Closed)
+                {
+                    _logger.AppendMessage(String.Format("Order ID {0} claimed cancelled is still alive. Cancel failed.", orderId));
+                    return false;
+                }
             }
 
             return true;
@@ -499,6 +552,35 @@ namespace RippleBot
             }
 
             throw new Exception(String.Format("Web request failed {0} times in a row with error '{1}'. Giving up.", RETRY_COUNT, exc.Message));
+        }
+
+        private void cleanupZombies(OffersResponse offerList, int activeOrderId)
+        {
+            for (int i = _possibleZombies.Count - 1; i >= 0; i--)
+            {
+                foreach (var offer in offerList.result.offers)
+                {
+                    if (activeOrderId == offer.seq)
+                    {
+                        _logger.AppendMessage("DEBUG: Order ID=" + activeOrderId + " not a zombie", true, ConsoleColor.Cyan);
+                        continue;
+                    }
+
+                    if (_possibleZombies[i].IsMatch(offer))
+                    {
+                        _logger.AppendMessage(String.Format("Identified {0} zombie order with ID={1} ({2} XRP for {3} {4}). Trying to cancel...",
+                                                            offer.Type, offer.seq, offer.AmountXrp, offer.Price, offer.Currency), true, ConsoleColor.Yellow);
+                        //Found offer abandoned by this bot. Try to cancel it
+                        if (CancelOrder(offer.seq))
+                            _possibleZombies.RemoveAt(i);
+                        goto Outer;
+                    }
+                }
+                //Zombie suspect not found among active orders, can remove it from zombie list
+                _possibleZombies.RemoveAt(i);
+            Outer:
+                ;
+            }
         }
         #endregion
     }

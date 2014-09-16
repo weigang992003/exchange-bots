@@ -1,4 +1,6 @@
-﻿using System.Runtime.Serialization;
+﻿using System.Collections.Generic;
+using System.Runtime.Serialization;
+using Common;
 
 
 namespace RippleBot.Business
@@ -19,6 +21,24 @@ namespace RippleBot.Business
         [DataMember] internal string engine_result_message { get; set; }
         [DataMember] internal string tx_blob { get; set; }
         [DataMember] internal NOR_TxJson tx_json { get; set; }
+
+
+        private readonly HashSet<string> _knownFails = new HashSet<string>
+        {
+            "tefPAST_SEQ", //Message "This sequence number has already past."
+        };
+
+        internal ResponseKind ResponseKind
+        {
+            get
+            {
+                if (0 == engine_result_code)    //Success
+                    return ResponseKind.Success;
+                if (_knownFails.Contains(engine_result))
+                    return ResponseKind.Error;
+                return ResponseKind.FatalError;
+            }
+        }
     }
 
     [DataContract]
