@@ -43,6 +43,7 @@
     <Compile Include="ITrader.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ResponseKind.cs" />
     <Compile Include="TraderBase.cs" />
     <Compile Include="TradeType.cs" />
     <Compile Include="WebClient2.cs">

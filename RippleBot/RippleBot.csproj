@@ -61,6 +61,7 @@
     <Compile Include="Business\Offers.cs" />
     <Compile Include="Business\OrderInfoRequest.cs" />
     <Compile Include="Business\Payment.cs" />
+    <Compile Include="CrazyBuyerTrap.cs" />
     <Compile Include="CrazyBuyerTrap_RippleCN.cs" />
     <Compile Include="CrazySellerTrap.cs" />
     <Compile Include="CrazySellerTrap_BitStamp.cs" />

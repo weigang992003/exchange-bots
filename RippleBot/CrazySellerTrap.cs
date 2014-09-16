@@ -10,7 +10,7 @@ namespace RippleBot
     /// General CST strategy for Ripple network. Particular ripple account, gateway and currency pair are
     /// parameters given by configuration.
     /// </summary>
-    public class CrazySellerTrap : TraderBase
+    internal class CrazySellerTrap : TraderBase
     {
         private readonly RippleApi _requestor;
 
