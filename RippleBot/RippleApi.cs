@@ -556,31 +556,31 @@ namespace RippleBot
 
         private void cleanupZombies(OffersResponse offerList, int activeOrderId)
         {
-            for (int i = _possibleZombies.Count - 1; i >= 0; i--)
+            var cleared = new List<OrderZombie>();
+
+            foreach (var suspect in _possibleZombies)
             {
                 foreach (var offer in offerList.result.offers)
                 {
                     if (activeOrderId == offer.seq)
-                    {
                         _logger.AppendMessage("DEBUG: Order ID=" + activeOrderId + " not a zombie", true, ConsoleColor.Cyan);
-                        continue;
-                    }
-
-                    if (_possibleZombies[i].IsMatch(offer))
+                    else if (suspect.IsMatch(offer))
                     {
                         _logger.AppendMessage(String.Format("Identified {0} zombie order with ID={1} ({2} XRP for {3} {4}). Trying to cancel...",
                                                             offer.Type, offer.seq, offer.AmountXrp, offer.Price, offer.Currency), true, ConsoleColor.Yellow);
-                        //Found offer abandoned by this bot. Try to cancel it
+                        //Found offer abandoned by this bot, try to cancel it
                         if (CancelOrder(offer.seq))
-                            _possibleZombies.RemoveAt(i);
+                            cleared.Add(suspect);
                         goto Outer;
                     }
                 }
-                //Zombie suspect not found among active orders, can remove it from zombie list
-                _possibleZombies.RemoveAt(i);
+                //Surely not a zombie, safe to remove from list of suspects
+                cleared.Add(suspect);
             Outer:
                 ;
             }
+
+            _possibleZombies.RemoveAll(cleared.Contains);
         }
         #endregion
     }
