@@ -267,7 +267,9 @@ namespace HuobiBot
                 delay += RETRY_DELAY;
                 try
                 {
-                    return sendPostRequest(TRADING_API_URL, postData);
+                    var text = sendPostRequest(TRADING_API_URL, postData);
+                    _logger.LastResponse = text;
+                    return text;
                 }
                 catch (WebException we)
                 {
@@ -309,6 +311,7 @@ namespace HuobiBot
                     using (var reader = new StreamReader(stream))
                     {
                         var text = reader.ReadToEnd();
+                        _logger.LastResponse = text;
                         return text;
                     }
                 }

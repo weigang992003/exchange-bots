@@ -30,6 +30,8 @@ namespace Common
                 catch (Exception ex)
                 {
                     log("ERROR: " + ex.Message + Environment.NewLine + ex.StackTrace);
+                    _logger.AppendMessage(Environment.NewLine + "Last response:" + Environment.NewLine + _logger.LastResponse + Environment.NewLine,
+                                          true, ConsoleColor.Cyan);
                     throw;
                 }
             } while (!_killSignal);

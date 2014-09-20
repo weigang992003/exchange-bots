@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading;
 using Common;
+using Common.Business;
 using HuobiBot.Business;
 
 
@@ -11,13 +12,9 @@ namespace HuobiBot
     /// Bullish strategy. Keeps a BUY order some fixed volume below highest bid price. When we buy from a panic
     /// whale, try to sell it higher ASAP.
     /// </summary>
-    internal class CrazySellerTrap : ITrader
+    internal class CrazySellerTrap : TraderBase
     {
-        private bool _killSignal;
-        private bool _verbose = true;
-        private readonly Logger _logger;
         private readonly HuobiApi _requestor;
-        private int _intervalMs;
 
         //BTC amount to trade
         private readonly double _operativeAmount;
@@ -47,42 +44,18 @@ namespace HuobiBot
         private double _executedBuyPrice = -1.0;
 
 
-        public CrazySellerTrap(Logger logger)
+        public CrazySellerTrap(Logger logger) : base(logger)
         {
-            _logger = logger;
             _operativeAmount = double.Parse(Configuration.GetValue("operative_amount"));
             _minWallVolume = double.Parse(Configuration.GetValue("min_volume"));
             _maxWallVolume = double.Parse(Configuration.GetValue("max_volume"));
-            _logger.AppendMessage(String.Format("Crazy seller trap trader initialized with operative={0}; MinWall={1}; MaxWall={2}", _operativeAmount, _minWallVolume, _maxWallVolume));
+            log(String.Format("Crazy seller trap trader initialized with operative={0}; MinWall={1}; MaxWall={2}", _operativeAmount, _minWallVolume, _maxWallVolume));
             _requestor = new HuobiApi(logger);
-        }
-
-        public void StartTrading()
-        {
-            do
-            {
-                try
-                {
-                    check();
-                    Thread.Sleep(_intervalMs);
-                }
-                catch (Exception ex)
-                {
-                    log("ERROR: " + ex.Message + Environment.NewLine + ex.StackTrace);
-                    throw;
-                }
-            } while (!_killSignal);
-        }
-
-        public void Kill()
-        {
-            _killSignal = true;
-            log("Crazy Seller Trap trader received kill signal. Good bye.");
         }
 
 
         /// <summary>The core method to do one iteration of orders' check and updates</summary>
-        private void check()
+        protected override void Check()
         {
             var market = _requestor.GetMarketDepth();
             if (null == market || !market.IsValid)
@@ -112,7 +85,7 @@ namespace HuobiBot
                         {
                             log("BUY order ID={0} untouched (amount={1} BTC, price={2} CNY)", _buyOrderId, _buyOrderAmount, _buyOrderPrice);
 
-                            double price = suggestBuyPrice(market);
+                            double price = SuggestBuyPrice(market);
                             var newAmount = _operativeAmount - _sellOrderAmount;
 
                             //Evaluate and update if needed
@@ -129,7 +102,7 @@ namespace HuobiBot
                             _executedBuyPrice = buyOrder.Price;
                             _buyOrderAmount = buyOrder.Amount;
                             log("BUY order ID={0} partially filled at price={1} CNY. Remaining amount={2} BTC;", ConsoleColor.Green, _buyOrderId, _executedBuyPrice, buyOrder.Amount);
-                            var price = suggestBuyPrice(market);
+                            var price = SuggestBuyPrice(market);
                             //The same price is totally unlikely, so we don't check it here
                             _buyOrderId = _requestor.UpdateBuyOrder(_buyOrderId, price, buyOrder.Amount);
                             _buyOrderPrice = price;
@@ -153,7 +126,7 @@ namespace HuobiBot
             }
             else if (_operativeAmount - _sellOrderAmount > 0.00001)    //No BUY order (and there are some money available). So create one
             {
-                _buyOrderPrice = suggestBuyPrice(market);
+                _buyOrderPrice = SuggestBuyPrice(market);
                 _buyOrderAmount = _operativeAmount - _sellOrderAmount;
                 _buyOrderId = _requestor.PlaceBuyOrder(_buyOrderPrice, _buyOrderAmount);
                 log("Successfully created BUY order with ID={0}; amount={1} BTC; price={2} CNY", ConsoleColor.Cyan, _buyOrderId, _buyOrderAmount, _buyOrderPrice);
@@ -174,7 +147,7 @@ namespace HuobiBot
                         {
                             log("SELL order ID={0} open (amount={1} BTC, price={2} CNY)", _sellOrderId, sellOrder.Amount, _sellOrderPrice);
 
-                            double price = suggestSellPrice(market);
+                            double price = SuggestSellPrice(market);
 
                             //Partially filled
                             if (!sellOrder.Amount.eq(_sellOrderAmount))
@@ -219,7 +192,7 @@ namespace HuobiBot
                 }
                 else    //No SELL order, create one
                 {
-                    _sellOrderPrice = suggestSellPrice(market);
+                    _sellOrderPrice = SuggestSellPrice(market);
                     var amount = _operativeAmount - _buyOrderAmount;
                     _sellOrderId = _requestor.PlaceSellOrder(_sellOrderPrice, ref amount);
                     _sellOrderAmount = amount;
@@ -231,7 +204,7 @@ namespace HuobiBot
         }
 
 
-        private double suggestBuyPrice(MarketDepthResponse market)
+        protected virtual double SuggestBuyPrice(IMarketDepthResponse<Order> market)        //TODO: To TraderBase
         {
             double sum = 0;
             var lowestAsk = market.Asks.First().Price;
@@ -265,7 +238,7 @@ namespace HuobiBot
             return price;
         }
 
-        private double suggestSellPrice(MarketDepthResponse market)
+        protected virtual double SuggestSellPrice(IMarketDepthResponse<Order> market)
         {
             const double MIN_WALL_VOLUME = 0.1;
 
@@ -290,42 +263,6 @@ namespace HuobiBot
 
             //All SELL orders are too low (probably some terrible fall). Suggest SELL order with minimum profit and hope :-( TODO: maybe some stop-loss strategy
             return _executedBuyPrice + MIN_DIFFERENCE;
-        }
-
-        private void log(string message, ConsoleColor color, params object[] args)
-        {
-            if (_verbose) //TODO: select verbose and non-verbose messages
-            {
-                try
-                {
-                    _logger.AppendMessage(String.Format(message, args), true, color);
-                }
-                catch (FormatException)
-                {
-                    var argz = null == args || 0 == args.Length
-                        ? "NULL"
-                        : String.Join(",", args);
-                    _logger.AppendMessage("Couldn't log message '" + message + "',  args=" + argz, true, ConsoleColor.Red);
-                }
-            }
-        }
-
-        private void log(string message, params object[] args)
-        {
-            if (_verbose) //TODO: select verbose and non-verbose messages
-            {
-                try
-                {
-                    _logger.AppendMessage(String.Format(message, args));
-                }
-                catch (FormatException)
-                {
-                    var argz = null == args || 0 == args.Length
-                        ? "NULL"
-                        : String.Join(",", args);
-                    _logger.AppendMessage("Couldn't log message '" + message + "',  args=" + argz, true, ConsoleColor.Red);
-                }
-            }
         }
     }
 }

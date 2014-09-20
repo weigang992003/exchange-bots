@@ -9,7 +9,7 @@ using Common.Business;
 namespace HuobiBot.Business
 {
     [DataContract]
-    internal class MarketDepthResponse
+    internal class MarketDepthResponse : IMarketDepthResponse<Order>
     {
         [DataMember] internal List<List<object>> asks { get; set; }
         [DataMember] internal List<List<object>> bids { get; set; }
@@ -19,7 +19,7 @@ namespace HuobiBot.Business
         private List<Order> _asks;
 
         /// <summary>Typed ASKs</summary>
-        internal List<Order> Asks
+        public List<Order> Asks
         {
             get
             {
@@ -39,7 +39,7 @@ namespace HuobiBot.Business
         private List<Order> _bids;
 
         /// <summary>Typed BIDss</summary>
-        internal List<Order> Bids
+        public List<Order> Bids
         {
             get
             {

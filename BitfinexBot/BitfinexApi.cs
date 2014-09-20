@@ -212,7 +212,9 @@ namespace BitfinexBot
                 delay += RETRY_DELAY;
                 try
                 {
-                    return client.DownloadString(url);
+                    var text = client.DownloadString(url);
+                    _logger.LastResponse = text;
+                    return text;
                 }
                 catch (WebException we)
                 {
@@ -233,7 +235,7 @@ namespace BitfinexBot
             WebException exc = null;
             for (int i = 1; i <= RETRY_COUNT; i++)
             {
-                long nonce = DateTime.Now.Ticks;
+                long nonce = DateTime.UtcNow.Ticks;
                 nonce += _nonceOffset;
 
                 string paramDict = "{" + String.Format("\"request\":\"/v1/{0}\",\"nonce\":\"{1}\"", method, nonce);
@@ -282,6 +284,7 @@ namespace BitfinexBot
                             using (var reader = new StreamReader(stream))
                             {
                                 var text = reader.ReadToEnd();
+                                _logger.LastResponse = text;
                                 return text;
                             }
                         }

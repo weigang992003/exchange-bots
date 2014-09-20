@@ -17,6 +17,9 @@ namespace Common
             _writer.Flush();
         }
 
+        /// <summary>Contains last response data from server, if API manager recorded them</summary>
+        public string LastResponse { get; set; }
+
         /// <summary>Append line to log file</summary>
         public void AppendMessage(string message, bool console=true, ConsoleColor? color = null)
         {

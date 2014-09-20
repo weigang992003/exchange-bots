@@ -6,10 +6,16 @@ using Common.Business;
 namespace BitfinexBot.Business
 {
     [DataContract]
-    internal class MarketDepthResponse
+    internal class MarketDepthResponse : IMarketDepthResponse<Order>
     {
         [DataMember] internal List<Order> bids { get; set; }
         [DataMember] internal List<Order> asks { get; set; }
+
+        #region IMarketDepthResponse members
+
+        public List<Order> Bids { get { return bids; } }
+        public List<Order> Asks { get { return asks; } }
+        #endregion
     }
 
     [DataContract]

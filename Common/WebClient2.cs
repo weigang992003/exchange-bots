@@ -32,6 +32,7 @@ namespace Common
             try
             {
                 var data = DownloadString(url);
+                _logger.LastResponse = data;
                 return data;
             }
             catch (Exception e)
@@ -46,6 +47,7 @@ namespace Common
             try
             {
                 var data = DownloadString(url);
+                _logger.LastResponse = data;
                 return Helpers.DeserializeJSON<T>(data);
             }
             catch (Exception e)

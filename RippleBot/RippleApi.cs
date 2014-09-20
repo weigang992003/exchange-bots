@@ -457,6 +457,7 @@ namespace RippleBot
             }
 
             var ret = _lastResponse;
+            _logger.LastResponse = ret;
             _lastResponse = null;
             return ret;
         }
@@ -534,6 +535,7 @@ namespace RippleBot
                             using (StreamReader reader = new StreamReader(stream))
                             {
                                 var text = reader.ReadToEnd();
+                                _logger.LastResponse = text;
                                 return text;
                             }
                         }

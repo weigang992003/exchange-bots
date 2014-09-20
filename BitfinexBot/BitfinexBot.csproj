@@ -45,6 +45,7 @@
     <Compile Include="Business\Ticker.cs" />
     <Compile Include="Business\Trade.cs" />
     <Compile Include="CrazyBuyerTrap.cs" />
+    <Compile Include="CrazySellerTrap.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TradeHelpers.cs" />

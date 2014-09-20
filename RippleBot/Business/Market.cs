@@ -1,11 +1,12 @@
 ﻿using System.Collections.Generic;
+using Common.Business;
 
 
 namespace RippleBot.Business
 {
-    internal class Market
+    public class Market //todo : IMarketDepthResponse
     {
-        internal List<Ask> Asks;
-        internal List<Bid> Bids;
+        public List<Ask> Asks { get; set; }
+        public List<Bid> Bids { get; set; }
     }
 }

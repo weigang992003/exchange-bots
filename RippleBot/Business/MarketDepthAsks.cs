@@ -23,7 +23,7 @@ namespace RippleBot.Business
     }
 
     [DataContract]
-    internal class Ask : IMarketOrder
+    public class Ask : IMarketOrder
     {
         [DataMember] internal string Account { get; set; }
         [DataMember] internal string BookDirectory { get; set; }

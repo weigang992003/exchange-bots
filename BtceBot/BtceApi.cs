@@ -84,9 +84,8 @@ namespace BtceBot
             {
                 if ("noorders" == error.error)
                     return new Order(true);
-                var message = "Error getting data for order ID=" + orderId;
-                _logger.AppendMessage(message, true, ConsoleColor.Yellow);
-                throw new Exception(message);
+
+                throw new Exception(String.Format("Error getting data for order ID={0} Message={1}", orderId, error.error));
             }
 
             var orderList = Helpers.DeserializeJSON<OrderResponse>(data);
@@ -222,7 +221,9 @@ namespace BtceBot
 
                 try
                 {
-                    return client.DownloadString(url);
+                    var text = client.DownloadString(url);
+                    _logger.LastResponse = text;
+                    return text;
                 }
                 catch (WebException we)
                 {
@@ -285,6 +286,7 @@ namespace BtceBot
                             using (StreamReader reader = new StreamReader(stream))
                             {
                                 var text = reader.ReadToEnd();
+                                _logger.LastResponse = text;
                                 return text;
                             }
                         }

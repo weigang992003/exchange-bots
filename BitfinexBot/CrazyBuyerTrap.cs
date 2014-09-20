@@ -1,19 +1,15 @@
 ﻿using System;
 using System.Linq;
-using System.Threading;
 using BitfinexBot.Business;
 using Common;
+using Common.Business;
 
 
 namespace BitfinexBot
 {
-    internal class CrazyBuyerTrap : ITrader
+    internal class CrazyBuyerTrap : TraderBase
     {
-        private bool _killSignal;
-        private bool _verbose = true;
-        private readonly Logger _logger;
         private readonly BitfinexApi _requestor;
-        private int _intervalMs;
 
         //LTC amount to trade
         private readonly double _operativeAmount;
@@ -43,41 +39,18 @@ namespace BitfinexBot
         private double _executedSellPrice = -1.0;
 
 
-        public CrazyBuyerTrap(Logger logger)
+        public CrazyBuyerTrap(Logger logger) : base(logger)
         {
-            _logger = logger;
             _operativeAmount = double.Parse(Configuration.GetValue("operative_amount"));
             _minWallVolume = double.Parse(Configuration.GetValue("min_volume"));
             _maxWallVolume = double.Parse(Configuration.GetValue("max_volume"));
-            _logger.AppendMessage(String.Format("Bitfinex Crazy buyer trap trader initialized with operative={0}; MinWall={1}; MaxWall={2}", _operativeAmount, _minWallVolume, _maxWallVolume));
+            log(String.Format("Bitfinex Litecoin CBT trader initialized with operative={0}; MinWall={1}; MaxWall={2}", _operativeAmount, _minWallVolume, _maxWallVolume));
             _requestor = new BitfinexApi(logger);
         }
 
-        public void StartTrading()
-        {
-            do
-            {
-                try
-                {
-                    check();
-                    Thread.Sleep(_intervalMs);
-                }
-                catch (Exception ex)
-                {
-                    log("ERROR: " + ex.Message + Environment.NewLine + ex.StackTrace);
-                    throw;
-                }
-            } while (!_killSignal);
-        }
-
-        public void Kill()
-        {
-            _killSignal = true;
-            log("Crazy Buyer Trap trader received kill signal. Good bye.");
-        }
 
         /// <summary>The core method to do one iteration of orders' check and updates</summary>
-        private void check()
+        protected override void Check()
         {
             var market = _requestor.GetMarketDepth();
             var tradeHistory = _requestor.GetTradeHistory();
@@ -166,7 +139,7 @@ namespace BitfinexBot
                             {
                                 log("BUY order ID={0} open (amount={1} LTC, price={2} USD)", _buyOrderId, buyOrder.Amount, _buyOrderPrice);
 
-                                double price = suggestBuyPrice(market);
+                                double price = SuggestBuyPrice(market);
 
                                 //Partially filled
                                 if (!buyOrder.Amount.eq(_buyOrderAmount))
@@ -211,7 +184,7 @@ namespace BitfinexBot
                 }
                 else    //No BUY order, create one
                 {
-                    _buyOrderPrice = suggestBuyPrice(market);
+                    _buyOrderPrice = SuggestBuyPrice(market);
                     _buyOrderAmount = _operativeAmount - _sellOrderAmount;
                     _buyOrderId = _requestor.PlaceBuyOrder(_buyOrderPrice, _buyOrderAmount);
                     log("Successfully created BUY order with ID={0}; amount={1} LTC; price={2} USD", ConsoleColor.Cyan, _buyOrderId, _buyOrderAmount, _buyOrderPrice);
@@ -257,12 +230,12 @@ namespace BitfinexBot
             return Math.Round(price, 3);
         }
 
-        private double suggestBuyPrice(MarketDepthResponse market)
+        protected virtual double SuggestBuyPrice(IMarketDepthResponse<Order> market)     //TODO: Clear candidate for movement to parent class
         {
             const double MIN_WALL_VOLUME = 0.1;
 
             double sumVolume = 0.0;
-            foreach (var bid in market.bids)
+            foreach (var bid in market.Bids)
             {
                 //Don't count self
                 if (bid.Price.eq(_buyOrderPrice) && bid.Amount.eq(_buyOrderAmount))
@@ -282,18 +255,6 @@ namespace BitfinexBot
 
             //All BUY orders are too high (probably some wild race). Suggest BUY order with minimum profit and hope
             return _executedSellPrice - MIN_DIFFERENCE;
-        }
-
-        private void log(string message, ConsoleColor color, params object[] args)
-        {
-            if (_verbose) //TODO: select verbose and non-verbose messages
-                _logger.AppendMessage(String.Format(message, args), true, color);
-        }
-
-        private void log(string message, params object[] args)
-        {
-            if (_verbose) //TODO: select verbose and non-verbose messages
-                _logger.AppendMessage(String.Format(message, args));
         }
     }
 }
