@@ -95,19 +95,16 @@ namespace BtceBot
                     {
                         _executedSellPrice = sellOrder.Price;
                         _sellOrderAmount = sellOrder.amount;
-                        log("SELL order ID={0} partially filled at price={1} USD. Remaining amount={2} LTC;", ConsoleColor.Green, _sellOrderId, _executedSellPrice, sellOrder.amount);
-                        var price = suggestSellPrice(market);
-                        //The same price is totally unlikely, so we don't check it here
-                        var amount = sellOrder.amount;
-                        if (amount < MIN_ORDER_AMOUNT)
-                        {
+                        log("SELL order ID={0} partially filled at price={1} USD. Remaining amount={2} LTC;",
+                            ConsoleColor.Green, _sellOrderId, _executedSellPrice, sellOrder.amount);
+
+                        if (_sellOrderAmount < MIN_ORDER_AMOUNT)
                             log("The order has amount under limit of {0} LTC, will not update", MIN_ORDER_AMOUNT);
-                            _sellOrderAmount = amount;  //Keep tract of amount
-                        }
                         else
                         {
-                            _sellOrderId = _requestor.UpdateSellOrder(_sellOrderId, price, ref amount);
-                            _sellOrderAmount = amount;
+                            var price = suggestSellPrice(market);
+                            //The same price is totally unlikely, so we don't check it here
+                            _sellOrderId = _requestor.UpdateSellOrder(_sellOrderId, price, ref _sellOrderAmount);
                             _sellOrderPrice = price;
                             log("Updated SELL order ID={0}; amount={1} LTC; price={2} USD", _sellOrderId, _sellOrderAmount, _sellOrderPrice);
                         }
@@ -147,7 +144,8 @@ namespace BtceBot
                         //Partially filled
                         if (!buyOrder.amount.eq(_buyOrderAmount))
                         {
-                            log("BUY order ID={0} partially filled at price={1} USD. Remaining amount={2} LTC;", ConsoleColor.Green, _buyOrderId, buyOrder.Price, buyOrder.amount);
+                            log("BUY order ID={0} partially filled at price={1} USD. Remaining amount={2} LTC;",
+                                ConsoleColor.Green, _buyOrderId, buyOrder.Price, buyOrder.amount);
 
                             if (buyOrder.amount < MIN_ORDER_AMOUNT)
                             {
@@ -208,7 +206,7 @@ namespace BtceBot
 
             var balance = _requestor.GetAccountBalance();
             log("DEBUG: Balance = {0} LTC", balance);
-            log(new string('=', 84));
+            log(new string('=', 90));
         }
 
         private double suggestSellPrice(MarketDepthResponse market)
@@ -247,7 +245,7 @@ namespace BtceBot
 
         private double suggestBuyPrice(MarketDepthResponse market)
         {
-            const double MIN_WALL_VOLUME = 0.1;
+            const double MIN_WALL_VOLUME = 0.8;
 
             double sumVolume = 0.0;
             foreach (var bid in market.Bids)

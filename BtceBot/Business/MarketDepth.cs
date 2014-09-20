@@ -7,7 +7,7 @@ using Common.Business;
 namespace BtceBot.Business
 {
     [DataContract]
-    internal class MarketDepthResponse
+    internal class MarketDepthResponse : IMarketDepthResponse<MarketOrder>
     {
         [DataMember] internal List<List<double>> asks { get; set; }
         [DataMember] internal List<List<double>> bids { get; set; }
@@ -18,7 +18,7 @@ namespace BtceBot.Business
         private List<MarketOrder> _bids;
 
 
-        internal List<MarketOrder> Asks
+        public List<MarketOrder> Asks
         {
             get
             {
@@ -33,7 +33,7 @@ namespace BtceBot.Business
             }
         }
 
-        internal List<MarketOrder> Bids
+        public List<MarketOrder> Bids
         {
             get
             {

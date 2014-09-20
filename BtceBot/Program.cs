@@ -29,6 +29,9 @@ namespace BtceBot
                 case "cbt":
                     trader = new CrazyBuyerTrap(logger);
                     break;
+                case "cst":
+                    trader = new CrazySellerTrap(logger);
+                    break;
                 case "bear":
                     throw new NotImplementedException("Soon...");
                 default:

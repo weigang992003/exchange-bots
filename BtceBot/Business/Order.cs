@@ -1,11 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Runtime.Serialization;
+using Common.Business;
 
 
 namespace BtceBot.Business
 {
     [DataContract]
-    internal class Order
+    internal class Order : IMarketOrder
     {
         [DataMember] internal int id { get; set; }
         [DataMember] internal string pair { get; set; }
@@ -16,7 +17,9 @@ namespace BtceBot.Business
         [DataMember] internal int status { get; set; }
 
         //convenience
-        internal double Price { get { return rate; } }
+        public double Price { get { return rate; } }
+
+        public double Amount { get { return amount; } }
 
         /// <summary>True if this order was fully filled or cancelled</summary>
         internal bool Closed { get; private set; }

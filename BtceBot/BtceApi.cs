@@ -25,7 +25,7 @@ namespace BtceBot
         private readonly WebProxy _webProxy;
 
         private readonly HMACSHA512 _hashMaker;
-        private long _lastServerTicks;
+        private long _nonce;
         private readonly Regex _orderIdPattern = new Regex("\"(?<id>\\d{2,20})\":{", RegexOptions.Compiled);
 
 
@@ -41,14 +41,14 @@ namespace BtceBot
             }
 
             _hashMaker = new HMACSHA512(Encoding.ASCII.GetBytes(Configuration.SecretKey));
-        }
 
+            synchronizeNonce();
+        }
 
         internal DateTime GetServerTime()
         {
             var data = sendGetRequest(DATA_BASE_URL + "ticker");
             var time = Helpers.DeserializeJSON<TickerResponse>(data).ticker.ServerTime;
-            _lastServerTicks = (long) (time - new DateTime(2014, 8, 1)).TotalMilliseconds;
             return time;
         }
 
@@ -208,6 +208,24 @@ namespace BtceBot
         }
 
 
+        /// <summary>Ask server for best value for nonce, use this as base for all future requests.</summary>
+        private void synchronizeNonce()
+        {
+            var data = sendPostRequest("getInfo");
+
+            var error = Helpers.DeserializeJSON<ErrorResponse>(data);
+            if (!String.IsNullOrEmpty(error.error) && error.error.Contains("invalid nonce parameter"))
+            {
+                var pattern = new Regex("you should send:(?<nonce>\\d{10,15})", RegexOptions.IgnoreCase);
+                var match = pattern.Match(error.error);
+                var serverNonce = match.Groups["nonce"].Value;
+                _logger.AppendMessage(String.Format("Server suggested nonce {0}, synchronizing future requests to this value.", serverNonce), true, ConsoleColor.Yellow);
+                _nonce = long.Parse(serverNonce);
+            }
+            else
+                throw new Exception("Unexpected response: " + Environment.NewLine + data);
+        }
+
         private string sendGetRequest(string url)
         {
             WebException exc = null;
@@ -238,6 +256,7 @@ namespace BtceBot
             throw new Exception(String.Format("Web request failed {0} times in a row with error '{1}'. Giving up.", RETRY_COUNT, exc.Message));
         }
 
+
         private string sendPostRequest(string method, Dictionary<string, string> paramz = null)
         {
             var args = new Dictionary<string, string>
@@ -258,7 +277,7 @@ namespace BtceBot
             {
                 try
                 {
-                    args["nonce"] = (_lastServerTicks++).ToString();
+                    args["nonce"] = (_nonce++).ToString();
 
                     var dataStr = buildPostData(args);
                     var postData = Encoding.ASCII.GetBytes(dataStr);
