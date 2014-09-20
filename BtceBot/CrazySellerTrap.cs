@@ -112,9 +112,9 @@ namespace BtceBot
                 }
                 else
                 {
-                    _executedBuyPrice = buyOrder.Price;
+                    _executedBuyPrice = _buyOrderPrice;
                     _buyOrderId = -1;
-                    log("BUY order ID={0} (amount={1} LTC) was closed at price={2} USD", ConsoleColor.Green, buyOrder.id, _buyOrderAmount, _executedBuyPrice);
+                    log("BUY order ID={0} (amount={1} LTC) was closed at price={2} USD", ConsoleColor.Green, _buyOrderId, _buyOrderAmount, _executedBuyPrice);
                     _buyOrderAmount = 0;
                 }
                 
@@ -189,7 +189,7 @@ namespace BtceBot
                     }
                     else
                     {
-                        log("SELL order ID={0} (amount={1} LTC) was closed at price={2} USD", ConsoleColor.Green, _sellOrderId, _sellOrderAmount, sellOrder.Price);
+                        log("SELL order ID={0} (amount={1} LTC) was closed at price={2} USD", ConsoleColor.Green, _sellOrderId, _sellOrderAmount, _sellOrderPrice);
                         _sellOrderAmount = 0;
                         _sellOrderId = -1;
                     }
