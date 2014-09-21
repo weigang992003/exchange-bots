@@ -209,6 +209,7 @@ namespace BtceBot
 
 
         /// <summary>Ask server for best value for nonce, use this as base for all future requests.</summary>
+        /// <remarks>NOTE: one API key can use only up to Int32.MaxValue, then new API key must be created on BTC-E.com</remarks>
         private void synchronizeNonce()
         {
             var data = sendPostRequest("getInfo");
@@ -216,7 +217,7 @@ namespace BtceBot
             var error = Helpers.DeserializeJSON<ErrorResponse>(data);
             if (!String.IsNullOrEmpty(error.error) && error.error.Contains("invalid nonce parameter"))
             {
-                var pattern = new Regex("you should send:(?<nonce>\\d{10,15})", RegexOptions.IgnoreCase);
+                var pattern = new Regex("you should send:(?<nonce>\\d{1,15})", RegexOptions.IgnoreCase);
                 var match = pattern.Match(error.error);
                 var serverNonce = match.Groups["nonce"].Value;
                 _logger.AppendMessage(String.Format("Server suggested nonce {0}, synchronizing future requests to this value.", serverNonce), true, ConsoleColor.Yellow);

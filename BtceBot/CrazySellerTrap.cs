@@ -113,8 +113,8 @@ namespace BtceBot
                 else
                 {
                     _executedBuyPrice = _buyOrderPrice;
-                    _buyOrderId = -1;
                     log("BUY order ID={0} (amount={1} LTC) was closed at price={2} USD", ConsoleColor.Green, _buyOrderId, _buyOrderAmount, _executedBuyPrice);
+                    _buyOrderId = -1;
                     _buyOrderAmount = 0;
                 }
                 
@@ -172,7 +172,6 @@ namespace BtceBot
                             }
                             else
                             {
-                                log("BUY gained some LTC. Increasing SELL amount to {0} LTC", ConsoleColor.Cyan, newAmount);
                                 _sellOrderId = _requestor.UpdateSellOrder(_sellOrderId, price, ref newAmount);
                                 _sellOrderAmount = newAmount;
                                 _sellOrderPrice = price;
