@@ -17,11 +17,6 @@ namespace RippleBot.Business
     [DataContract]
     internal class OrderData
     {
-        private static readonly HashSet<string> _knownFails = new HashSet<string>
-        {
-            "tefPAST_SEQ", //Message "This sequence number has already past."
-        };
-
         [DataMember] internal string engine_result { get; set; }
         [DataMember] internal int engine_result_code { get; set; }
         [DataMember] internal string engine_result_message { get; set; }
@@ -35,8 +30,8 @@ namespace RippleBot.Business
             {
                 if (0 == engine_result_code)    //Success
                     return ResponseKind.Success;
-                if (_knownFails.Contains(engine_result))
-                    return ResponseKind.Error;
+                if (Const.OkResultCodes.Contains(engine_result))
+                    return ResponseKind.NonCriticalError;
                 return ResponseKind.FatalError;
             }
         }

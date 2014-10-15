@@ -7,15 +7,6 @@ namespace RippleBot.Business
     [DataContract]
     internal class CancelResult
     {
-        private static readonly HashSet<string> _okResultTokens = new HashSet<string>
-        {
-            "tesSUCCESS",
-            "telINSUF_FEE_P",       //Message "Fee insufficient", no matter how it's possible while cancelling
-            "tefPAST_SEQ",          //Message "This sequence number has already past", no idea what it means
-            "terPRE_SEQ",           //Message "Missing/inapplicable prior transaction"
-            "temBAD_SEQUENCE",      //Message "Malformed: Sequence is not in the past."
-        };
-
         [DataMember] internal string engine_result { get; set; }
         [DataMember] internal int engine_result_code { get; set; }
         [DataMember] internal string engine_result_message { get; set; }
@@ -25,7 +16,7 @@ namespace RippleBot.Business
         /// <summary>Response indicated success</summary>
         internal bool ResultOK
         {
-            get { return _okResultTokens.Contains(engine_result); }
+            get { return Const.OkResultCodes.Contains(engine_result); }
         }
     }
 

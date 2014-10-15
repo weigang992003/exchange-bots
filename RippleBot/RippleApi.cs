@@ -211,7 +211,7 @@ namespace RippleBot
                     _logger.AppendMessage(message, true, ConsoleColor.Yellow);
                     throw new Exception(message);
                 }
-                if (ResponseKind.Error == response.result.ResponseKind)
+                if (ResponseKind.NonCriticalError == response.result.ResponseKind)
                 {
                     _logger.AppendMessage("Non-fatal error creating BUY order. Message=" + response.result.engine_result_message, true, ConsoleColor.Yellow);
                     _logger.AppendMessage("Retry in " + delay + " ms...", true, ConsoleColor.Yellow);
@@ -293,7 +293,7 @@ namespace RippleBot
                     _logger.AppendMessage(message, true, ConsoleColor.Yellow);
                     throw new Exception(message);
                 }
-                if (ResponseKind.Error == response.result.ResponseKind)
+                if (ResponseKind.NonCriticalError == response.result.ResponseKind)
                 {
                     _logger.AppendMessage("Non-fatal error creating SELL order. Message=" + response.result.engine_result_message, true, ConsoleColor.Yellow);
                     _logger.AppendMessage("Retry in " + delay + " ms...", true, ConsoleColor.Yellow);
@@ -421,9 +421,9 @@ namespace RippleBot
                 if (offer.Price.ToString().Contains("12345"))       //TODO: This is really stupid!! Find some way how to safely flag manual/bot orders
                     _logger.AppendMessage("Cleanup: Order ID=" + offer.seq + " not a zombie, possibly manual", true, ConsoleColor.Cyan);
                 else if (-1 != buyOrderId && buyOrderId == offer.seq)
-                    _logger.AppendMessage("Cleanup: Order ID=" + offer.seq + " not a zombie, our BUY order", true, ConsoleColor.Cyan);
+                    _logger.AppendMessage("Cleanup: Order ID=" + offer.seq + " not a zombie, our BUY order", false);
                 else if (-1 != sellOrderId && sellOrderId == offer.seq)
-                    _logger.AppendMessage("Cleanup: Order ID=" + offer.seq + " not a zombie, our SELL order", true, ConsoleColor.Cyan);
+                    _logger.AppendMessage("Cleanup: Order ID=" + offer.seq + " not a zombie, our SELL order", false);
                 else
                 {
                     _logger.AppendMessage(String.Format("Identified {0} zombie order with ID={1} ({2} XRP for {3} {4}). Trying to cancel...",

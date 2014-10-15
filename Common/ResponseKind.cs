@@ -6,7 +6,7 @@ namespace Common
     {
         Success,
         /// <summary>Response denotes error that can be treated without stopping trading</summary>
-        Error,
+        NonCriticalError,
         /// <summary>Response denotes error that should stop trading</summary>
         FatalError
     }
