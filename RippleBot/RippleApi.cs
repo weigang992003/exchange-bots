@@ -69,6 +69,14 @@ namespace RippleBot
                 Thread.Sleep(250);
         }
 
+        internal ServerStateResponse GetServerState()
+        {
+            var command = new ServerStateRequest();
+
+            var data = sendToRippleNet(Helpers.SerializeJson(command));
+            return Helpers.DeserializeJSON<ServerStateResponse>(data);
+        }
+
         internal double GetXrpBalance()
         {
             var command = new AccountInfoRequest { account = _walletAddress };
@@ -85,7 +93,7 @@ namespace RippleBot
             return account.result.account_data.BalanceXrp;
         }
 
-        internal Offer GetOrderInfo(int orderId)
+        internal Offer GetOrderInfo(int orderId, bool cleanZombies = true)
         {
             var command = new OrderInfoRequest { id = 1, account = _walletAddress };
 
@@ -101,7 +109,7 @@ namespace RippleBot
             var offerList = Helpers.DeserializeJSON<OffersResponse>(dataFix);
             var order = offerList.result.offers.FirstOrDefault(o => o.seq == orderId);
 
-            if (_possibleZombies.Any())
+            if (cleanZombies && _possibleZombies.Any())
                 cleanupZombies(offerList, orderId);
 
             //NULL means it was already filled BUG: OR CANCELLED!!! TODO: some better way of getting order status
@@ -389,7 +397,7 @@ namespace RippleBot
                 //First give some time to Ripple network to chew
                 Thread.Sleep(2000);
 
-                var order = GetOrderInfo(orderId);
+                var order = GetOrderInfo(orderId, false);
                 if (null != order && !order.Closed)
                 {
                     _logger.AppendMessage(String.Format("Order ID {0} claimed cancelled is still alive. Cancel failed.", orderId));

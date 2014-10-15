@@ -1,0 +1,21 @@
+﻿{
+  "result": {
+    "engine_result": "telINSUF_FEE_P",
+    "engine_result_code": -394,
+    "engine_result_message": "Fee insufficient.",
+    "tx_blob": "hex digits...........",
+    "tx_json": {
+      "Account": "rpMV1zYgR5P6YWA2JSXDPcbsbqivkooKVY",
+      "Fee": "1",
+      "Flags": 2147483648,
+      "OfferSequence": 1024,
+      "Sequence": 24775,
+      "SigningPubKey": "hex digits................",
+      "TransactionType": "OfferCancel",
+      "TxnSignature": " hex digits..................",
+      "hash": "abdf  abcf  and other hex digits"
+    }
+  },
+  "status": "success",
+  "type": "response"
+}

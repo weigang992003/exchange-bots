@@ -61,11 +61,13 @@
     <Compile Include="Business\Offers.cs" />
     <Compile Include="Business\OrderInfoRequest.cs" />
     <Compile Include="Business\Payment.cs" />
+    <Compile Include="Business\ServerState.cs" />
+    <Compile Include="Business\ServerStateRequest.cs" />
+    <Compile Include="Const.cs" />
     <Compile Include="CrazyBuyerTrap.cs" />
     <Compile Include="CrazyBuyerTrap_RippleCN.cs" />
     <Compile Include="CrazySellerTrap.cs" />
     <Compile Include="CrazySellerTrap_BitStamp.cs" />
-    <Compile Include="CrazySellerTrap_RippleTradeJapan.cs" />
     <Compile Include="TradeHelper.cs" />
     <Compile Include="WideSpreadSeller.cs" />
     <None Include="DataSamples\WebSocket API\account_info.json" />
@@ -78,8 +80,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RippleApi.cs" />
     <None Include="DataSamples\WebSocket API\ErrorServerBusy.json" />
+    <None Include="DataSamples\WebSocket API\offerCancel.error.json" />
     <None Include="DataSamples\WebSocket API\offerCancel.json" />
     <None Include="DataSamples\WebSocket API\offerCreate.sell.json" />
+    <None Include="DataSamples\WebSocket API\server_state.json" />
   </ItemGroup>
   <ItemGroup>
     <None Include="DataSamples\WebSocket API\account_offers.json" />

@@ -22,6 +22,14 @@ namespace RippleBot.Business
     }
 
     [DataContract]
+    internal class AccountResult
+    {
+        [DataMember] internal AccountData account_data;
+        [DataMember] internal int ledger_current_index;
+        [DataMember] internal bool validated;
+    } 
+
+    [DataContract]
     internal class AccountData
     {
         [DataMember] internal string Account;
@@ -39,16 +47,8 @@ namespace RippleBot.Business
             get
             {
                 ulong drops = ulong.Parse(Balance);
-                return (double)drops / 1000000.0;
+                return (double)drops / Const.DROPS_IN_XRP;
             }
         }
-    }
-
-    [DataContract]
-    internal class AccountResult
-    {
-        [DataMember] internal AccountData account_data;
-        [DataMember] internal int ledger_current_index;
-        [DataMember] internal bool validated;
-    }    
+    }   
 }

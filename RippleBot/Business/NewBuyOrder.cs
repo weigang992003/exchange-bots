@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Runtime.Serialization;
 using Common;
 
@@ -16,17 +17,17 @@ namespace RippleBot.Business
     [DataContract]
     internal class OrderData
     {
+        private static readonly HashSet<string> _knownFails = new HashSet<string>
+        {
+            "tefPAST_SEQ", //Message "This sequence number has already past."
+        };
+
         [DataMember] internal string engine_result { get; set; }
         [DataMember] internal int engine_result_code { get; set; }
         [DataMember] internal string engine_result_message { get; set; }
         [DataMember] internal string tx_blob { get; set; }
         [DataMember] internal NOR_TxJson tx_json { get; set; }
 
-
-        private readonly HashSet<string> _knownFails = new HashSet<string>
-        {
-            "tefPAST_SEQ", //Message "This sequence number has already past."
-        };
 
         internal ResponseKind ResponseKind
         {

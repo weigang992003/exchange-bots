@@ -17,5 +17,7 @@ namespace RippleBot.Business
         [DataMember] internal readonly string TransactionType = "OfferCancel";
         [DataMember] internal string Account;
         [DataMember] internal string OfferSequence;
+
+        [DataMember] internal int Fee = Const.MAX_FEE;
     }
 }

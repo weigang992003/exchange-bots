@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RippleBot", "RippleBot\Ripp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BtceBot", "BtceBot\BtceBot.csproj", "{565245BA-5868-4C7A-8580-226B3B438FAB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BtcChinaBot.web", "BtcChinaBot.web\BtcChinaBot.web.csproj", "{75E310FA-5F7A-44CD-8383-1096B37078C0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,10 @@ Global
 		{565245BA-5868-4C7A-8580-226B3B438FAB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{565245BA-5868-4C7A-8580-226B3B438FAB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{565245BA-5868-4C7A-8580-226B3B438FAB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{75E310FA-5F7A-44CD-8383-1096B37078C0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{75E310FA-5F7A-44CD-8383-1096B37078C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{75E310FA-5F7A-44CD-8383-1096B37078C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{75E310FA-5F7A-44CD-8383-1096B37078C0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,0 +1,29 @@
+﻿{
+  "result": {
+    "state": {
+      "build_version": "0.26.3-sp2",
+      "complete_ledgers": "32570-9380895",
+      "io_latency_ms": 1,
+      "last_close": {
+        "converge_time": 3013,
+        "proposers": 5
+      },
+      "load_base": 256,
+      "load_factor": 256000,
+      "peers": 61,
+      "pubkey_node": "n9Lt7DgQmxjHF5mYJsV2U9anALHmPem8PWQHWGpw4XMz79HA5aJY",
+      "server_state": "full",
+      "validated_ledger": {
+        "base_fee": 10,
+        "close_time": 466649600,
+        "hash": "44CE87D13DE6558532075120FF53CC25B97D4CB4B7EAC430CB79E35229944C38",
+        "reserve_base": 20000000,
+        "reserve_inc": 5000000,
+        "seq": 9380895
+      },
+      "validation_quorum": 3
+    }
+  },
+  "status": "success",
+  "type": "response"
+}

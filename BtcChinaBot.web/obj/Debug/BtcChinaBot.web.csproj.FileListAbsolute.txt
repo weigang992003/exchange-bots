@@ -1,0 +1,8 @@
+C:\Users\sl034marmiha\Documents\GitHub\exchange-bots\BtcChinaBot.web\bin\BtcChinaBot.web.dll.config
+C:\Users\sl034marmiha\Documents\GitHub\exchange-bots\BtcChinaBot.web\bin\BtcChinaBot.web.dll
+C:\Users\sl034marmiha\Documents\GitHub\exchange-bots\BtcChinaBot.web\bin\BtcChinaBot.web.pdb
+C:\Users\sl034marmiha\Documents\GitHub\exchange-bots\BtcChinaBot.web\obj\Debug\BtcChinaBot.web.dll
+C:\Users\sl034marmiha\Documents\GitHub\exchange-bots\BtcChinaBot.web\obj\Debug\BtcChinaBot.web.pdb
+C:\Users\sl034marmiha\Documents\GitHub\exchange-bots\BtcChinaBot.web\obj\Debug\BtcChinaBot.web.csprojResolveAssemblyReference.cache
+C:\Users\sl034marmiha\Documents\GitHub\exchange-bots\BtcChinaBot.web\bin\Common.dll
+C:\Users\sl034marmiha\Documents\GitHub\exchange-bots\BtcChinaBot.web\bin\Common.pdb

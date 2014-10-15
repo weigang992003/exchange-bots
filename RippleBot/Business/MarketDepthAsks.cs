@@ -47,7 +47,7 @@ namespace RippleBot.Business
         {
             get
             {
-                return double.Parse(TakerGets) / 1000000.0;
+                return double.Parse(TakerGets) / Const.DROPS_IN_XRP;
             }
         }
 

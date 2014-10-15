@@ -46,7 +46,7 @@ namespace RippleBot.Business
                         ? taker_pays.value
                         : taker_gets.value;
                     var valNumber = double.Parse(value);
-                    _amountXrp = valNumber / 1000000.0;
+                    _amountXrp = valNumber / Const.DROPS_IN_XRP;
                 }
 
                 return _amountXrp;

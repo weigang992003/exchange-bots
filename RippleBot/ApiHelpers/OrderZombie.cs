@@ -9,8 +9,8 @@ namespace RippleBot.ApiHelpers
     /// </summary>
     internal class OrderZombie
     {
-        private readonly double _price;
-        private readonly double _amount;
+        /*TODO private*/internal readonly double _price;
+        /*TODO private*/internal readonly double _amount;
         private readonly string _currCode;
 
         internal OrderZombie(double price, double amount, string currencyCode)

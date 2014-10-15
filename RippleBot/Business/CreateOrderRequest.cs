@@ -18,8 +18,8 @@ namespace RippleBot.Business
         [DataMember] internal string Account;
         [DataMember] internal string TakerPays;
         [DataMember] internal Take TakerGets;
+        [DataMember] internal int Fee = Const.MAX_FEE;
     }
-
 
 
 
@@ -40,5 +40,6 @@ namespace RippleBot.Business
         [DataMember] internal string TakerGets;
 
         [DataMember] internal readonly uint Flags = 2147483648;
+        [DataMember] internal int Fee = Const.MAX_FEE;
     }
 }
