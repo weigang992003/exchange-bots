@@ -10,6 +10,7 @@ namespace Common
         private readonly bool _verbose = true;
         private readonly Logger _logger;
         protected int _intervalMs;
+        protected bool _cleanup;
 
 
         protected TraderBase(Logger logger)

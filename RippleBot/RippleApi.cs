@@ -6,7 +6,7 @@ using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Common;
-using RippleBot.ApiHelpers;
+//using RippleBot.ApiHelpers;
 using RippleBot.Business;
 using RippleBot.Business.DataApi;
 using WebSocket4Net;
@@ -35,7 +35,6 @@ namespace RippleBot
 
         private string _lastResponse;
         private readonly Regex _offerPattern = new Regex("\"taker_(?<verb>get|pay)s\":\"(?<value>\\d{1,20})\"");
-        private readonly List<OrderZombie> _possibleZombies = new List<OrderZombie>(); 
 
 
         internal RippleApi(Logger logger, string exchIssuerAddress, string fiatCurrencyCode)
@@ -93,24 +92,10 @@ namespace RippleBot
             return account.result.account_data.BalanceXrp;
         }
 
-        internal Offer GetOrderInfo(int orderId, bool cleanZombies = true)
+        internal Offer GetOrderInfo(int orderId)
         {
-            var command = new OrderInfoRequest { id = 1, account = _walletAddress };
-
-            var data = sendToRippleNet(Helpers.SerializeJson(command));
-            if (null == data)
-                return null;
-
-            if (!checkError("GetOrderInfo", data))
-                return null;
-
-            var dataFix = _offerPattern.Replace(data, "'taker_${verb}s': {'currency': 'XRP', 'issuer':'ripple labs', 'value': '${value}'}".Replace("'", "\""));
-
-            var offerList = Helpers.DeserializeJSON<OffersResponse>(dataFix);
+            var offerList = getActiveOrders();
             var order = offerList.result.offers.FirstOrDefault(o => o.seq == orderId);
-
-            if (cleanZombies && _possibleZombies.Any())
-                cleanupZombies(offerList, orderId);
 
             //NULL means it was already filled BUG: OR CANCELLED!!! TODO: some better way of getting order status
             if (null == order)
@@ -209,8 +194,7 @@ namespace RippleBot
                     _logger.AppendMessage("Error creating BUY order. Mesage=" + error.error_message, true, ConsoleColor.Magenta);
                     if (!error.IsCritical)
                     {
-                        //The request might have been successfull even if server says there were problems. Add to list of cleanup candidates.
-                        _possibleZombies.Add(new OrderZombie(price, amount, _fiatCurreny));
+                        //The request might have been successfull even if server says there were problems
                         _logger.AppendMessage("Retry in " + delay + " ms...", true, ConsoleColor.Yellow);
                         delay *= 2;
                         Thread.Sleep(delay);
@@ -230,7 +214,6 @@ namespace RippleBot
                 if (ResponseKind.Error == response.result.ResponseKind)
                 {
                     _logger.AppendMessage("Non-fatal error creating BUY order. Message=" + response.result.engine_result_message, true, ConsoleColor.Yellow);
-                    _possibleZombies.Add(new OrderZombie(price, amount, _fiatCurreny));
                     _logger.AppendMessage("Retry in " + delay + " ms...", true, ConsoleColor.Yellow);
                     delay *= 2;
                     Thread.Sleep(delay);
@@ -294,7 +277,6 @@ namespace RippleBot
                     _logger.AppendMessage("Error creating SELL order. Mesage=" + error.error_message, true, ConsoleColor.Magenta);
                     if (!error.IsCritical)
                     {
-                        _possibleZombies.Add(new OrderZombie(price, amount, _fiatCurreny));
                         _logger.AppendMessage("Retry in " + delay + " ms...", true, ConsoleColor.Yellow);
                         delay *= 2;
                         Thread.Sleep(delay);
@@ -314,7 +296,6 @@ namespace RippleBot
                 if (ResponseKind.Error == response.result.ResponseKind)
                 {
                     _logger.AppendMessage("Non-fatal error creating SELL order. Message=" + response.result.engine_result_message, true, ConsoleColor.Yellow);
-                    _possibleZombies.Add(new OrderZombie(price, amount, _fiatCurreny));
                     _logger.AppendMessage("Retry in " + delay + " ms...", true, ConsoleColor.Yellow);
                     delay *= 2;
                     Thread.Sleep(delay);
@@ -391,20 +372,6 @@ namespace RippleBot
                                                   orderId, cancel.result.engine_result, cancel.result.engine_result_message));
             }
 
-            //TODO: this might be DEBUG due to my bad coverage of OK/fail response types to CancelOffer call
-            if (verify)
-            {
-                //First give some time to Ripple network to chew
-                Thread.Sleep(2000);
-
-                var order = GetOrderInfo(orderId, false);
-                if (null != order && !order.Closed)
-                {
-                    _logger.AppendMessage(String.Format("Order ID {0} claimed cancelled is still alive. Cancel failed.", orderId));
-                    return false;
-                }
-            }
-
             return true;
         }
 
@@ -442,7 +409,52 @@ namespace RippleBot
             return Helpers.DeserializeJSON<CandlesResponse>(data);
         }
 
+        /// <summary>
+        /// Cancel all orders that are not maintained by this bot and not placed manually
+        /// </summary>
+        internal void CleanupZombies(int buyOrderId, int sellOrderId)
+        {
+            var offerList = getActiveOrders();
+
+            foreach (var offer in offerList.result.offers)
+            {
+                if (offer.Price.ToString().Contains("12345"))       //TODO: This is really stupid!! Find some way how to safely flag manual/bot orders
+                    _logger.AppendMessage("Cleanup: Order ID=" + offer.seq + " not a zombie, possibly manual", true, ConsoleColor.Cyan);
+                else if (-1 != buyOrderId && buyOrderId == offer.seq)
+                    _logger.AppendMessage("Cleanup: Order ID=" + offer.seq + " not a zombie, our BUY order", true, ConsoleColor.Cyan);
+                else if (-1 != sellOrderId && sellOrderId == offer.seq)
+                    _logger.AppendMessage("Cleanup: Order ID=" + offer.seq + " not a zombie, our SELL order", true, ConsoleColor.Cyan);
+                else
+                {
+                    _logger.AppendMessage(String.Format("Identified {0} zombie order with ID={1} ({2} XRP for {3} {4}). Trying to cancel...",
+                                                        offer.Type, offer.seq, offer.AmountXrp, offer.Price, offer.Currency), true, ConsoleColor.Yellow);
+                    //Found offer abandoned by this bot, try to cancel it
+                    if (CancelOrder(offer.seq))
+                        _logger.AppendMessage("... success", true, ConsoleColor.Cyan);
+                    else
+                        _logger.AppendMessage("... failed. Maybe next time", true, ConsoleColor.Yellow);
+                }
+            }
+        }
+
+
         #region private helpers
+
+        private OffersResponse getActiveOrders()
+        {
+            var command = new OrderInfoRequest { id = 1, account = _walletAddress };
+
+            var data = sendToRippleNet(Helpers.SerializeJson(command));
+            if (null == data)
+                return null;
+
+            if (!checkError("GetOrderInfo", data))
+                return null;
+
+            var dataFix = _offerPattern.Replace(data, "'taker_${verb}s': {'currency': 'XRP', 'issuer':'ripple labs', 'value': '${value}'}".Replace("'", "\""));
+
+            return Helpers.DeserializeJSON<OffersResponse>(dataFix);
+        }
 
         private string sendToRippleNet(string commandData)
         {
@@ -562,35 +574,6 @@ namespace RippleBot
             }
 
             throw new Exception(String.Format("Web request failed {0} times in a row with error '{1}'. Giving up.", RETRY_COUNT, exc.Message));
-        }
-
-        private void cleanupZombies(OffersResponse offerList, int activeOrderId)
-        {
-            var cleared = new List<OrderZombie>();
-
-            foreach (var suspect in _possibleZombies)
-            {
-                foreach (var offer in offerList.result.offers)
-                {
-                    if (activeOrderId == offer.seq)
-                        _logger.AppendMessage("DEBUG: Order ID=" + activeOrderId + " not a zombie", true, ConsoleColor.Cyan);
-                    else if (suspect.IsMatch(offer))
-                    {
-                        _logger.AppendMessage(String.Format("Identified {0} zombie order with ID={1} ({2} XRP for {3} {4}). Trying to cancel...",
-                                                            offer.Type, offer.seq, offer.AmountXrp, offer.Price, offer.Currency), true, ConsoleColor.Yellow);
-                        //Found offer abandoned by this bot, try to cancel it
-                        if (CancelOrder(offer.seq))
-                            cleared.Add(suspect);
-                        goto Outer;
-                    }
-                }
-                //Surely not a zombie, safe to remove from list of suspects
-                cleared.Add(suspect);
-            Outer:
-                ;
-            }
-
-            _possibleZombies.RemoveAll(cleared.Contains);
         }
         #endregion
     }

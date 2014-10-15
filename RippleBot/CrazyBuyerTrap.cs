@@ -55,6 +55,9 @@ namespace RippleBot
                 throw new Exception("Configuration key 'currency_code' missing");
             _minDifference = double.Parse(Configuration.GetValue("trade_spread"));
             _minPriceUpdate = double.Parse(Configuration.GetValue("min_price_update"));
+            var cleanup = Configuration.GetValue("cleanup_zombies");
+            _cleanup = bool.Parse(cleanup ?? false.ToString());
+            log("Zombie cleanup: " + cleanup);
 
             _requestor = new RippleApi(logger, gateway, _currencyCode);
             _requestor.Init();
@@ -246,6 +249,9 @@ namespace RippleBot
                         ConsoleColor.Cyan, _buyOrderId, _buyOrderAmount, _buyOrderPrice, _currencyCode);
                 }
             }
+
+            if (_cleanup)
+                _requestor.CleanupZombies(_buyOrderId, _sellOrderId);
 
             _xrpBalance = _requestor.GetXrpBalance();
             log("### Balance= {0} XRP", _xrpBalance);

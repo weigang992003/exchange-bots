@@ -79,15 +79,6 @@ namespace RippleBot
             _intervalMs = Helpers.SuggestInterval(coef, 8000, 20000);
             log("Madness={0}; Volume={1} XRP; Interval={2} ms", coef, _volumeWall, _intervalMs);
 
-
-
-            var serverInfo = _requestor.GetServerState();
-            log("Current server fee is " + serverInfo.LastFee + " XRP");
-
-            var x = _requestor.CancelOrder(1024);
-
-
-
             //We have active BUY order
             if (-1 != _buyOrderId)
             {
