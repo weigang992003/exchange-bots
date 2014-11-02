@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Common;
-//using RippleBot.ApiHelpers;
 using RippleBot.Business;
 using RippleBot.Business.DataApi;
 using WebSocket4Net;
@@ -489,7 +487,7 @@ namespace RippleBot
             var error = Helpers.DeserializeJSON<ErrorResponse>(data);
             if (!String.IsNullOrEmpty(error.error))
             {
-                if (!error.IsCritical)
+                if (!error.IsCritical)          //TODO: or check for "insufficient fee" response
                 {
                     _logger.AppendMessage(action + ": non-critical error " + error.error_message, true, ConsoleColor.Yellow);
                     return false;
