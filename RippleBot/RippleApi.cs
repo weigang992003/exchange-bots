@@ -93,6 +93,8 @@ namespace RippleBot
         internal Offer GetOrderInfo(int orderId)
         {
             var offerList = getActiveOrders();
+            if (null == offerList)
+                return null;
             var order = offerList.result.offers.FirstOrDefault(o => o.seq == orderId);
 
             //NULL means it was already filled BUG: OR CANCELLED!!! TODO: some better way of getting order status

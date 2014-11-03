@@ -65,9 +65,7 @@
     <Compile Include="Business\ServerStateRequest.cs" />
     <Compile Include="Const.cs" />
     <Compile Include="CrazyBuyerTrap.cs" />
-    <Compile Include="CrazyBuyerTrap_RippleCN.cs" />
     <Compile Include="CrazySellerTrap.cs" />
-    <Compile Include="CrazySellerTrap_BitStamp.cs" />
     <Compile Include="TradeHelper.cs" />
     <Compile Include="WideSpreadSeller.cs" />
     <None Include="DataSamples\WebSocket API\account_info.json" />
